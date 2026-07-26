@@ -51,7 +51,7 @@ export default async function CustomersPage({
                   </td>
                 </tr>
               ) : (
-                result.data.map((customer) => (
+                result.data.map((customer: any) => (
                   <tr key={customer.id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="px-4 py-3">
                       <Link href={`/dashboard/customers/${customer.id}`} className="font-medium text-indigo-400 hover:underline">
