@@ -10,11 +10,10 @@ export const metadata: Metadata = {
   title: "Order Details",
 };
 
-export default async function OrderDetailsPage({
-  params,
-}: {
-  params: { id: string };
+export default async function OrderDetailsPage(props: {
+  params: Promise<{ id: string }>;
 }) {
+  const params = await props.params;
   await requireDashboardAccess();
 
   const order = await getOrder(params.id);

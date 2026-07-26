@@ -10,11 +10,10 @@ export const metadata: Metadata = {
   title: "Orders",
 };
 
-export default async function OrdersPage({
-  searchParams,
-}: {
-  searchParams: { page?: string; search?: string; status?: string };
+export default async function OrdersPage(props: {
+  searchParams: Promise<{ page?: string; search?: string; status?: string }>;
 }) {
+  const searchParams = await props.searchParams;
   await requireDashboardAccess();
 
   const page = searchParams.page ? parseInt(searchParams.page) : 1;
