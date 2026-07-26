@@ -51,7 +51,7 @@ export default async function OrdersPage(props: {
                   </td>
                 </tr>
               ) : (
-                result.data.map((order) => (
+                result.data.map((order: any) => (
                   <tr key={order.id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="px-4 py-3">
                       <Link href={`/dashboard/orders/${order.id}`} className="font-medium text-indigo-400 hover:underline">

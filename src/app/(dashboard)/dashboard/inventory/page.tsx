@@ -69,7 +69,7 @@ export default async function InventoryPage({
                   </td>
                 </tr>
               ) : (
-                result.data.map((variant) => (
+                result.data.map((variant: any) => (
                   <tr key={variant.id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="px-4 py-3 font-medium text-white">
                       <Link href={`/dashboard/products/${variant.product.id}`} className="hover:underline">

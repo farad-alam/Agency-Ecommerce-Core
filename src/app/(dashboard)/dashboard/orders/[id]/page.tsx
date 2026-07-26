@@ -47,7 +47,7 @@ export default async function OrderDetailsPage(props: {
           <Card className="border-white/[0.08] bg-black/40 backdrop-blur-xl p-6">
             <h2 className="text-lg font-medium text-white mb-4">Line Items</h2>
             <div className="space-y-4">
-              {order.items.map((item) => (
+              {order.items.map((item: any) => (
                 <div key={item.id} className="flex justify-between items-start py-2 border-b border-white/[0.04] last:border-0">
                   <div>
                     <p className="font-medium text-zinc-200">{item.productTitle}</p>

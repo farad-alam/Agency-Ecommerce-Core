@@ -27,7 +27,7 @@ export default async function AccountOrdersPage(props: {
         </div>
       ) : (
         <div className="space-y-6">
-          {result.data.map((order) => (
+          {result.data.map((order: any) => (
             <div key={order.id} className="border rounded-lg overflow-hidden bg-white">
               <div className="bg-gray-50 px-6 py-4 border-b flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex gap-8">

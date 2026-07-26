@@ -40,7 +40,7 @@ export default async function StorefrontHomepage() {
       <section className="container mx-auto px-4 space-y-8">
         <h2 className="text-3xl font-bold tracking-tight">Shop by Category</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {collections.slice(0, 3).map((collection) => (
+          {collections.slice(0, 3).map((collection: any) => (
             <Link 
               key={collection.id} 
               href={`/products?collection=${collection.slug}`}
@@ -76,7 +76,7 @@ export default async function StorefrontHomepage() {
         
         {newArrivals.data.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {newArrivals.data.map((product) => (
+            {newArrivals.data.map((product: any) => (
               <ProductCard key={product.id} product={product as any} />
             ))}
           </div>

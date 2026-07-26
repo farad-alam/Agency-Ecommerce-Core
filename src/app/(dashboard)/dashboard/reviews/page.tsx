@@ -53,7 +53,7 @@ export default async function ReviewsPage({
                   </td>
                 </tr>
               ) : (
-                result.data.map((review) => (
+                result.data.map((review: any) => (
                   <tr key={review.id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="px-4 py-3 font-medium text-white max-w-[200px] truncate">
                       {review.product.title}

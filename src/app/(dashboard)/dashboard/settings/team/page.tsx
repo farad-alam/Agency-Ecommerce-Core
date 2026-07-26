@@ -43,7 +43,7 @@ export default async function TeamSettingsPage() {
             <h2 className="text-sm font-medium text-white">Active Members</h2>
           </div>
           <div className="divide-y divide-white/[0.08]">
-            {staff.map((user) => (
+            {staff.map((user: any) => (
               <div key={user.id} className="p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
                 <div>
                   <p className="font-medium text-zinc-200">{user.name || "Unknown"} {user.id === staff[0].id ? "(You)" : ""}</p>
@@ -65,7 +65,7 @@ export default async function TeamSettingsPage() {
               <h2 className="text-sm font-medium text-white">Pending Invites</h2>
             </div>
             <div className="divide-y divide-white/[0.08]">
-              {invites.map((invite) => (
+              {invites.map((invite: any) => (
                 <div key={invite.id} className="p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
                   <div>
                     <p className="font-medium text-zinc-200">{invite.email}</p>

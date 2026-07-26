@@ -73,14 +73,14 @@ export default async function ProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.04]">
-              {products.map((product) => {
+              {products.map((product: any) => {
                 const totalStock = product.variants.reduce(
                   (sum, v) => sum + v.inventoryQty,
                   0
                 );
                 const minPrice =
                   product.variants.length > 0
-                    ? Math.min(...product.variants.map((v) => Number(v.price)))
+                    ? Math.min(...product.variants.map((v: any) => Number(v.price)))
                     : null;
                 const thumb = product.media[0];
                 const isLowStock =
