@@ -33,6 +33,14 @@ export default async function OrderDetailsPage({
             Placed on {format(new Date(order.createdAt), "MMMM d, yyyy 'at' h:mm a")}
           </p>
         </div>
+        <div className="flex gap-2">
+          {/* Real app uses client component for interactive refund flow */}
+          {order.paymentStatus === "PAID" && !["REFUNDED", "CANCELLED"].includes(order.status) && (
+            <button className="px-4 py-2 bg-zinc-800 border border-zinc-700 text-white font-medium text-sm rounded-md hover:bg-zinc-700 transition-colors">
+              Process Refund
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

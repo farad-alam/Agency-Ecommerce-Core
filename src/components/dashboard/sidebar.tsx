@@ -15,6 +15,7 @@ import {
   Truck,
   MessageSquare,
   Percent,
+  LayoutList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,13 +33,15 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Customers", href: "/dashboard/customers", icon: Users },
   { label: "Categories", href: "/dashboard/categories", icon: Layers },
   { label: "Brands", href: "/dashboard/brands", icon: Tag },
-  { label: "Collections", href: "/dashboard/collections", icon: Layers },
+  { label: "Collections", href: "/dashboard/collections", icon: LayoutList },
+  { label: "Inventory", href: "/dashboard/inventory", icon: Package },
   { label: "Coupons", href: "/dashboard/coupons", icon: Percent },
   { label: "Shipping", href: "/dashboard/shipping", icon: Truck },
   { label: "Reviews", href: "/dashboard/reviews", icon: MessageSquare },
   { label: "Media", href: "/dashboard/media", icon: Image },
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart2, adminOnly: true },
-  { label: "Settings", href: "/dashboard/settings", icon: Settings, adminOnly: true },
+  { label: "Store Settings", href: "/dashboard/settings", icon: Settings, adminOnly: true },
+  { label: "Team", href: "/dashboard/settings/team", icon: Users, adminOnly: true },
 ];
 
 interface Props {
