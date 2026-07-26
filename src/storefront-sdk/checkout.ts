@@ -6,8 +6,19 @@ import { getAuthIdentifiers } from "./cart";
 import { sendEmail } from "@/lib/email";
 import * as React from "react";
 import OrderConfirmationEmail from "@/emails/order-confirmation";
+import { headers } from "next/headers";
+import { apiRateLimit } from "@/lib/rate-limit";
+import { Errors } from "@/core/errors";
 
 export async function submitCheckout(input: CheckoutInput) {
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for") ?? "127.0.0.1";
+  
+  const { success } = await apiRateLimit.limit(ip);
+  if (!success) {
+    throw Errors.businessRule("Checkout rate limit exceeded. Please try again later.", "RATE_LIMITED");
+  }
+
   const identity = await getAuthIdentifiers();
   
   // 1. Process Checkout

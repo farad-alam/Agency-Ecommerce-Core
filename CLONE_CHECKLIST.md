@@ -47,6 +47,7 @@ Required variables:
 - `EMAIL_FROM` — "Store Name <noreply@clientdomain.com>"
 - `SEED_ADMIN_EMAIL` — the admin's email
 - `SEED_ADMIN_PASSWORD` — a strong password (change this!)
+- `CRON_SECRET` — a secret string for the Vercel cron job (e.g. `openssl rand -base64 16`)
 - `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` — create free Upstash project
 
 ## Step 4 — Store Config
