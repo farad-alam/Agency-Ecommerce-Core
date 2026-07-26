@@ -4,7 +4,6 @@ import { getOrder } from "@/core/orders";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { Prisma } from "@prisma/client";
 
 export const metadata: Metadata = {
   title: "Order Details",
