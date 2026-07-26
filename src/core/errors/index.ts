@@ -71,3 +71,5 @@ export const Errors = {
   internal: () =>
     new AppError("An unexpected error occurred", 500, ErrorCode.INTERNAL_ERROR),
 } as const;
+
+export * from "./handler";

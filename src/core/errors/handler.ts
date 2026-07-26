@@ -61,9 +61,9 @@ export function handleError(error: unknown): NextResponse {
 }
 
 type RouteHandler = (
-  req: Request,
-  context?: { params: Record<string, string> }
-) => Promise<NextResponse>;
+  req: any,
+  context?: any
+) => Promise<NextResponse> | NextResponse;
 
 export function withHandler(handler: RouteHandler): RouteHandler {
   return async (req, context) => {

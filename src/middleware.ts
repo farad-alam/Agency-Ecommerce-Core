@@ -1,6 +1,9 @@
-import { auth } from "@/lib/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+
+const { auth } = NextAuth(authConfig);
 
 const SECURITY_HEADERS = {
   "X-Frame-Options": "DENY",
@@ -25,6 +28,7 @@ export default auth(function middleware(req: NextRequest) {
 
   // Get session from auth middleware wrapper
   const session = (req as unknown as { auth: { user?: { id: string; role: string } } | null }).auth;
+  console.log("[Middleware] Path:", pathname, "Session:", JSON.stringify(session, null, 2));
 
   // Apply security headers to all responses
   const res = NextResponse.next();
