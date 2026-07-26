@@ -78,7 +78,7 @@ export default async function CustomerProfilePage({
                   No orders found.
                 </div>
               ) : (
-                customer.orders.map((order) => (
+                customer.orders.map((order: any) => (
                   <div key={order.id} className="p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors">
                     <div>
                       <Link href={`/dashboard/orders/${order.id}`} className="font-medium text-indigo-400 hover:underline">
