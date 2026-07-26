@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 
-export default function StorefrontLoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/account";
@@ -121,5 +121,13 @@ export default function StorefrontLoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function StorefrontLoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[70vh] flex justify-center items-center"><Loader2 className="animate-spin text-gray-400" /></div>}>
+      <LoginForm />
+    </Suspense>
   );
 }
