@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,11 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Plus, Trash2, X, Image as ImageIcon } from "lucide-react";
+import { Loader2, Plus, Trash2, X, Image as ImageIcon, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
 import type { Brand, Category } from "@prisma/client";
 import type { ProductFull } from "@/app/(dashboard)/dashboard/products/[id]/page";
 import { toast } from "sonner";
 import Link from "next/link";
+import { storeConfig } from "@/config/store.config";
 
 interface Props {
   product?: ProductFull;
@@ -32,6 +33,32 @@ function slugify(text: string) {
     .replace(/[^\w\s-]/g, "")
     .replace(/[\s_]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+// Auto-SKU Generator
+function generateSku(title: string, options: VariantOption[]): string {
+  if (!title) return "";
+  
+  // 1. Get initials from title (e.g., "Classic Cotton Tee" -> "CCT")
+  const titleInitials = title
+    .split(/\s+/)
+    .filter(word => word.length > 0)
+    .map(word => word[0].toUpperCase())
+    .join("")
+    .slice(0, 5); // Keep it reasonably short
+    
+  // 2. Get option values (e.g., "XL", "Blue" -> "XL-BLU")
+  const optionValues = options
+    .map(opt => opt.value.trim())
+    .filter(val => val.length > 0)
+    .map(val => val.toUpperCase().replace(/\s+/g, "").slice(0, 4)) // Abbreviate options
+    .join("-");
+    
+  if (optionValues) {
+    return `${titleInitials}-${optionValues}`;
+  }
+  
+  return titleInitials ? `${titleInitials}-001` : "";
 }
 
 interface VariantOption {
@@ -49,6 +76,7 @@ interface VariantState {
   barcode: string;
   options: VariantOption[];
   mediaUrl?: string | null;
+  skuLocked: boolean; // Track if user manually edited the SKU
 }
 
 export function ProductForm({ product, brands, categories }: Props) {
@@ -65,11 +93,19 @@ export function ProductForm({ product, brands, categories }: Props) {
   const [status, setStatus] = useState<"DRAFT" | "ACTIVE" | "ARCHIVED">(
     (product?.status as "DRAFT" | "ACTIVE" | "ARCHIVED") ?? "DRAFT"
   );
-  // Use "none" for empty state to fix Radix Select rendering issues
+  
   const [brandId, setBrandId] = useState(product?.brandId ?? "none");
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
     product?.categories.map((c) => c.categoryId) ?? []
   );
+
+  // Determine if it's a simple product (no variants/options)
+  const [isSimpleProduct, setIsSimpleProduct] = useState(
+    !product || (product.variants.length === 1 && Object.keys(product.variants[0].options as object || {}).length === 0)
+  );
+
+  const [showAdvancedSEO, setShowAdvancedSEO] = useState(false);
+  const [showAdvancedVariantConfig, setShowAdvancedVariantConfig] = useState(false);
 
   // Initialize variants state
   const [variants, setVariants] = useState<VariantState[]>(
@@ -97,6 +133,7 @@ export function ProductForm({ product, brands, categories }: Props) {
         barcode: v.barcode || "",
         options: optsArray,
         mediaUrl,
+        skuLocked: true, // Existing variants are locked by default
       };
     }) ?? [
       {
@@ -107,6 +144,7 @@ export function ProductForm({ product, brands, categories }: Props) {
         weightGrams: "",
         barcode: "",
         options: [{ key: "", value: "" }],
+        skuLocked: false,
       },
     ]
   );
@@ -115,10 +153,21 @@ export function ProductForm({ product, brands, categories }: Props) {
   const [metaTitle, setMetaTitle] = useState(product?.seo?.metaTitle ?? "");
   const [metaDescription, setMetaDescription] = useState(product?.seo?.metaDescription ?? "");
 
+  // Auto-generate SKUs when Title changes
+  useEffect(() => {
+    if (isSimpleProduct && title) {
+      setVariants(prev => prev.map(v => {
+        if (!v.skuLocked && !v.id) {
+          return { ...v, sku: generateSku(title, []) };
+        }
+        return v;
+      }));
+    }
+  }, [title, isSimpleProduct]);
+
   function handleTitleChange(val: string) {
     setTitle(val);
     if (!isEditing) setSlug(slugify(val));
-    // Auto-fill SEO if empty
     if (!metaTitle || metaTitle === product?.title) {
       setMetaTitle(val.slice(0, 70));
     }
@@ -135,13 +184,14 @@ export function ProductForm({ product, brands, categories }: Props) {
     setVariants((prev) => [
       ...prev,
       {
-        sku: "",
-        price: "",
-        compareAtPrice: "",
+        sku: generateSku(title, [{ key: "", value: "" }]),
+        price: prev[0]?.price || "",
+        compareAtPrice: prev[0]?.compareAtPrice || "",
         inventoryQty: "0",
         weightGrams: "",
         barcode: "",
         options: [{ key: "", value: "" }],
+        skuLocked: false,
       },
     ]);
   }
@@ -150,10 +200,32 @@ export function ProductForm({ product, brands, categories }: Props) {
     setVariants((prev) => prev.filter((_, idx) => idx !== i));
   }
 
-  function updateVariantField(i: number, field: keyof VariantState, value: string | VariantOption[]) {
+  function updateVariantField(i: number, field: keyof VariantState, value: any) {
     setVariants((prev) =>
-      prev.map((v, idx) => (idx === i ? { ...v, [field]: value } : v))
+      prev.map((v, idx) => {
+        if (idx !== i) return v;
+        
+        const updated = { ...v, [field]: value };
+        
+        // If user manually types SKU, lock it
+        if (field === 'sku') {
+           updated.skuLocked = true;
+        }
+        
+        return updated;
+      })
     );
+  }
+  
+  function resetSku(i: number) {
+    setVariants(prev => prev.map((v, idx) => {
+      if (idx !== i) return v;
+      return { 
+        ...v, 
+        sku: generateSku(title, isSimpleProduct ? [] : v.options), 
+        skuLocked: false 
+      };
+    }));
   }
 
   function addOptionRow(variantIndex: number) {
@@ -166,11 +238,13 @@ export function ProductForm({ product, brands, categories }: Props) {
 
   function removeOptionRow(variantIndex: number, optionIndex: number) {
     const variant = variants[variantIndex];
-    updateVariantField(
-      variantIndex,
-      "options",
-      variant.options.filter((_, idx) => idx !== optionIndex)
-    );
+    const newOptions = variant.options.filter((_, idx) => idx !== optionIndex);
+    updateVariantField(variantIndex, "options", newOptions);
+    
+    // Auto-update SKU if not locked
+    if (!variant.skuLocked && !variant.id) {
+       updateVariantField(variantIndex, "sku", generateSku(title, newOptions));
+    }
   }
 
   function updateOptionField(
@@ -184,16 +258,20 @@ export function ProductForm({ product, brands, categories }: Props) {
       idx === optionIndex ? { ...opt, [field]: value } : opt
     );
     updateVariantField(variantIndex, "options", newOptions);
+    
+    // Auto-update SKU if not locked
+    if (!variant.skuLocked && !variant.id) {
+       updateVariantField(variantIndex, "sku", generateSku(title, newOptions));
+    }
   }
 
   async function handleSave() {
     setError(null);
     setSaving(true);
 
-    // Validate Variants
     const hasValidVariant = variants.some((v) => v.sku.trim() !== "");
     if (!hasValidVariant) {
-      setError("You must provide at least one variant with a valid SKU.");
+      setError("Please ensure your product has an automatically generated or custom SKU.");
       setSaving(false);
       return;
     }
@@ -210,41 +288,36 @@ export function ProductForm({ product, brands, categories }: Props) {
 
       let productId = product?.id;
 
-      // 1. Create or Update Product
       if (isEditing) {
         const res = await fetch(`/api/products/${product!.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error ?? "Failed to update product");
-        }
+        if (!res.ok) throw new Error((await res.json()).error ?? "Failed to update product");
       } else {
         const res = await fetch("/api/products", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error ?? "Failed to create product");
-        }
-        const newProduct = await res.json();
-        productId = newProduct.id;
+        if (!res.ok) throw new Error((await res.json()).error ?? "Failed to create product");
+        productId = (await res.json()).id;
       }
 
-      // 2. Save Variants (Create new or Update existing)
       for (const variant of variants) {
-        if (!variant.sku.trim()) continue; // Skip empty rows
+        if (!variant.sku.trim()) continue;
 
-        const optionsObj = variant.options.reduce((acc, curr) => {
-          if (curr.key.trim() && curr.value.trim()) {
-            acc[curr.key.trim()] = curr.value.trim();
-          }
-          return acc;
-        }, {} as Record<string, string>);
+        // If simple product, don't save options
+        let optionsObj = {};
+        if (!isSimpleProduct) {
+          optionsObj = variant.options.reduce((acc, curr) => {
+            if (curr.key.trim() && curr.value.trim()) {
+              acc[curr.key.trim()] = curr.value.trim();
+            }
+            return acc;
+          }, {} as Record<string, string>);
+        }
 
         const payload = {
           sku: variant.sku.trim(),
@@ -257,14 +330,12 @@ export function ProductForm({ product, brands, categories }: Props) {
         };
 
         if (variant.id) {
-          // PATCH existing variant
           await fetch(`/api/products/${productId}/variants/${variant.id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
         } else {
-          // POST new variant
           await fetch(`/api/products/${productId}/variants`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -273,7 +344,6 @@ export function ProductForm({ product, brands, categories }: Props) {
         }
       }
 
-      // 3. Save SEO
       if (metaTitle || metaDescription) {
         await fetch(`/api/products/${productId}/seo`, {
           method: "POST",
@@ -282,11 +352,10 @@ export function ProductForm({ product, brands, categories }: Props) {
         });
       }
 
-      toast.success(isEditing ? "Product updated successfully!" : "Product created successfully!");
+      toast.success(isEditing ? "Product saved successfully!" : "Product created! You can now add images.");
 
       startTransition(() => {
         if (!isEditing) {
-          // Redirect to edit page so they can upload images
           router.push(`/dashboard/products/${productId}`);
         }
         router.refresh();
@@ -299,6 +368,7 @@ export function ProductForm({ product, brands, categories }: Props) {
   }
 
   const loading = saving || isPending;
+  const currencySymbol = storeConfig.currency === "BDT" ? "৳" : storeConfig.currency === "EUR" ? "€" : storeConfig.currency === "GBP" ? "£" : "$";
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -306,9 +376,9 @@ export function ProductForm({ product, brands, categories }: Props) {
       <div className="space-y-5 lg:col-span-2">
         <Tabs defaultValue="details" className="w-full">
           <TabsList className="border border-white/[0.08] bg-[#18181b] mb-4">
-            <TabsTrigger value="details" className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300">Details</TabsTrigger>
-            <TabsTrigger value="variants" className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300">Variants</TabsTrigger>
-            <TabsTrigger value="seo" className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300">SEO</TabsTrigger>
+            <TabsTrigger value="details" className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300">Basic Info</TabsTrigger>
+            <TabsTrigger value="variants" className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300">Pricing & Inventory</TabsTrigger>
+            <TabsTrigger value="seo" className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300">Google SEO</TabsTrigger>
           </TabsList>
 
           {/* Details tab */}
@@ -321,22 +391,12 @@ export function ProductForm({ product, brands, categories }: Props) {
               )}
 
               <div className="space-y-2">
-                <Label className="text-zinc-300">Title</Label>
+                <Label className="text-zinc-300">Product Name</Label>
                 <Input
                   value={title}
                   onChange={(e) => handleTitleChange(e.target.value)}
-                  placeholder="e.g. Classic Cotton Tee"
+                  placeholder="e.g. Classic Cotton Tee, Vanilla Scented Candle"
                   className="border-white/[0.12] bg-black/20 text-white placeholder:text-zinc-600 focus-visible:ring-indigo-500"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-zinc-300">Slug</Label>
-                <Input
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                  placeholder="classic-cotton-tee"
-                  className="border-white/[0.12] bg-black/20 font-mono text-sm text-zinc-400 placeholder:text-zinc-700 focus-visible:ring-indigo-500"
                 />
               </div>
 
@@ -345,20 +405,45 @@ export function ProductForm({ product, brands, categories }: Props) {
                 <Textarea
                   value={description}
                   onChange={(e) => handleDescriptionChange(e.target.value)}
-                  placeholder="Product description…"
+                  placeholder="Describe what makes this product special. What is it made of? Who is it for?"
                   rows={6}
                   className="border-white/[0.12] bg-black/20 text-white placeholder:text-zinc-600 focus-visible:ring-indigo-500"
                 />
+              </div>
+
+              {/* Advanced SEO Toggle */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedSEO(!showAdvancedSEO)}
+                  className="flex items-center gap-1.5 text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
+                >
+                  {showAdvancedSEO ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  {showAdvancedSEO ? "Hide Advanced Settings" : "Show Advanced Settings (URL Slug)"}
+                </button>
+                
+                {showAdvancedSEO && (
+                  <div className="mt-4 p-4 rounded-lg bg-black/20 border border-white/[0.04] space-y-2">
+                    <Label className="text-zinc-400">Website URL Slug (Auto-generated)</Label>
+                    <Input
+                      value={slug}
+                      onChange={(e) => setSlug(e.target.value)}
+                      placeholder="classic-cotton-tee"
+                      className="border-white/[0.08] bg-black/40 font-mono text-sm text-zinc-400 focus-visible:ring-indigo-500"
+                    />
+                    <p className="text-xs text-zinc-500">Only change this if you specifically need a custom webpage link.</p>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Media Upload Prompt / Display */}
             <div className="rounded-xl border border-white/[0.08] bg-[#18181b] p-6 shadow-sm">
-              <Label className="mb-4 block text-zinc-300">Media</Label>
+              <Label className="mb-4 block text-zinc-300">Product Images</Label>
               {!isEditing ? (
                 <div className="rounded-lg border border-dashed border-white/[0.12] bg-black/20 p-8 text-center text-sm text-zinc-500">
                   <ImageIcon className="mx-auto mb-2 h-6 w-6 text-zinc-600" />
-                  Save the product first to upload and manage media.
+                  Create the product first to upload and manage images.
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -373,43 +458,67 @@ export function ProductForm({ product, brands, categories }: Props) {
                     </div>
                   ) : (
                     <div className="rounded-lg border border-dashed border-white/[0.12] bg-black/20 p-8 text-center text-sm text-zinc-500">
-                      No media uploaded yet.
+                      No images uploaded yet.
                     </div>
                   )}
-                  {/* Provide a clear path to media management */}
                   <Link 
                     href={`/dashboard/products/${product.id}/media`} 
                     className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 h-9 px-4 py-2 w-full"
                   >
                     <ImageIcon className="mr-2 h-4 w-4" />
-                    Manage Media
+                    Manage Images
                   </Link>
                 </div>
               )}
             </div>
           </TabsContent>
 
-          {/* Variants tab */}
+          {/* Variants / Pricing tab */}
           <TabsContent value="variants" className="space-y-4">
-            <div className="rounded-xl border border-white/[0.08] bg-[#18181b] p-6 space-y-6 shadow-sm">
-              <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
-                <h3 className="text-base font-medium text-white">Manage Variants</h3>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={addVariantRow}
-                  className="bg-zinc-800 text-white hover:bg-zinc-700 border border-white/[0.12]"
-                >
-                  <Plus className="mr-1.5 h-4 w-4" />
-                  Add Variant
-                </Button>
+            <div className="rounded-xl border border-white/[0.08] bg-[#18181b] p-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/[0.08] pb-4 mb-6 gap-4">
+                <div>
+                  <h3 className="text-base font-medium text-white">Pricing & Inventory</h3>
+                  <p className="text-xs text-zinc-400 mt-1">Set prices and track stock levels.</p>
+                </div>
+                
+                <div className="flex items-center gap-3 p-1 rounded-lg bg-black/40 border border-white/[0.08]">
+                  <button
+                    type="button"
+                    onClick={() => setIsSimpleProduct(true)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${isSimpleProduct ? 'bg-indigo-500/20 text-indigo-300' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  >
+                    Simple Product
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsSimpleProduct(false)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${!isSimpleProduct ? 'bg-indigo-500/20 text-indigo-300' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  >
+                    Product with Options
+                  </button>
+                </div>
               </div>
 
-              <div className="space-y-8">
-                {variants.map((v, i) => (
-                  <div key={v.id || i} className="relative rounded-lg border border-white/[0.12] bg-black/20 p-5">
-                    {/* Delete variant button (only for new variants) */}
-                    {!v.id && variants.length > 1 && (
+              {!isSimpleProduct && (
+                <div className="flex justify-end mb-4">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={addVariantRow}
+                    className="bg-zinc-800 text-white hover:bg-zinc-700 border border-white/[0.12]"
+                  >
+                    <Plus className="mr-1.5 h-4 w-4" />
+                    Add Another Variation
+                  </Button>
+                </div>
+              )}
+
+              <div className="space-y-6">
+                {(isSimpleProduct ? [variants[0]] : variants).map((v, i) => (
+                  <div key={v.id || i} className={`relative rounded-lg border ${!isSimpleProduct ? 'border-white/[0.12] bg-black/20 p-5' : 'border-transparent'}`}>
+                    
+                    {!isSimpleProduct && !v.id && variants.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeVariantRow(i)}
@@ -419,144 +528,170 @@ export function ProductForm({ product, brands, categories }: Props) {
                       </button>
                     )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                      <div className="space-y-2 lg:col-span-2">
-                        <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">SKU</Label>
-                        <div className="flex gap-3">
-                          {v.mediaUrl && (
-                            <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded border border-white/[0.12] bg-zinc-900">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={v.mediaUrl} alt="Variant" className="h-full w-full object-cover" />
+                    {/* Attributes/Options section - hidden for simple products */}
+                    {!isSimpleProduct && (
+                      <div className="space-y-3 pb-5 mb-5 border-b border-white/[0.08]">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium text-white">Product Attributes (e.g. Size, Color)</Label>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => addOptionRow(i)}
+                            className="h-7 px-2 text-xs text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
+                          >
+                            <Plus className="h-3 w-3 mr-1" /> Add Attribute
+                          </Button>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {v.options.map((opt, optIdx) => (
+                            <div key={optIdx} className="flex items-center gap-2">
+                              <Input
+                                value={opt.key}
+                                onChange={(e) => updateOptionField(i, optIdx, "key", e.target.value)}
+                                placeholder="Attribute (e.g. Size)"
+                                className="h-9 border-white/[0.12] bg-white/[0.02] text-sm text-zinc-200"
+                              />
+                              <Input
+                                value={opt.value}
+                                onChange={(e) => updateOptionField(i, optIdx, "value", e.target.value)}
+                                placeholder="Value (e.g. Medium)"
+                                className="h-9 border-white/[0.12] bg-white/[0.02] text-sm text-zinc-200"
+                              />
+                              {v.options.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeOptionRow(i, optIdx)}
+                                  className="p-1.5 text-zinc-600 hover:text-red-400 transition-colors"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              )}
                             </div>
-                          )}
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Selling Price</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-2.5 text-zinc-500 text-sm">{currencySymbol}</span>
                           <Input
-                            value={v.sku}
-                            onChange={(e) => updateVariantField(i, "sku", e.target.value)}
-                            placeholder="SKU-001"
-                            className="h-9 border-white/[0.12] bg-white/[0.04] text-white focus-visible:ring-indigo-500"
+                            value={v.price}
+                            onChange={(e) => updateVariantField(i, "price", e.target.value)}
+                            placeholder="0.00"
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            className="h-10 pl-7 border-white/[0.12] bg-white/[0.04] text-white focus-visible:ring-indigo-500"
                           />
                         </div>
                       </div>
-                      
+
                       <div className="space-y-2">
-                        <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Price</Label>
-                        <Input
-                          value={v.price}
-                          onChange={(e) => updateVariantField(i, "price", e.target.value)}
-                          placeholder="0.00"
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          className="h-9 border-white/[0.12] bg-white/[0.04] text-white focus-visible:ring-indigo-500"
-                        />
+                        <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Original Price (Sale)</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-2.5 text-zinc-500 text-sm">{currencySymbol}</span>
+                          <Input
+                            value={v.compareAtPrice}
+                            onChange={(e) => updateVariantField(i, "compareAtPrice", e.target.value)}
+                            placeholder="Leave blank if no sale"
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            className="h-10 pl-7 border-white/[0.12] bg-white/[0.04] text-white focus-visible:ring-indigo-500"
+                          />
+                        </div>
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Stock Qty</Label>
+                        <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Stock Quantity</Label>
                         <Input
                           value={v.inventoryQty}
                           onChange={(e) => updateVariantField(i, "inventoryQty", e.target.value)}
-                          placeholder="0"
+                          placeholder="Items available"
                           type="number"
                           min={0}
-                          className="h-9 border-white/[0.12] bg-white/[0.04] text-white focus-visible:ring-indigo-500"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Compare At Price</Label>
-                        <Input
-                          value={v.compareAtPrice}
-                          onChange={(e) => updateVariantField(i, "compareAtPrice", e.target.value)}
-                          placeholder="0.00"
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          className="h-9 border-white/[0.12] bg-white/[0.04] text-white focus-visible:ring-indigo-500"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Weight (g)</Label>
-                        <Input
-                          value={v.weightGrams}
-                          onChange={(e) => updateVariantField(i, "weightGrams", e.target.value)}
-                          placeholder="0"
-                          type="number"
-                          min={0}
-                          className="h-9 border-white/[0.12] bg-white/[0.04] text-white focus-visible:ring-indigo-500"
-                        />
-                      </div>
-
-                      <div className="space-y-2 lg:col-span-2">
-                        <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Barcode (ISBN/UPC)</Label>
-                        <Input
-                          value={v.barcode}
-                          onChange={(e) => updateVariantField(i, "barcode", e.target.value)}
-                          placeholder="0123456789012"
-                          className="h-9 border-white/[0.12] bg-white/[0.04] text-white focus-visible:ring-indigo-500"
+                          className="h-10 border-white/[0.12] bg-white/[0.04] text-white focus-visible:ring-indigo-500"
                         />
                       </div>
                     </div>
 
-                    <div className="space-y-3 pt-4 border-t border-white/[0.08]">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Options</Label>
-                        <Button 
+                    <div className="mt-4 pt-4 border-t border-white/[0.04]">
+                      <div className="flex items-center justify-between mb-3">
+                        <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+                          Store SKU
+                          {v.skuLocked && <span className="px-1.5 py-0.5 rounded-sm bg-indigo-500/10 text-indigo-400 text-[10px] tracking-normal lowercase">Custom</span>}
+                        </Label>
+                        <button 
                           type="button" 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => addOptionRow(i)}
-                          className="h-7 px-2 text-xs text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
+                          onClick={() => resetSku(i)}
+                          className="text-[11px] text-zinc-500 hover:text-zinc-300 flex items-center"
+                          title="Regenerate SKU automatically"
                         >
-                          <Plus className="h-3 w-3 mr-1" /> Add Option
-                        </Button>
+                          <RotateCcw className="h-3 w-3 mr-1" /> Auto-generate
+                        </button>
                       </div>
-                      
-                      <div className="space-y-2">
-                        {v.options.map((opt, optIdx) => (
-                          <div key={optIdx} className="flex items-center gap-2">
-                            <Input
-                              value={opt.key}
-                              onChange={(e) => updateOptionField(i, optIdx, "key", e.target.value)}
-                              placeholder="e.g. Size"
-                              className="h-8 border-white/[0.12] bg-white/[0.02] text-sm text-zinc-200"
-                            />
-                            <Input
-                              value={opt.value}
-                              onChange={(e) => updateOptionField(i, optIdx, "value", e.target.value)}
-                              placeholder="e.g. XL"
-                              className="h-8 border-white/[0.12] bg-white/[0.02] text-sm text-zinc-200"
-                            />
-                            {v.options.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => removeOptionRow(i, optIdx)}
-                                className="p-1.5 text-zinc-600 hover:text-red-400 transition-colors"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            )}
+                      <div className="flex gap-3">
+                        {v.mediaUrl && !isSimpleProduct && (
+                          <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded border border-white/[0.12] bg-zinc-900">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={v.mediaUrl} alt="Variant" className="h-full w-full object-cover" />
                           </div>
-                        ))}
+                        )}
+                        <Input
+                          value={v.sku}
+                          onChange={(e) => updateVariantField(i, "sku", e.target.value)}
+                          placeholder="Automatically generated identifier"
+                          className="h-9 border-white/[0.12] bg-black/40 font-mono text-xs text-zinc-300 focus-visible:ring-indigo-500"
+                        />
                       </div>
                     </div>
 
-                    {/* ID Indicator */}
-                    {v.id && (
-                      <div className="absolute top-4 right-4 flex items-center gap-2">
-                        <span className="text-[10px] uppercase tracking-wider text-emerald-500/80 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Saved Variant</span>
-                      </div>
-                    )}
+                    {/* Advanced Variant Config */}
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={() => setShowAdvancedVariantConfig(!showAdvancedVariantConfig)}
+                        className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                      >
+                        {showAdvancedVariantConfig ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                        {showAdvancedVariantConfig ? "Hide Shipping & Barcode" : "Add Shipping Weight & Barcode"}
+                      </button>
+                      
+                      {showAdvancedVariantConfig && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3 p-4 rounded-lg bg-black/20 border border-white/[0.04]">
+                          <div className="space-y-2">
+                            <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Shipping Weight (grams)</Label>
+                            <Input
+                              value={v.weightGrams}
+                              onChange={(e) => updateVariantField(i, "weightGrams", e.target.value)}
+                              placeholder="e.g. 500"
+                              type="number"
+                              min={0}
+                              className="h-8 border-white/[0.08] bg-white/[0.02] text-sm text-zinc-300"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Barcode (UPC/GTIN)</Label>
+                            <Input
+                              value={v.barcode}
+                              onChange={(e) => updateVariantField(i, "barcode", e.target.value)}
+                              placeholder="Optional scanner code"
+                              className="h-8 border-white/[0.08] bg-white/[0.02] text-sm text-zinc-300"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                   </div>
                 ))}
               </div>
-
-              {isEditing && (
-                <p className="text-xs text-zinc-500 text-center mt-6">
-                  Modifying fields will update the variant upon clicking &quot;Save Changes&quot;.
-                </p>
-              )}
             </div>
           </TabsContent>
 
@@ -565,7 +700,7 @@ export function ProductForm({ product, brands, categories }: Props) {
             <div className="rounded-xl border border-white/[0.08] bg-[#18181b] p-6 space-y-5 shadow-sm">
               <div className="space-y-2">
                 <Label className="text-zinc-300 flex justify-between">
-                  Meta Title
+                  Google Search Title
                   <span className={`text-xs ${metaTitle.length > 70 ? 'text-red-400' : 'text-zinc-500'}`}>
                     {metaTitle.length}/70
                   </span>
@@ -574,13 +709,13 @@ export function ProductForm({ product, brands, categories }: Props) {
                   value={metaTitle}
                   onChange={(e) => setMetaTitle(e.target.value)}
                   maxLength={100}
-                  placeholder="SEO page title"
+                  placeholder="What customers see in Google results"
                   className="border-white/[0.12] bg-black/20 text-white focus-visible:ring-indigo-500"
                 />
               </div>
               <div className="space-y-2">
                 <Label className="text-zinc-300 flex justify-between">
-                  Meta Description
+                  Google Search Description
                   <span className={`text-xs ${metaDescription.length > 160 ? 'text-red-400' : 'text-zinc-500'}`}>
                     {metaDescription.length}/160
                   </span>
@@ -589,7 +724,7 @@ export function ProductForm({ product, brands, categories }: Props) {
                   value={metaDescription}
                   onChange={(e) => setMetaDescription(e.target.value)}
                   maxLength={200}
-                  placeholder="Brief description for search engines"
+                  placeholder="Short summary shown under the title in Google"
                   rows={4}
                   className="border-white/[0.12] bg-black/20 text-white focus-visible:ring-indigo-500"
                 />
@@ -603,15 +738,15 @@ export function ProductForm({ product, brands, categories }: Props) {
       <div className="space-y-4">
         {/* Status */}
         <div className="rounded-xl border border-white/[0.08] bg-[#18181b] p-5 space-y-3 shadow-sm">
-          <Label className="text-sm font-semibold text-white">Status</Label>
+          <Label className="text-sm font-semibold text-white">Visibility</Label>
           <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
             <SelectTrigger className="border-white/[0.12] bg-black/20 text-zinc-200">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="border-white/[0.12] bg-[#18181b] text-zinc-200">
-              <SelectItem value="DRAFT">Draft</SelectItem>
-              <SelectItem value="ACTIVE">Active</SelectItem>
-              <SelectItem value="ARCHIVED">Archived</SelectItem>
+              <SelectItem value="ACTIVE">Live (Visible on store)</SelectItem>
+              <SelectItem value="DRAFT">Hidden (Draft)</SelectItem>
+              <SelectItem value="ARCHIVED">Discontinued (Archived)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -619,7 +754,7 @@ export function ProductForm({ product, brands, categories }: Props) {
         {/* Brand */}
         {brands.length > 0 && (
           <div className="rounded-xl border border-white/[0.08] bg-[#18181b] p-5 space-y-3 shadow-sm">
-            <Label className="text-sm font-semibold text-white">Brand</Label>
+            <Label className="text-sm font-semibold text-white">Brand / Manufacturer</Label>
             <Select value={brandId} onValueChange={(v) => setBrandId(v || "none")}>
               <SelectTrigger className="border-white/[0.12] bg-black/20 text-zinc-200">
                 <SelectValue placeholder="Select brand…" />
@@ -639,7 +774,7 @@ export function ProductForm({ product, brands, categories }: Props) {
         {/* Categories */}
         {categories.length > 0 && (
           <div className="rounded-xl border border-white/[0.08] bg-[#18181b] p-5 space-y-3 shadow-sm">
-            <Label className="text-sm font-semibold text-white">Categories</Label>
+            <Label className="text-sm font-semibold text-white">Store Categories</Label>
             <div className="flex flex-wrap gap-2">
               {categories.map((cat) => {
                 const selected = selectedCategoryIds.includes(cat.id);
@@ -672,8 +807,8 @@ export function ProductForm({ product, brands, categories }: Props) {
         <div className="pt-2">
           <Button
             onClick={handleSave}
-            disabled={loading || !title.trim() || !slug.trim()}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-sm disabled:opacity-50"
+            disabled={loading || !title.trim()}
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-sm disabled:opacity-50 h-11"
           >
             {loading ? (
               <>
@@ -683,7 +818,7 @@ export function ProductForm({ product, brands, categories }: Props) {
             ) : isEditing ? (
               "Save Changes"
             ) : (
-              "Create Product"
+              "Save Product"
             )}
           </Button>
 
