@@ -75,7 +75,7 @@ export default async function ProductsPage() {
             <tbody className="divide-y divide-white/[0.04]">
               {products.map((product: any) => {
                 const totalStock = product.variants.reduce(
-                  (sum, v) => sum + v.inventoryQty,
+                  (sum: number, v: any) => sum + v.inventoryQty,
                   0
                 );
                 const minPrice =
