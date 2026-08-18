@@ -32,15 +32,23 @@ export function MediaManager({ productId, productTitle, initialMedia }: Props) {
     setIsUploading(true);
 
     try {
-      // Get signed URL params
-      const res = await fetch(`/api/media/upload-url?folder=products`);
-      if (!res.ok) throw new Error("Failed to get upload signature");
-      const signatureParams = await res.json();
+      // 1. Get signed URL params
+      let signatureParams;
+      try {
+        const res = await fetch(`/api/media/upload-url?folder=products`);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(`Failed to get upload signature: ${errData?.error || res.statusText}`);
+        }
+        signatureParams = await res.json();
+      } catch (err) {
+        throw new Error(`Step 1 (Signature) failed: ${err instanceof Error ? err.message : 'Unknown'}`);
+      }
 
       const uploadedMedia: Media[] = [];
 
       for (const file of files) {
-        // Upload to Cloudinary
+        // 2. Upload to Cloudinary
         const formData = new FormData();
         formData.append("file", file);
         formData.append("api_key", signatureParams.apiKey);
@@ -51,36 +59,47 @@ export function MediaManager({ productId, productTitle, initialMedia }: Props) {
           formData.append("eager", signatureParams.eager);
         }
 
-        const uploadRes = await fetch(
-          `https://api.cloudinary.com/v1_1/${signatureParams.cloudName}/image/upload`,
-          {
-            method: "POST",
-            body: formData,
+        let uploadData;
+        try {
+          const uploadRes = await fetch(
+            `https://api.cloudinary.com/v1_1/${signatureParams.cloudName}/image/upload`,
+            {
+              method: "POST",
+              body: formData,
+            }
+          );
+
+          if (!uploadRes.ok) {
+            const errData = await uploadRes.json().catch(() => ({}));
+            throw new Error(`Cloudinary Error: ${errData?.error?.message || uploadRes.statusText}`);
           }
-        );
-
-        if (!uploadRes.ok) {
-          const errData = await uploadRes.json().catch(() => ({}));
-          throw new Error(`Cloudinary Error: ${errData?.error?.message || uploadRes.statusText}`);
+          uploadData = await uploadRes.json();
+        } catch (err) {
+          throw new Error(`Step 2 (Cloudinary Upload) failed: ${err instanceof Error ? err.message : 'Unknown'}`);
         }
-        const uploadData = await uploadRes.json();
 
-        // Confirm upload with our API
-        const confirmRes = await fetch("/api/media/confirm", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            cloudinaryId: uploadData.public_id,
-            url: uploadData.secure_url,
-            productId,
-          }),
-        });
+        // 3. Confirm upload with our API
+        let confirmedMedia;
+        try {
+          const confirmRes = await fetch("/api/media/confirm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              cloudinaryId: uploadData.public_id,
+              url: uploadData.secure_url,
+              productId,
+            }),
+          });
 
-        if (!confirmRes.ok) {
-          const errData = await confirmRes.json().catch(() => ({}));
-          throw new Error(`API Error: ${errData?.error || confirmRes.statusText}`);
+          if (!confirmRes.ok) {
+            const errData = await confirmRes.json().catch(() => ({}));
+            throw new Error(`API Error: ${errData?.error || confirmRes.statusText}`);
+          }
+          confirmedMedia = await confirmRes.json();
+        } catch (err) {
+          throw new Error(`Step 3 (API Confirm) failed: ${err instanceof Error ? err.message : 'Unknown'}`);
         }
-        const confirmedMedia = await confirmRes.json();
+        
         uploadedMedia.push(confirmedMedia);
       }
 
