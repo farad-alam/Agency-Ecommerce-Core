@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         hostname: "res.cloudinary.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
+      },
     ],
   },
   experimental: {
@@ -18,7 +23,7 @@ const nextConfig: NextConfig = {
       default-src 'self';
       script-src 'self' 'unsafe-eval' 'unsafe-inline';
       style-src 'self' 'unsafe-inline';
-      img-src 'self' blob: data: https://res.cloudinary.com;
+      img-src 'self' blob: data: https://res.cloudinary.com https://images.unsplash.com;
       font-src 'self';
       object-src 'none';
       base-uri 'self';
