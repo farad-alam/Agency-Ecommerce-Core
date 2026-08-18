@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useTransition } from "react";
+import { useState, useRef, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { UploadCloud, X, Loader2, Image as ImageIcon, ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -20,6 +20,10 @@ export function MediaManager({ productId, productTitle, initialMedia }: Props) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setMedia(initialMedia);
+  }, [initialMedia]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -55,7 +59,10 @@ export function MediaManager({ productId, productTitle, initialMedia }: Props) {
           }
         );
 
-        if (!uploadRes.ok) throw new Error("Upload to Cloudinary failed");
+        if (!uploadRes.ok) {
+          const errData = await uploadRes.json().catch(() => ({}));
+          throw new Error(`Cloudinary Error: ${errData?.error?.message || uploadRes.statusText}`);
+        }
         const uploadData = await uploadRes.json();
 
         // Confirm upload with our API
@@ -69,7 +76,10 @@ export function MediaManager({ productId, productTitle, initialMedia }: Props) {
           }),
         });
 
-        if (!confirmRes.ok) throw new Error("Failed to confirm upload");
+        if (!confirmRes.ok) {
+          const errData = await confirmRes.json().catch(() => ({}));
+          throw new Error(`API Error: ${errData?.error || confirmRes.statusText}`);
+        }
         const confirmedMedia = await confirmRes.json();
         uploadedMedia.push(confirmedMedia);
       }

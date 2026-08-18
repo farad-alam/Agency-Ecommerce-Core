@@ -123,6 +123,6 @@ export const confirmMediaSchema = z.object({
   cloudinaryId: z.string().min(1),
   url: z.string().url(),
   alt: z.string().max(255).optional(),
-  productId: z.string().cuid().optional(),
+  productId: z.string().min(1).optional(),
   position: z.number().int().min(0).optional(),
 });
