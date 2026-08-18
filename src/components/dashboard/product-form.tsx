@@ -2,63 +2,21 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Plus, Trash2, X, Image as ImageIcon, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Plus, Trash2, X, ImageIcon, RotateCcw, ChevronDown, ChevronUp, ArrowLeft } from "lucide-react";
 import type { Brand, Category } from "@prisma/client";
 import type { ProductFull } from "@/app/(dashboard)/dashboard/products/[id]/page";
 import { toast } from "sonner";
 import Link from "next/link";
 import { storeConfig } from "@/config/store.config";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 interface Props {
   product?: ProductFull;
   brands: Brand[];
   categories: Category[];
-}
-
-function slugify(text: string) {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-// Auto-SKU Generator
-function generateSku(title: string, options: VariantOption[]): string {
-  if (!title) return "";
-  
-  // 1. Get initials from title (e.g., "Classic Cotton Tee" -> "CCT")
-  const titleInitials = title
-    .split(/\s+/)
-    .filter(word => word.length > 0)
-    .map(word => word[0].toUpperCase())
-    .join("")
-    .slice(0, 5); // Keep it reasonably short
-    
-  // 2. Get option values (e.g., "XL", "Blue" -> "XL-BLU")
-  const optionValues = options
-    .map(opt => opt.value.trim())
-    .filter(val => val.length > 0)
-    .map(val => val.toUpperCase().replace(/\s+/g, "").slice(0, 4)) // Abbreviate options
-    .join("-");
-    
-  if (optionValues) {
-    return `${titleInitials}-${optionValues}`;
-  }
-  
-  return titleInitials ? `${titleInitials}-001` : "";
 }
 
 interface VariantOption {
@@ -75,54 +33,136 @@ interface VariantState {
   weightGrams: string;
   barcode: string;
   options: VariantOption[];
-  mediaUrl?: string | null;
-  skuLocked: boolean; // Track if user manually edited the SKU
+  skuLocked: boolean;
 }
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function generateSku(title: string, options: VariantOption[]): string {
+  if (!title) return "";
+  const initials = title
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w[0].toUpperCase())
+    .join("")
+    .slice(0, 5);
+  const optVals = options
+    .map((o) => o.value.trim())
+    .filter(Boolean)
+    .map((v) => v.toUpperCase().replace(/\s+/g, "").slice(0, 4))
+    .join("-");
+  return optVals ? `${initials}-${optVals}` : `${initials}-001`;
+}
+
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  BDT: "৳", USD: "$", EUR: "€", GBP: "£", INR: "₹",
+};
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function RequiredDot() {
+  return (
+    <span
+      className="inline-block w-1.5 h-1.5 rounded-full bg-rose-400 ml-1 align-middle"
+      title="Required"
+    />
+  );
+}
+
+function FieldLabel({
+  children,
+  required,
+  hint,
+}: {
+  children: React.ReactNode;
+  required?: boolean;
+  hint?: string;
+}) {
+  return (
+    <div className="mb-1.5">
+      <label className="block text-[13px] font-medium text-zinc-200">
+        {children}
+        {required && <RequiredDot />}
+      </label>
+      {hint && <p className="text-[11px] text-zinc-500 mt-0.5">{hint}</p>}
+    </div>
+  );
+}
+
+function PriceInput({
+  value,
+  onChange,
+  placeholder,
+  symbol,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  symbol: string;
+}) {
+  return (
+    <div className="relative">
+      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-sm font-medium pointer-events-none">
+        {symbol}
+      </span>
+      <input
+        type="number"
+        min={0}
+        step="0.01"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full h-12 pl-8 pr-4 rounded-xl border border-white/[0.09] bg-[#111113] text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition"
+      />
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 export function ProductForm({ product, brands, categories }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [saving, setSaving] = useState(false);
+  const [savingAs, setSavingAs] = useState<"DRAFT" | "ACTIVE" | "ARCHIVED" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const isEditing = !!product;
+  const currencySymbol = CURRENCY_SYMBOLS[storeConfig.currency] ?? "$";
 
+  // ─── Form State ─────────────────────────────────────────────────────────────
   const [title, setTitle] = useState(product?.title ?? "");
   const [slug, setSlug] = useState(product?.slug ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
   const [status, setStatus] = useState<"DRAFT" | "ACTIVE" | "ARCHIVED">(
     (product?.status as "DRAFT" | "ACTIVE" | "ARCHIVED") ?? "DRAFT"
   );
-  
   const [brandId, setBrandId] = useState(product?.brandId ?? "none");
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
     product?.categories.map((c) => c.categoryId) ?? []
   );
-
-  // Determine if it's a simple product (no variants/options)
-  const [isSimpleProduct, setIsSimpleProduct] = useState(
-    !product || (product.variants.length === 1 && Object.keys(product.variants[0].options as object || {}).length === 0)
+  const [showVariants, setShowVariants] = useState(
+    !!product && product.variants.length > 1
   );
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const [showAdvancedSEO, setShowAdvancedSEO] = useState(false);
-  const [showAdvancedVariantConfig, setShowAdvancedVariantConfig] = useState(false);
-
-  // Initialize variants state
+  // ─── Variant State ───────────────────────────────────────────────────────────
   const [variants, setVariants] = useState<VariantState[]>(
     product?.variants.map((v) => {
       const optsArray: VariantOption[] = [];
       if (v.options && typeof v.options === "object") {
-        Object.entries(v.options as Record<string, string>).forEach(([k, val]) => {
-          optsArray.push({ key: k, value: val });
-        });
+        Object.entries(v.options as Record<string, string>).forEach(([k, val]) =>
+          optsArray.push({ key: k, value: val })
+        );
       }
-      if (optsArray.length === 0) {
-        optsArray.push({ key: "", value: "" }); // default empty row
-      }
-
-      // Variant media is not fetched in the current query
-      const mediaUrl = undefined;
-
+      if (!optsArray.length) optsArray.push({ key: "", value: "" });
       return {
         id: v.id,
         sku: v.sku,
@@ -132,67 +172,53 @@ export function ProductForm({ product, brands, categories }: Props) {
         weightGrams: v.weightGrams ? String(v.weightGrams) : "",
         barcode: v.barcode || "",
         options: optsArray,
-        mediaUrl,
-        skuLocked: true, // Existing variants are locked by default
+        skuLocked: true,
       };
     }) ?? [
-      {
-        sku: "",
-        price: "",
-        compareAtPrice: "",
-        inventoryQty: "0",
-        weightGrams: "",
-        barcode: "",
-        options: [{ key: "", value: "" }],
-        skuLocked: false,
-      },
+      { sku: "", price: "", compareAtPrice: "", inventoryQty: "0", weightGrams: "", barcode: "", options: [{ key: "", value: "" }], skuLocked: false },
     ]
   );
 
-  // SEO state
-  const [metaTitle, setMetaTitle] = useState(product?.seo?.metaTitle ?? "");
-  const [metaDescription, setMetaDescription] = useState(product?.seo?.metaDescription ?? "");
-
-  // Auto-generate SKUs when Title changes
+  // ─── Auto-generate SKU on title change ──────────────────────────────────────
   useEffect(() => {
-    if (isSimpleProduct && title) {
-      setVariants(prev => prev.map(v => {
-        if (!v.skuLocked && !v.id) {
-          return { ...v, sku: generateSku(title, []) };
-        }
-        return v;
-      }));
-    }
-  }, [title, isSimpleProduct]);
+    if (!title) return;
+    setVariants((prev) =>
+      prev.map((v) =>
+        !v.skuLocked && !v.id ? { ...v, sku: generateSku(title, showVariants ? v.options : []) } : v
+      )
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title]);
 
+  // ─── Handlers ───────────────────────────────────────────────────────────────
   function handleTitleChange(val: string) {
     setTitle(val);
     if (!isEditing) setSlug(slugify(val));
-    if (!metaTitle || metaTitle === product?.title) {
-      setMetaTitle(val.slice(0, 70));
-    }
   }
 
-  function handleDescriptionChange(val: string) {
-    setDescription(val);
-    if (!metaDescription || metaDescription === product?.description?.slice(0, 160)) {
-      setMetaDescription(val.replace(/(<([^>]+)>)/gi, "").slice(0, 160));
-    }
+  function updateVariant(i: number, field: keyof VariantState, value: string | VariantOption[] | boolean) {
+    setVariants((prev) =>
+      prev.map((v, idx) => {
+        if (idx !== i) return v;
+        const updated = { ...v, [field]: value };
+        if (field === "sku") updated.skuLocked = true;
+        return updated;
+      })
+    );
+  }
+
+  function resetSku(i: number) {
+    setVariants((prev) =>
+      prev.map((v, idx) =>
+        idx === i ? { ...v, sku: generateSku(title, showVariants ? v.options : []), skuLocked: false } : v
+      )
+    );
   }
 
   function addVariantRow() {
     setVariants((prev) => [
       ...prev,
-      {
-        sku: generateSku(title, [{ key: "", value: "" }]),
-        price: prev[0]?.price || "",
-        compareAtPrice: prev[0]?.compareAtPrice || "",
-        inventoryQty: "0",
-        weightGrams: "",
-        barcode: "",
-        options: [{ key: "", value: "" }],
-        skuLocked: false,
-      },
+      { sku: generateSku(title, []), price: prev[0]?.price || "", compareAtPrice: "", inventoryQty: "0", weightGrams: "", barcode: "", options: [{ key: "", value: "" }], skuLocked: false },
     ]);
   }
 
@@ -200,79 +226,33 @@ export function ProductForm({ product, brands, categories }: Props) {
     setVariants((prev) => prev.filter((_, idx) => idx !== i));
   }
 
-  function updateVariantField(i: number, field: keyof VariantState, value: any) {
-    setVariants((prev) =>
-      prev.map((v, idx) => {
-        if (idx !== i) return v;
-        
-        const updated = { ...v, [field]: value };
-        
-        // If user manually types SKU, lock it
-        if (field === 'sku') {
-           updated.skuLocked = true;
-        }
-        
-        return updated;
-      })
-    );
-  }
-  
-  function resetSku(i: number) {
-    setVariants(prev => prev.map((v, idx) => {
-      if (idx !== i) return v;
-      return { 
-        ...v, 
-        sku: generateSku(title, isSimpleProduct ? [] : v.options), 
-        skuLocked: false 
-      };
-    }));
+  function updateOption(vi: number, oi: number, field: "key" | "value", val: string) {
+    const variant = variants[vi];
+    const newOpts = variant.options.map((o, idx) => idx === oi ? { ...o, [field]: val } : o);
+    const updated = { ...variant, options: newOpts };
+    if (!variant.skuLocked && !variant.id) updated.sku = generateSku(title, newOpts);
+    setVariants((prev) => prev.map((v, idx) => idx === vi ? updated : v));
   }
 
-  function addOptionRow(variantIndex: number) {
-    const variant = variants[variantIndex];
-    updateVariantField(variantIndex, "options", [
-      ...variant.options,
-      { key: "", value: "" },
-    ]);
+  function addOption(vi: number) {
+    const opts = [...variants[vi].options, { key: "", value: "" }];
+    updateVariant(vi, "options", opts);
   }
 
-  function removeOptionRow(variantIndex: number, optionIndex: number) {
-    const variant = variants[variantIndex];
-    const newOptions = variant.options.filter((_, idx) => idx !== optionIndex);
-    updateVariantField(variantIndex, "options", newOptions);
-    
-    // Auto-update SKU if not locked
-    if (!variant.skuLocked && !variant.id) {
-       updateVariantField(variantIndex, "sku", generateSku(title, newOptions));
-    }
+  function removeOption(vi: number, oi: number) {
+    const opts = variants[vi].options.filter((_, idx) => idx !== oi);
+    updateVariant(vi, "options", opts);
   }
 
-  function updateOptionField(
-    variantIndex: number,
-    optionIndex: number,
-    field: "key" | "value",
-    value: string
-  ) {
-    const variant = variants[variantIndex];
-    const newOptions = variant.options.map((opt, idx) =>
-      idx === optionIndex ? { ...opt, [field]: value } : opt
-    );
-    updateVariantField(variantIndex, "options", newOptions);
-    
-    // Auto-update SKU if not locked
-    if (!variant.skuLocked && !variant.id) {
-       updateVariantField(variantIndex, "sku", generateSku(title, newOptions));
-    }
-  }
-
-  async function handleSave() {
+  // ─── Save ────────────────────────────────────────────────────────────────────
+  async function handleSave(saveStatus: "DRAFT" | "ACTIVE" | "ARCHIVED") {
     setError(null);
-    setSaving(true);
+    setSavingAs(saveStatus);
 
-    const hasValidVariant = variants.some((v) => v.sku.trim() !== "");
+    const hasValidVariant = variants.some((v) => v.sku.trim());
     if (!hasValidVariant) {
-      setError("Please ensure your product has an automatically generated or custom SKU.");
-      setSaving(false);
+      setError("At least one variant with a valid SKU is required.");
+      setSavingAs(null);
       return;
     }
 
@@ -281,7 +261,7 @@ export function ProductForm({ product, brands, categories }: Props) {
         title: title.trim(),
         slug: slug.trim(),
         description: description.trim() || undefined,
-        status,
+        status: isEditing ? status : (saveStatus === "ARCHIVED" ? "DRAFT" : saveStatus),
         brandId: brandId === "none" ? null : brandId,
         categoryIds: selectedCategoryIds,
       };
@@ -292,32 +272,27 @@ export function ProductForm({ product, brands, categories }: Props) {
         const res = await fetch(`/api/products/${product!.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
+          body: JSON.stringify({ ...body, status }),
         });
-        if (!res.ok) throw new Error((await res.json()).error ?? "Failed to update product");
+        if (!res.ok) throw new Error((await res.json()).error ?? "Update failed");
       } else {
         const res = await fetch("/api/products", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        if (!res.ok) throw new Error((await res.json()).error ?? "Failed to create product");
+        if (!res.ok) throw new Error((await res.json()).error ?? "Create failed");
         productId = (await res.json()).id;
       }
 
       for (const variant of variants) {
         if (!variant.sku.trim()) continue;
-
-        // If simple product, don't save options
-        let optionsObj = {};
-        if (!isSimpleProduct) {
-          optionsObj = variant.options.reduce((acc, curr) => {
-            if (curr.key.trim() && curr.value.trim()) {
-              acc[curr.key.trim()] = curr.value.trim();
-            }
-            return acc;
-          }, {} as Record<string, string>);
-        }
+        const optionsObj = showVariants
+          ? variant.options.reduce((acc, o) => {
+              if (o.key.trim() && o.value.trim()) acc[o.key.trim()] = o.value.trim();
+              return acc;
+            }, {} as Record<string, string>)
+          : {};
 
         const payload = {
           sku: variant.sku.trim(),
@@ -344,6 +319,9 @@ export function ProductForm({ product, brands, categories }: Props) {
         }
       }
 
+      // Auto-inherit SEO from title/description
+      const metaTitle = title.trim().slice(0, 70);
+      const metaDescription = description.trim().replace(/(<([^>]+)>)/gi, "").slice(0, 160);
       if (metaTitle || metaDescription) {
         await fetch(`/api/products/${productId}/seo`, {
           method: "POST",
@@ -352,219 +330,492 @@ export function ProductForm({ product, brands, categories }: Props) {
         });
       }
 
-      toast.success(isEditing ? "Product saved successfully!" : "Product created! You can now add images.");
+      toast.success(
+        isEditing
+          ? "Product saved!"
+          : saveStatus === "ACTIVE"
+          ? "Product published to your store!"
+          : "Draft saved. You can publish it later."
+      );
 
       startTransition(() => {
-        if (!isEditing) {
-          router.push(`/dashboard/products/${productId}`);
-        }
+        if (!isEditing) router.push(`/dashboard/products/${productId}`);
         router.refresh();
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
-      setSaving(false);
+      setSavingAs(null);
     }
   }
 
-  const loading = saving || isPending;
-  const currencySymbol = storeConfig.currency === "BDT" ? "৳" : storeConfig.currency === "EUR" ? "€" : storeConfig.currency === "GBP" ? "£" : "$";
+  const isSaving = !!savingAs || isPending;
 
+  // ─── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      {/* Main content */}
-      <div className="space-y-5 lg:col-span-2">
-        <Tabs defaultValue="details" className="w-full">
-          <TabsList className="border border-white/[0.08] bg-[#18181b] mb-4">
-            <TabsTrigger value="details" className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300">Basic Info</TabsTrigger>
-            <TabsTrigger value="variants" className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300">Pricing & Inventory</TabsTrigger>
-            <TabsTrigger value="seo" className="data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300">Google SEO</TabsTrigger>
-          </TabsList>
+    <div className="min-h-screen bg-[#0f0f10]">
+      {/* ─── Top Header Bar ─────────────────────────────────────────────────── */}
+      <div className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 border-b border-white/[0.07] bg-[#0f0f10]/95 backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/products"
+            className="flex items-center justify-center h-8 w-8 rounded-lg border border-white/[0.09] bg-white/[0.04] text-zinc-400 hover:text-white hover:bg-white/[0.08] transition"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <div>
+            <h1 className="text-sm font-semibold text-white leading-none">
+              {isEditing ? product.title : "Add New Product"}
+            </h1>
+            <p className="text-[11px] text-zinc-500 mt-0.5">
+              {isEditing
+                ? `Last updated ${product.updatedAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+                : "Fill in the details below"}
+            </p>
+          </div>
+        </div>
 
-          {/* Details tab */}
-          <TabsContent value="details" className="space-y-4">
-            <div className="rounded-xl border border-white/[0.08] bg-[#18181b] p-6 space-y-5 shadow-sm">
-              {error && (
-                <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-                  {error}
-                </div>
-              )}
+        <div className="flex items-center gap-2">
+          {error && (
+            <p className="text-xs text-rose-400 max-w-xs truncate">{error}</p>
+          )}
+          {isEditing ? (
+            <>
+              <button
+                onClick={() => router.push("/dashboard/products")}
+                className="h-9 px-4 rounded-xl border border-white/[0.09] text-sm text-zinc-400 hover:text-white hover:bg-white/[0.04] transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleSave(status)}
+                disabled={isSaving || !title.trim()}
+                className="h-9 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-sm font-medium text-white flex items-center gap-2 transition"
+              >
+                {isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                Save Changes
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => handleSave("DRAFT")}
+                disabled={isSaving || !title.trim()}
+                className="h-9 px-4 rounded-xl border border-white/[0.09] bg-white/[0.02] text-sm text-zinc-300 hover:bg-white/[0.06] disabled:opacity-50 flex items-center gap-2 transition"
+              >
+                {savingAs === "DRAFT" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                Save Draft
+              </button>
+              <button
+                onClick={() => handleSave("ACTIVE")}
+                disabled={isSaving || !title.trim()}
+                className="h-9 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-sm font-medium text-white flex items-center gap-2 transition"
+              >
+                {savingAs === "ACTIVE" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                ● Publish
+              </button>
+            </>
+          )}
+        </div>
+      </div>
 
-              <div className="space-y-2">
-                <Label className="text-zinc-300">Product Name</Label>
-                <Input
-                  value={title}
-                  onChange={(e) => handleTitleChange(e.target.value)}
-                  placeholder="e.g. Classic Cotton Tee, Vanilla Scented Candle"
-                  className="border-white/[0.12] bg-black/20 text-white placeholder:text-zinc-600 focus-visible:ring-indigo-500"
-                />
+      {/* ─── Body ─────────────────────────────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-6">
+
+          {/* ── Left Panel: Media & Visibility ──────────────────────────────── */}
+          <div className="space-y-4">
+
+            {/* Cover Image */}
+            <div className="rounded-2xl border border-white/[0.07] bg-[#1a1a1d] overflow-hidden">
+              <div className="p-5 border-b border-white/[0.06]">
+                <h2 className="text-sm font-semibold text-white">Product Images</h2>
+                <p className="text-[11px] text-zinc-500 mt-0.5">The first image becomes the cover photo</p>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-zinc-300">Description</Label>
-                <Textarea
-                  value={description}
-                  onChange={(e) => handleDescriptionChange(e.target.value)}
-                  placeholder="Describe what makes this product special. What is it made of? Who is it for?"
-                  rows={6}
-                  className="border-white/[0.12] bg-black/20 text-white placeholder:text-zinc-600 focus-visible:ring-indigo-500"
-                />
-              </div>
-
-              {/* Advanced SEO Toggle */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setShowAdvancedSEO(!showAdvancedSEO)}
-                  className="flex items-center gap-1.5 text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
-                >
-                  {showAdvancedSEO ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  {showAdvancedSEO ? "Hide Advanced Settings" : "Show Advanced Settings (URL Slug)"}
-                </button>
-                
-                {showAdvancedSEO && (
-                  <div className="mt-4 p-4 rounded-lg bg-black/20 border border-white/[0.04] space-y-2">
-                    <Label className="text-zinc-400">Website URL Slug (Auto-generated)</Label>
-                    <Input
-                      value={slug}
-                      onChange={(e) => setSlug(e.target.value)}
-                      placeholder="classic-cotton-tee"
-                      className="border-white/[0.08] bg-black/40 font-mono text-sm text-zinc-400 focus-visible:ring-indigo-500"
-                    />
-                    <p className="text-xs text-zinc-500">Only change this if you specifically need a custom webpage link.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Media Upload Prompt / Display */}
-            <div className="rounded-xl border border-white/[0.08] bg-[#18181b] p-6 shadow-sm">
-              <Label className="mb-4 block text-zinc-300">Product Images</Label>
               {!isEditing ? (
-                <div className="rounded-lg border border-dashed border-white/[0.12] bg-black/20 p-8 text-center text-sm text-zinc-500">
-                  <ImageIcon className="mx-auto mb-2 h-6 w-6 text-zinc-600" />
-                  Create the product first to upload and manage images.
+                <div className="p-6">
+                  <div className="aspect-[4/3] rounded-xl border-2 border-dashed border-white/[0.1] bg-black/20 flex flex-col items-center justify-center gap-3 text-zinc-500 hover:border-indigo-500/40 hover:text-zinc-400 transition cursor-pointer">
+                    <div className="h-12 w-12 rounded-2xl bg-white/[0.04] flex items-center justify-center">
+                      <ImageIcon className="h-6 w-6" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-zinc-400">Add images after saving</p>
+                      <p className="text-xs text-zinc-600 mt-0.5">Create the product first, then upload photos</p>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {product?.media.length ? (
-                    <div className="flex flex-wrap gap-4">
-                      {product.media.map((m) => (
-                        <div key={m.id} className="relative h-28 w-28 overflow-hidden rounded-lg border border-white/[0.12] bg-black/40">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={m.url} alt={m.alt ?? ""} className="h-full w-full object-cover" />
+                <div className="p-6 space-y-4">
+                  {product.media.length > 0 ? (
+                    <>
+                      {/* Cover image */}
+                      <div className="aspect-[4/3] rounded-xl overflow-hidden bg-black/40 relative group">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={product.media[0].url}
+                          alt={product.media[0].alt ?? product.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                          <span className="text-xs text-white font-medium bg-black/60 px-3 py-1.5 rounded-lg">Cover Photo</span>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                      {/* Thumbnails */}
+                      {product.media.length > 1 && (
+                        <div className="grid grid-cols-4 gap-2">
+                          {product.media.slice(1, 4).map((m) => (
+                            <div key={m.id} className="aspect-square rounded-lg overflow-hidden bg-black/40">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={m.url} alt={m.alt ?? ""} className="w-full h-full object-cover" />
+                            </div>
+                          ))}
+                          <Link
+                            href={`/dashboard/products/${product.id}/media`}
+                            className="aspect-square rounded-lg border-2 border-dashed border-white/[0.1] bg-black/20 flex items-center justify-center text-zinc-600 hover:text-zinc-400 hover:border-indigo-500/40 transition"
+                          >
+                            <Plus className="h-5 w-5" />
+                          </Link>
+                        </div>
+                      )}
+                    </>
                   ) : (
-                    <div className="rounded-lg border border-dashed border-white/[0.12] bg-black/20 p-8 text-center text-sm text-zinc-500">
-                      No images uploaded yet.
+                    <div className="aspect-[4/3] rounded-xl border-2 border-dashed border-white/[0.1] bg-black/20 flex flex-col items-center justify-center gap-3 text-zinc-500">
+                      <ImageIcon className="h-8 w-8" />
+                      <p className="text-sm">No images yet</p>
                     </div>
                   )}
-                  <Link 
-                    href={`/dashboard/products/${product.id}/media`} 
-                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 h-9 px-4 py-2 w-full"
+                  <Link
+                    href={`/dashboard/products/${product.id}/media`}
+                    className="flex items-center justify-center gap-2 w-full h-10 rounded-xl border border-white/[0.09] bg-white/[0.02] text-sm text-zinc-300 hover:bg-white/[0.06] transition"
                   >
-                    <ImageIcon className="mr-2 h-4 w-4" />
+                    <ImageIcon className="h-4 w-4" />
                     Manage Images
                   </Link>
                 </div>
               )}
             </div>
-          </TabsContent>
 
-          {/* Variants / Pricing tab */}
-          <TabsContent value="variants" className="space-y-4">
-            <div className="rounded-xl border border-white/[0.08] bg-[#18181b] p-6 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/[0.08] pb-4 mb-6 gap-4">
-                <div>
-                  <h3 className="text-base font-medium text-white">Pricing & Inventory</h3>
-                  <p className="text-xs text-zinc-400 mt-1">Set prices and track stock levels.</p>
+            {/* Visibility */}
+            <div className="rounded-2xl border border-white/[0.07] bg-[#1a1a1d] p-5">
+              <h2 className="text-sm font-semibold text-white">Visibility</h2>
+              <p className="text-[11px] text-zinc-500 mt-0.5 mb-4">Control whether customers can see this product</p>
+
+              {isEditing ? (
+                <div className="flex rounded-xl border border-white/[0.09] bg-black/20 p-1 gap-1">
+                  {(["ACTIVE", "DRAFT", "ARCHIVED"] as const).map((s) => {
+                    const labels: Record<string, string> = { ACTIVE: "● Live", DRAFT: "Hidden", ARCHIVED: "Archived" };
+                    return (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setStatus(s)}
+                        className={`flex-1 py-2 rounded-lg text-xs font-medium transition ${
+                          status === s
+                            ? s === "ACTIVE"
+                              ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                              : "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+                            : "text-zinc-500 hover:text-zinc-300"
+                        }`}
+                      >
+                        {labels[s]}
+                      </button>
+                    );
+                  })}
                 </div>
-                
-                <div className="flex items-center gap-3 p-1 rounded-lg bg-black/40 border border-white/[0.08]">
+              ) : (
+                <div className="flex rounded-xl border border-white/[0.09] bg-black/20 p-1 gap-1">
+                  <div className="flex-1 py-2 rounded-lg text-xs font-medium text-center text-zinc-500 border border-transparent">
+                    ○ Hidden
+                  </div>
+                  <div className="flex-1 py-2 rounded-lg text-xs font-medium text-center bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                    ● Published
+                  </div>
+                </div>
+              )}
+              <p className="text-[11px] text-zinc-600 mt-3">
+                {isEditing
+                  ? status === "ACTIVE" ? "This product is live and visible to customers." : "This product is currently hidden from customers."
+                  : "Use the buttons above to choose Draft or Publish when saving."}
+              </p>
+            </div>
+          </div>
+
+          {/* ── Right Panel: Product Details ─────────────────────────────────── */}
+          <div className="space-y-4">
+
+            {/* Product Details Card */}
+            <div className="rounded-2xl border border-white/[0.07] bg-[#1a1a1d] overflow-hidden">
+              {/* Panel Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+                <div>
+                  <h2 className="text-sm font-semibold text-white">Product Details</h2>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">Key info to describe and display your product</p>
+                </div>
+                {/* General / Advanced toggle */}
+                <div className="flex rounded-lg border border-white/[0.09] bg-black/20 p-0.5 gap-0.5">
                   <button
                     type="button"
-                    onClick={() => setIsSimpleProduct(true)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${isSimpleProduct ? 'bg-indigo-500/20 text-indigo-300' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    onClick={() => setShowAdvanced(false)}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition ${!showAdvanced ? "bg-white/[0.08] text-white" : "text-zinc-500 hover:text-zinc-300"}`}
                   >
-                    Simple Product
+                    General
                   </button>
                   <button
                     type="button"
-                    onClick={() => setIsSimpleProduct(false)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${!isSimpleProduct ? 'bg-indigo-500/20 text-indigo-300' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    onClick={() => setShowAdvanced(true)}
+                    className={`px-3 py-1 rounded-md text-xs font-medium transition ${showAdvanced ? "bg-white/[0.08] text-white" : "text-zinc-500 hover:text-zinc-300"}`}
                   >
-                    Product with Options
+                    Advanced
                   </button>
                 </div>
               </div>
 
-              {!isSimpleProduct && (
-                <div className="flex justify-end mb-4">
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={addVariantRow}
-                    className="bg-zinc-800 text-white hover:bg-zinc-700 border border-white/[0.12]"
-                  >
-                    <Plus className="mr-1.5 h-4 w-4" />
-                    Add Another Variation
-                  </Button>
-                </div>
-              )}
+              <div className="p-6 space-y-5">
+                {error && (
+                  <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-400">
+                    {error}
+                  </div>
+                )}
 
-              <div className="space-y-6">
-                {(isSimpleProduct ? [variants[0]] : variants).map((v, i) => (
-                  <div key={v.id || i} className={`relative rounded-lg border ${!isSimpleProduct ? 'border-white/[0.12] bg-black/20 p-5' : 'border-transparent'}`}>
-                    
-                    {!isSimpleProduct && !v.id && variants.length > 1 && (
+                {!showAdvanced ? (
+                  <>
+                    {/* Product Name */}
+                    <div>
+                      <FieldLabel required hint="This is what customers will see on your store">Product Name</FieldLabel>
+                      <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => handleTitleChange(e.target.value)}
+                        placeholder="e.g. Classic Cotton Tee, Vanilla Scented Candle"
+                        className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition"
+                      />
+                    </div>
+
+                    {/* Brand + Category */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <FieldLabel hint="The maker or manufacturer">Brand</FieldLabel>
+                        <select
+                          value={brandId}
+                          onChange={(e) => setBrandId(e.target.value)}
+                          className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition appearance-none"
+                          style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
+                        >
+                          <option value="none">No brand</option>
+                          {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <FieldLabel hint="Click to select multiple">Category</FieldLabel>
+                        <div className="flex flex-wrap gap-1.5 min-h-12 items-center px-3 py-2 rounded-xl border border-white/[0.09] bg-[#111113]">
+                          {categories.length === 0 ? (
+                            <span className="text-xs text-zinc-600">No categories</span>
+                          ) : (
+                            categories.map((cat) => {
+                              const sel = selectedCategoryIds.includes(cat.id);
+                              return (
+                                <button
+                                  key={cat.id}
+                                  type="button"
+                                  onClick={() => setSelectedCategoryIds((p) => sel ? p.filter((id) => id !== cat.id) : [...p, cat.id])}
+                                  className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition border ${sel ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/30" : "bg-white/[0.02] text-zinc-500 border-white/[0.06] hover:text-zinc-300"}`}
+                                >
+                                  {cat.name}
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Pricing */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <FieldLabel required hint="The amount customers pay">Selling Price</FieldLabel>
+                        <PriceInput
+                          value={variants[0]?.price ?? ""}
+                          onChange={(v) => updateVariant(0, "price", v)}
+                          placeholder="0.00"
+                          symbol={currencySymbol}
+                        />
+                      </div>
+                      <div>
+                        <FieldLabel hint="Leave blank if not on sale">Original Price (Was)</FieldLabel>
+                        <PriceInput
+                          value={variants[0]?.compareAtPrice ?? ""}
+                          onChange={(v) => updateVariant(0, "compareAtPrice", v)}
+                          placeholder="Leave blank if no sale"
+                          symbol={currencySymbol}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Stock */}
+                    <div>
+                      <FieldLabel required hint="How many units do you currently have available?">Stock Count</FieldLabel>
+                      <input
+                        type="number"
+                        min={0}
+                        value={variants[0]?.inventoryQty ?? "0"}
+                        onChange={(e) => updateVariant(0, "inventoryQty", e.target.value)}
+                        placeholder="e.g. 50"
+                        className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition"
+                      />
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <FieldLabel hint="Describe the product — materials, benefits, who it's for">Description</FieldLabel>
+                      <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Tell customers what makes this product special..."
+                        rows={5}
+                        className="w-full px-4 py-3 rounded-xl border border-white/[0.09] bg-[#111113] text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition resize-none"
+                      />
+                    </div>
+
+                    {/* Auto SKU display */}
+                    <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-black/20 border border-white/[0.05]">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-zinc-500">SKU:</span>
+                        <span className="font-mono text-[11px] text-zinc-300">{variants[0]?.sku || "Auto-generated when you type the name"}</span>
+                        {variants[0]?.skuLocked && <span className="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded">Custom</span>}
+                      </div>
                       <button
                         type="button"
-                        onClick={() => removeVariantRow(i)}
-                        className="absolute top-4 right-4 text-zinc-500 hover:text-red-400 transition-colors"
+                        onClick={() => resetSku(0)}
+                        className="text-[11px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <RotateCcw className="h-3 w-3" /> Regenerate
                       </button>
-                    )}
+                    </div>
 
-                    {/* Attributes/Options section - hidden for simple products */}
-                    {!isSimpleProduct && (
-                      <div className="space-y-3 pb-5 mb-5 border-b border-white/[0.08]">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-sm font-medium text-white">Product Attributes (e.g. Size, Color)</Label>
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => addOptionRow(i)}
-                            className="h-7 px-2 text-xs text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10"
-                          >
-                            <Plus className="h-3 w-3 mr-1" /> Add Attribute
-                          </Button>
+                    {/* Variants toggle */}
+                    <div className="pt-2 border-t border-white/[0.06]">
+                      <button
+                        type="button"
+                        onClick={() => setShowVariants((v) => !v)}
+                        className="flex items-center gap-2 w-full text-left"
+                      >
+                        <div className={`h-5 w-5 rounded-md border flex items-center justify-center transition ${showVariants ? "bg-indigo-500 border-indigo-500" : "border-white/[0.2] bg-white/[0.02]"}`}>
+                          {showVariants && (
+                            <svg className="h-3 w-3 text-white" viewBox="0 0 12 12" fill="none">
+                              <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          )}
                         </div>
-                        
+                        <div>
+                          <p className="text-sm font-medium text-zinc-200">This product has sizes, colors, or other options</p>
+                          <p className="text-[11px] text-zinc-500">Check this if your product comes in different variations</p>
+                        </div>
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  /* ─── Advanced Panel ────────────────────────────────────────── */
+                  <div className="space-y-5">
+                    <div>
+                      <FieldLabel hint="The URL link for this product page — auto-generated from the name">URL Slug</FieldLabel>
+                      <input
+                        type="text"
+                        value={slug}
+                        onChange={(e) => setSlug(e.target.value)}
+                        placeholder="classic-cotton-tee"
+                        className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] font-mono text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition"
+                      />
+                      <p className="text-[11px] text-zinc-600 mt-1">Only change this if you need a specific web address. Changing it will break existing links.</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <FieldLabel hint="Used for shipping cost calculation">Shipping Weight (grams)</FieldLabel>
+                        <input
+                          type="number"
+                          min={0}
+                          value={variants[0]?.weightGrams ?? ""}
+                          onChange={(e) => updateVariant(0, "weightGrams", e.target.value)}
+                          placeholder="e.g. 500"
+                          className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition"
+                        />
+                      </div>
+                      <div>
+                        <FieldLabel hint="Barcode, UPC, or GTIN if you have one">Barcode</FieldLabel>
+                        <input
+                          type="text"
+                          value={variants[0]?.barcode ?? ""}
+                          onChange={(e) => updateVariant(0, "barcode", e.target.value)}
+                          placeholder="Optional"
+                          className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ── Variants Section ──────────────────────────────────────────── */}
+            {showVariants && (
+              <div className="rounded-2xl border border-white/[0.07] bg-[#1a1a1d] overflow-hidden">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+                  <div>
+                    <h2 className="text-sm font-semibold text-white">Product Variations</h2>
+                    <p className="text-[11px] text-zinc-500 mt-0.5">Each row = one variation (e.g. Size S, Size M, Size L)</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={addVariantRow}
+                    className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-white/[0.09] bg-white/[0.03] text-xs font-medium text-zinc-300 hover:bg-white/[0.07] transition"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Add Variation
+                  </button>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  {variants.map((v, vi) => (
+                    <div key={v.id || vi} className="rounded-xl border border-white/[0.07] bg-black/20 p-5 space-y-4 relative">
+                      {!v.id && variants.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeVariantRow(vi)}
+                          className="absolute top-4 right-4 text-zinc-600 hover:text-rose-400 transition"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+
+                      {/* Attributes */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <FieldLabel>Attributes (e.g. Size → Medium, Color → Blue)</FieldLabel>
+                          <button
+                            type="button"
+                            onClick={() => addOption(vi)}
+                            className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition"
+                          >
+                            <Plus className="h-3 w-3" /> Add
+                          </button>
+                        </div>
                         <div className="space-y-2">
-                          {v.options.map((opt, optIdx) => (
-                            <div key={optIdx} className="flex items-center gap-2">
-                              <Input
+                          {v.options.map((opt, oi) => (
+                            <div key={oi} className="flex items-center gap-2">
+                              <input
                                 value={opt.key}
-                                onChange={(e) => updateOptionField(i, optIdx, "key", e.target.value)}
+                                onChange={(e) => updateOption(vi, oi, "key", e.target.value)}
                                 placeholder="Attribute (e.g. Size)"
-                                className="h-9 border-white/[0.12] bg-white/[0.02] text-sm text-zinc-200"
+                                className="flex-1 h-9 px-3 rounded-lg border border-white/[0.09] bg-[#111113] text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition"
                               />
-                              <Input
+                              <input
                                 value={opt.value}
-                                onChange={(e) => updateOptionField(i, optIdx, "value", e.target.value)}
+                                onChange={(e) => updateOption(vi, oi, "value", e.target.value)}
                                 placeholder="Value (e.g. Medium)"
-                                className="h-9 border-white/[0.12] bg-white/[0.02] text-sm text-zinc-200"
+                                className="flex-1 h-9 px-3 rounded-lg border border-white/[0.09] bg-[#111113] text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition"
                               />
                               {v.options.length > 1 && (
-                                <button
-                                  type="button"
-                                  onClick={() => removeOptionRow(i, optIdx)}
-                                  className="p-1.5 text-zinc-600 hover:text-red-400 transition-colors"
-                                >
+                                <button type="button" onClick={() => removeOption(vi, oi)} className="text-zinc-600 hover:text-rose-400 transition">
                                   <X className="h-4 w-4" />
                                 </button>
                               )}
@@ -572,269 +823,46 @@ export function ProductForm({ product, brands, categories }: Props) {
                           ))}
                         </div>
                       </div>
-                    )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Selling Price</Label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-2.5 text-zinc-500 text-sm">{currencySymbol}</span>
-                          <Input
-                            value={v.price}
-                            onChange={(e) => updateVariantField(i, "price", e.target.value)}
-                            placeholder="0.00"
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            className="h-10 pl-7 border-white/[0.12] bg-white/[0.04] text-white focus-visible:ring-indigo-500"
+                      {/* Price / Stock */}
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <FieldLabel required>Price</FieldLabel>
+                          <PriceInput value={v.price} onChange={(val) => updateVariant(vi, "price", val)} placeholder="0.00" symbol={currencySymbol} />
+                        </div>
+                        <div>
+                          <FieldLabel>Original Price</FieldLabel>
+                          <PriceInput value={v.compareAtPrice} onChange={(val) => updateVariant(vi, "compareAtPrice", val)} placeholder="Was…" symbol={currencySymbol} />
+                        </div>
+                        <div>
+                          <FieldLabel required>Stock</FieldLabel>
+                          <input
+                            type="number" min={0}
+                            value={v.inventoryQty}
+                            onChange={(e) => updateVariant(vi, "inventoryQty", e.target.value)}
+                            placeholder="0"
+                            className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition"
                           />
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Original Price (Sale)</Label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-2.5 text-zinc-500 text-sm">{currencySymbol}</span>
-                          <Input
-                            value={v.compareAtPrice}
-                            onChange={(e) => updateVariantField(i, "compareAtPrice", e.target.value)}
-                            placeholder="Leave blank if no sale"
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            className="h-10 pl-7 border-white/[0.12] bg-white/[0.04] text-white focus-visible:ring-indigo-500"
-                          />
+                      {/* SKU */}
+                      <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-black/20 border border-white/[0.05]">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-zinc-500 uppercase tracking-wider">SKU</span>
+                          <span className="font-mono text-[11px] text-zinc-300">{v.sku || "Auto-generated"}</span>
+                          {v.skuLocked && <span className="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1 py-0.5 rounded">Custom</span>}
                         </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Stock Quantity</Label>
-                        <Input
-                          value={v.inventoryQty}
-                          onChange={(e) => updateVariantField(i, "inventoryQty", e.target.value)}
-                          placeholder="Items available"
-                          type="number"
-                          min={0}
-                          className="h-10 border-white/[0.12] bg-white/[0.04] text-white focus-visible:ring-indigo-500"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t border-white/[0.04]">
-                      <div className="flex items-center justify-between mb-3">
-                        <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                          Store SKU
-                          {v.skuLocked && <span className="px-1.5 py-0.5 rounded-sm bg-indigo-500/10 text-indigo-400 text-[10px] tracking-normal lowercase">Custom</span>}
-                        </Label>
-                        <button 
-                          type="button" 
-                          onClick={() => resetSku(i)}
-                          className="text-[11px] text-zinc-500 hover:text-zinc-300 flex items-center"
-                          title="Regenerate SKU automatically"
-                        >
-                          <RotateCcw className="h-3 w-3 mr-1" /> Auto-generate
+                        <button type="button" onClick={() => resetSku(vi)} className="text-[10px] text-zinc-600 hover:text-zinc-300 flex items-center gap-1 transition">
+                          <RotateCcw className="h-2.5 w-2.5" /> Reset
                         </button>
                       </div>
-                      <div className="flex gap-3">
-                        {v.mediaUrl && !isSimpleProduct && (
-                          <div className="h-9 w-9 flex-shrink-0 overflow-hidden rounded border border-white/[0.12] bg-zinc-900">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={v.mediaUrl} alt="Variant" className="h-full w-full object-cover" />
-                          </div>
-                        )}
-                        <Input
-                          value={v.sku}
-                          onChange={(e) => updateVariantField(i, "sku", e.target.value)}
-                          placeholder="Automatically generated identifier"
-                          className="h-9 border-white/[0.12] bg-black/40 font-mono text-xs text-zinc-300 focus-visible:ring-indigo-500"
-                        />
-                      </div>
                     </div>
-
-                    {/* Advanced Variant Config */}
-                    <div className="mt-4">
-                      <button
-                        type="button"
-                        onClick={() => setShowAdvancedVariantConfig(!showAdvancedVariantConfig)}
-                        className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-                      >
-                        {showAdvancedVariantConfig ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                        {showAdvancedVariantConfig ? "Hide Shipping & Barcode" : "Add Shipping Weight & Barcode"}
-                      </button>
-                      
-                      {showAdvancedVariantConfig && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3 p-4 rounded-lg bg-black/20 border border-white/[0.04]">
-                          <div className="space-y-2">
-                            <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Shipping Weight (grams)</Label>
-                            <Input
-                              value={v.weightGrams}
-                              onChange={(e) => updateVariantField(i, "weightGrams", e.target.value)}
-                              placeholder="e.g. 500"
-                              type="number"
-                              min={0}
-                              className="h-8 border-white/[0.08] bg-white/[0.02] text-sm text-zinc-300"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Barcode (UPC/GTIN)</Label>
-                            <Input
-                              value={v.barcode}
-                              onChange={(e) => updateVariantField(i, "barcode", e.target.value)}
-                              placeholder="Optional scanner code"
-                              className="h-8 border-white/[0.08] bg-white/[0.02] text-sm text-zinc-300"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          </TabsContent>
-
-          {/* SEO tab */}
-          <TabsContent value="seo" className="space-y-4">
-            <div className="rounded-xl border border-white/[0.08] bg-[#18181b] p-6 space-y-5 shadow-sm">
-              <div className="space-y-2">
-                <Label className="text-zinc-300 flex justify-between">
-                  Google Search Title
-                  <span className={`text-xs ${metaTitle.length > 70 ? 'text-red-400' : 'text-zinc-500'}`}>
-                    {metaTitle.length}/70
-                  </span>
-                </Label>
-                <Input
-                  value={metaTitle}
-                  onChange={(e) => setMetaTitle(e.target.value)}
-                  maxLength={100}
-                  placeholder="What customers see in Google results"
-                  className="border-white/[0.12] bg-black/20 text-white focus-visible:ring-indigo-500"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-zinc-300 flex justify-between">
-                  Google Search Description
-                  <span className={`text-xs ${metaDescription.length > 160 ? 'text-red-400' : 'text-zinc-500'}`}>
-                    {metaDescription.length}/160
-                  </span>
-                </Label>
-                <Textarea
-                  value={metaDescription}
-                  onChange={(e) => setMetaDescription(e.target.value)}
-                  maxLength={200}
-                  placeholder="Short summary shown under the title in Google"
-                  rows={4}
-                  className="border-white/[0.12] bg-black/20 text-white focus-visible:ring-indigo-500"
-                />
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-
-      {/* Sidebar */}
-      <div className="space-y-4">
-        {/* Status */}
-        <div className="rounded-xl border border-white/[0.08] bg-[#18181b] p-5 space-y-3 shadow-sm">
-          <Label className="text-sm font-semibold text-white">Visibility</Label>
-          <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
-            <SelectTrigger className="border-white/[0.12] bg-black/20 text-zinc-200">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="border-white/[0.12] bg-[#18181b] text-zinc-200">
-              <SelectItem value="ACTIVE">Live (Visible on store)</SelectItem>
-              <SelectItem value="DRAFT">Hidden (Draft)</SelectItem>
-              <SelectItem value="ARCHIVED">Discontinued (Archived)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Brand */}
-        {brands.length > 0 && (
-          <div className="rounded-xl border border-white/[0.08] bg-[#18181b] p-5 space-y-3 shadow-sm">
-            <Label className="text-sm font-semibold text-white">Brand / Manufacturer</Label>
-            <Select value={brandId} onValueChange={(v) => setBrandId(v || "none")}>
-              <SelectTrigger className="border-white/[0.12] bg-black/20 text-zinc-200">
-                <SelectValue placeholder="Select brand…" />
-              </SelectTrigger>
-              <SelectContent className="border-white/[0.12] bg-[#18181b] text-zinc-200">
-                <SelectItem value="none" className="text-zinc-500 italic">No brand</SelectItem>
-                {brands.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {b.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        {/* Categories */}
-        {categories.length > 0 && (
-          <div className="rounded-xl border border-white/[0.08] bg-[#18181b] p-5 space-y-3 shadow-sm">
-            <Label className="text-sm font-semibold text-white">Store Categories</Label>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => {
-                const selected = selectedCategoryIds.includes(cat.id);
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() =>
-                      setSelectedCategoryIds((prev) =>
-                        selected
-                          ? prev.filter((id) => id !== cat.id)
-                          : [...prev, cat.id]
-                      )
-                    }
-                    className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
-                      selected
-                        ? "border-indigo-500/40 bg-indigo-500/20 text-indigo-300"
-                        : "border-white/[0.12] bg-white/[0.02] text-zinc-400 hover:text-zinc-200 hover:border-white/[0.2]"
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Save button */}
-        <div className="pt-2">
-          <Button
-            onClick={handleSave}
-            disabled={loading || !title.trim()}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-sm disabled:opacity-50 h-11"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving…
-              </>
-            ) : isEditing ? (
-              "Save Changes"
-            ) : (
-              "Save Product"
             )}
-          </Button>
-
-          {isEditing && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (window.confirm("Discard unsaved changes?")) {
-                  router.push("/dashboard/products");
-                }
-              }}
-              className="w-full mt-3 border-white/[0.12] bg-transparent text-zinc-300 hover:bg-white/[0.04]"
-            >
-              Cancel
-            </Button>
-          )}
+          </div>
         </div>
       </div>
     </div>

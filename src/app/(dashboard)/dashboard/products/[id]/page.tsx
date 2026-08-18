@@ -40,20 +40,5 @@ export default async function EditProductPage({ params }: Props) {
 
   if (!product) notFound();
 
-  return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-white">{product.title}</h1>
-        <p className="text-sm text-zinc-500">
-          Last updated{" "}
-          {product.updatedAt.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </p>
-      </div>
-      <ProductForm product={product} brands={brands} categories={categories} />
-    </div>
-  );
+  return <ProductForm product={product} brands={brands} categories={categories} />;
 }
