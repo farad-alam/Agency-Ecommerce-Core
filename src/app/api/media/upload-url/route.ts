@@ -8,6 +8,11 @@ export async function GET(req: Request) {
     await requireDashboardAccess();
     const url = new URL(req.url);
     const folder = url.searchParams.get("folder") ?? "products";
+    
+    if (!process.env.CLOUDINARY_API_SECRET) {
+      throw new Error("Cloudinary API Secret is missing in environment variables.");
+    }
+    
     const params = await getSignedUploadParams(folder);
     return NextResponse.json(params);
   } catch (err) {
