@@ -2,7 +2,7 @@
 
 import { useState, useRef, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { UploadCloud, X, Loader2, Image as ImageIcon, ArrowLeft, Trash2 } from "lucide-react";
+import { UploadCloud, X, Loader2, Image as ImageIcon, ArrowLeft, Trash2, Star } from "lucide-react";
 import { toast } from "sonner";
 import type { Media } from "@prisma/client";
 import Link from "next/link";
@@ -18,6 +18,7 @@ export function MediaManager({ productId, productTitle, initialMedia }: Props) {
   const [media, setMedia] = useState<Media[]>(initialMedia);
   const [isUploading, setIsUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -139,6 +140,40 @@ export function MediaManager({ productId, productTitle, initialMedia }: Props) {
     }
   };
 
+  const handleMakeCover = async (id: string) => {
+    setUpdatingId(id);
+    
+    // Optimistically reorder locally
+    const newMedia = [...media];
+    const targetIndex = newMedia.findIndex((m) => m.id === id);
+    if (targetIndex === -1) return;
+    
+    const [targetItem] = newMedia.splice(targetIndex, 1);
+    newMedia.unshift(targetItem);
+    setMedia(newMedia);
+
+    try {
+      const res = await fetch(`/api/products/${productId}/media/reorder`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderedMediaIds: newMedia.map((m) => m.id),
+        }),
+      });
+      
+      if (!res.ok) throw new Error("Failed to reorder media");
+      
+      toast.success("Cover image updated");
+      startTransition(() => router.refresh());
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update cover");
+      // Revert on error
+      setMedia(media);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0f0f10]">
       {/* ─── Top Header Bar ─────────────────────────────────────────────────── */}
@@ -223,20 +258,40 @@ export function MediaManager({ productId, productTitle, initialMedia }: Props) {
                         </div>
                       )}
                       
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(item.id);
-                        }}
-                        disabled={deletingId === item.id}
-                        className="absolute top-2 right-2 h-8 w-8 rounded-lg bg-black/60 backdrop-blur-sm text-zinc-300 hover:text-rose-400 hover:bg-black/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all disabled:opacity-100"
-                      >
-                        {deletingId === item.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
+                      <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                        {index > 0 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMakeCover(item.id);
+                            }}
+                            disabled={updatingId === item.id}
+                            title="Make Cover Image"
+                            className="h-8 w-8 rounded-lg bg-black/60 backdrop-blur-sm text-zinc-300 hover:text-indigo-400 hover:bg-black/80 flex items-center justify-center disabled:opacity-100"
+                          >
+                            {updatingId === item.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Star className="h-4 w-4" />
+                            )}
+                          </button>
                         )}
-                      </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(item.id);
+                          }}
+                          disabled={deletingId === item.id}
+                          title="Delete Image"
+                          className="h-8 w-8 rounded-lg bg-black/60 backdrop-blur-sm text-zinc-300 hover:text-rose-400 hover:bg-black/80 flex items-center justify-center disabled:opacity-100"
+                        >
+                          {deletingId === item.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
