@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { storeConfig } from "@/config/store.config";
+import { DeleteProductButton } from "@/components/dashboard/delete-product-button";
 
 export const metadata: Metadata = { title: "Products" };
 
@@ -19,6 +20,7 @@ async function getProducts() {
     orderBy: { createdAt: "desc" },
     include: {
       brand: { select: { name: true } },
+      categories: { select: { category: { select: { name: true } } } },
       variants: { select: { price: true, inventoryQty: true } },
       media: {
         where: { position: 0 },
@@ -69,7 +71,9 @@ export default async function ProductsPage() {
                 <th className="px-4 py-3">Variants</th>
                 <th className="px-4 py-3">Stock</th>
                 <th className="px-4 py-3">Price from</th>
+                <th className="px-4 py-3">Category</th>
                 <th className="px-4 py-3">Brand</th>
+                <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.04]">
@@ -146,7 +150,15 @@ export default async function ProductsPage() {
                         : "—"}
                     </td>
                     <td className="px-4 py-3.5 text-zinc-500">
+                      {product.categories?.length > 0
+                        ? product.categories.map((c: any) => c.category.name).join(", ")
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3.5 text-zinc-500">
                       {product.brand?.name ?? "—"}
+                    </td>
+                    <td className="px-4 py-3.5 text-right">
+                      <DeleteProductButton id={product.id} title={product.title} />
                     </td>
                   </tr>
                 );
