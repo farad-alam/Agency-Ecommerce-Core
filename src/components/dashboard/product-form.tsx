@@ -220,6 +220,10 @@ export function ProductForm({ product, brands, categories }: Props) {
   const [savingAs, setSavingAs] = useState<"DRAFT" | "ACTIVE" | "ARCHIVED" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // ─── Pending files for new products ─────────────────────────────────────────
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const isEditing = !!product;
   const currencySymbol = CURRENCY_SYMBOLS[storeConfig.currency] ?? "$";
 
@@ -361,6 +365,44 @@ export function ProductForm({ product, brands, categories }: Props) {
         if (!res.ok) throw new Error(await extractApiError(res, "Create failed"));
         const created = await res.json();
         productId = created.id;
+
+        // ── 1b. Upload pending files to Cloudinary and link to product ──
+        if (pendingFiles.length > 0) {
+          try {
+            const uploadUrlRes = await fetch(`/api/media/upload-url?folder=products`);
+            if (!uploadUrlRes.ok) throw new Error("Failed to get upload signature");
+            const signatureParams = await uploadUrlRes.json();
+
+            for (const file of pendingFiles) {
+              const formData = new FormData();
+              formData.append("file", file);
+              formData.append("api_key", signatureParams.apiKey);
+              formData.append("timestamp", signatureParams.timestamp);
+              formData.append("signature", signatureParams.signature);
+              formData.append("folder", signatureParams.folder);
+
+              const uploadRes = await fetch(
+                `https://api.cloudinary.com/v1_1/${signatureParams.cloudName}/image/upload`,
+                { method: "POST", body: formData }
+              );
+              if (!uploadRes.ok) throw new Error("Cloudinary upload failed");
+              const uploadData = await uploadRes.json();
+
+              await fetch(`/api/products/${productId}/media`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  cloudinaryId: uploadData.public_id,
+                  url: uploadData.secure_url,
+                  alt: file.name,
+                }),
+              });
+            }
+          } catch (uploadErr) {
+            console.error("Image upload error:", uploadErr);
+            toast.error("Product created, but some images failed to upload.");
+          }
+        }
       }
 
       const sharedPrice = parseFloat(shared.price) || 0;
@@ -554,16 +596,73 @@ export function ProductForm({ product, brands, categories }: Props) {
                 <p className="text-[11px] text-zinc-500 mt-0.5">The first image becomes the cover photo</p>
               </div>
               {!isEditing ? (
-                <div className="p-6">
-                  <div className="aspect-[4/3] rounded-xl border-2 border-dashed border-white/[0.1] bg-black/20 flex flex-col items-center justify-center gap-3">
-                    <div className="h-12 w-12 rounded-2xl bg-white/[0.04] flex items-center justify-center">
-                      <ImageIcon className="h-6 w-6 text-zinc-500" />
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-zinc-400">Add images after saving</p>
-                      <p className="text-xs text-zinc-600 mt-0.5">Create the product first, then upload photos</p>
-                    </div>
-                  </div>
+                <div className="p-6 space-y-4">
+                  {pendingFiles.length > 0 ? (
+                    <>
+                      {/* First image is cover */}
+                      <div className="aspect-[4/3] rounded-xl overflow-hidden bg-black/40 relative group">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={URL.createObjectURL(pendingFiles[0])} alt="Cover preview" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2">
+                          <span className="text-xs text-white font-medium bg-black/60 px-3 py-1.5 rounded-lg">Cover Photo</span>
+                        </div>
+                      </div>
+                      
+                      {/* Thumbnails */}
+                      <div className="grid grid-cols-4 gap-2">
+                        {pendingFiles.slice(1).map((f, i) => (
+                          <div key={i} className="aspect-square rounded-lg overflow-hidden bg-black/40 relative group">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={URL.createObjectURL(f)} alt="Preview" className="w-full h-full object-cover" />
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="aspect-square rounded-lg border-2 border-dashed border-white/[0.1] bg-black/20 flex items-center justify-center text-zinc-600 hover:text-zinc-400 hover:border-indigo-500/40 transition"
+                        >
+                          <Plus className="h-5 w-5" />
+                        </button>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setPendingFiles([])}
+                          className="flex-1 flex items-center justify-center gap-2 h-9 rounded-xl border border-rose-500/20 bg-rose-500/10 text-xs font-medium text-rose-400 hover:bg-rose-500/20 transition"
+                        >
+                          Clear All
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full aspect-[4/3] rounded-xl border-2 border-dashed border-white/[0.1] bg-black/20 hover:border-indigo-500/40 hover:bg-indigo-500/5 transition flex flex-col items-center justify-center gap-3 cursor-pointer group"
+                    >
+                      <div className="h-12 w-12 rounded-2xl bg-white/[0.04] group-hover:bg-indigo-500/20 flex items-center justify-center transition">
+                        <Plus className="h-6 w-6 text-zinc-500 group-hover:text-indigo-400" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-zinc-400 group-hover:text-indigo-300">Click to add images</p>
+                        <p className="text-xs text-zinc-600 mt-0.5">JPEG, PNG, WEBP up to 5MB</p>
+                      </div>
+                    </button>
+                  )}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        setPendingFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
+                      }
+                      e.target.value = ""; // reset
+                    }}
+                  />
                 </div>
               ) : (
                 <div className="p-6 space-y-4">
