@@ -3,20 +3,22 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { storeConfig } from "@/config/store.config";
-import { DeleteProductButton } from "@/components/dashboard/delete-product-button";
+import { ArchiveProductButton } from "@/components/dashboard/delete-product-button";
+import { ArchivedToggle } from "@/components/dashboard/archived-toggle";
+import { Suspense } from "react";
 
 export const metadata: Metadata = { title: "Products" };
 
 const STATUS_BADGE: Record<string, string> = {
   ACTIVE: "bg-green-500/10 text-green-400 border-green-500/20",
   DRAFT: "bg-zinc-700 text-zinc-400 border-zinc-600",
-  ARCHIVED: "bg-red-500/10 text-red-400 border-red-500/20",
+  ARCHIVED: "bg-amber-500/10 text-amber-400 border-amber-500/20",
 };
 
-async function getProducts() {
+async function getProducts(showArchived: boolean) {
   return db.product.findMany({
+    where: showArchived ? { status: "ARCHIVED" } : { status: { not: "ARCHIVED" } },
     orderBy: { createdAt: "desc" },
     include: {
       brand: { select: { name: true } },
@@ -32,8 +34,14 @@ async function getProducts() {
   });
 }
 
-export default async function ProductsPage() {
-  const products = await getProducts();
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ archived?: string }>;
+}) {
+  const { archived } = await searchParams;
+  const showArchived = archived === "1";
+  const products = await getProducts(showArchived);
 
   return (
     <div className="space-y-5">
@@ -41,26 +49,46 @@ export default async function ProductsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Products</h1>
-          <p className="text-sm text-zinc-500">{products.length} total</p>
+          <p className="text-sm text-zinc-500">
+            {products.length} {showArchived ? "archived" : "active"}
+          </p>
         </div>
-        <Link href="/dashboard/products/new">
-          <Button className="bg-indigo-600 hover:bg-indigo-700">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Product
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Suspense fallback={null}>
+            <ArchivedToggle />
+          </Suspense>
+          {!showArchived && (
+            <Link href="/dashboard/products/new">
+              <Button className="bg-indigo-600 hover:bg-indigo-700">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Product
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
+
+      {/* Archived notice */}
+      {showArchived && (
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-amber-400">
+          Showing archived products. These are hidden from your store but their order history is fully preserved. Use the restore button to bring them back.
+        </div>
+      )}
 
       {/* Table */}
       <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-[#18181b]">
         {products.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-20">
-            <p className="text-sm text-zinc-500">No products yet.</p>
-            <Link href="/dashboard/products/new">
-              <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700">
-                Create your first product
-              </Button>
-            </Link>
+            <p className="text-sm text-zinc-500">
+              {showArchived ? "No archived products." : "No products yet."}
+            </p>
+            {!showArchived && (
+              <Link href="/dashboard/products/new">
+                <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700">
+                  Create your first product
+                </Button>
+              </Link>
+            )}
           </div>
         ) : (
           <table className="w-full text-sm">
@@ -94,7 +122,7 @@ export default async function ProductsPage() {
                 return (
                   <tr
                     key={product.id}
-                    className="group hover:bg-white/[0.02]"
+                    className={`group hover:bg-white/[0.02] ${showArchived ? "opacity-60 hover:opacity-100" : ""}`}
                   >
                     <td className="px-6 py-3.5">
                       <Link
@@ -158,7 +186,11 @@ export default async function ProductsPage() {
                       {product.brand?.name ?? "—"}
                     </td>
                     <td className="px-4 py-3.5 text-right">
-                      <DeleteProductButton id={product.id} title={product.title} />
+                      <ArchiveProductButton
+                        id={product.id}
+                        title={product.title}
+                        currentStatus={product.status}
+                      />
                     </td>
                   </tr>
                 );

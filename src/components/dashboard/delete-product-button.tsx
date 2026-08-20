@@ -2,42 +2,66 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, Loader2 } from "lucide-react";
+import { Archive, Loader2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
-export function DeleteProductButton({ id, title }: { id: string; title: string }) {
-  const [isDeleting, setIsDeleting] = useState(false);
+interface Props {
+  id: string;
+  title: string;
+  currentStatus: string;
+}
+
+export function ArchiveProductButton({ id, title, currentStatus }: Props) {
+  const [isPending, setIsPending] = useState(false);
   const router = useRouter();
+  const isArchived = currentStatus === "ARCHIVED";
 
-  async function handleDelete(e: React.MouseEvent) {
+  async function handle(e: React.MouseEvent) {
     e.preventDefault();
-    if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
 
-    setIsDeleting(true);
+    const message = isArchived
+      ? `Restore "${title}" and make it visible again?`
+      : `Archive "${title}"?\n\nThis will hide it from your store. Your order history will NOT be affected — all past orders remain intact.`;
+
+    if (!confirm(message)) return;
+
+    setIsPending(true);
     try {
       const res = await fetch(`/api/products/${id}`, {
-        method: "DELETE",
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: isArchived ? "DRAFT" : "ARCHIVED" }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to delete product");
+        throw new Error(data.error || "Action failed");
       }
-      toast.success("Product deleted successfully");
+      toast.success(isArchived ? "Product restored to Drafts" : "Product archived successfully");
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete product");
-      setIsDeleting(false);
+      toast.error(err instanceof Error ? err.message : "Action failed");
+      setIsPending(false);
     }
   }
 
   return (
     <button
-      onClick={handleDelete}
-      disabled={isDeleting}
-      className="p-2 text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition disabled:opacity-50"
-      title="Delete Product"
+      onClick={handle}
+      disabled={isPending}
+      className={`p-2 rounded-lg transition disabled:opacity-50 ${
+        isArchived
+          ? "text-zinc-500 hover:text-emerald-400 hover:bg-emerald-500/10"
+          : "text-zinc-500 hover:text-amber-400 hover:bg-amber-500/10"
+      }`}
+      title={isArchived ? "Restore product" : "Archive product"}
     >
-      {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+      {isPending ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : isArchived ? (
+        <RotateCcw className="h-4 w-4" />
+      ) : (
+        <Archive className="h-4 w-4" />
+      )}
     </button>
   );
 }
