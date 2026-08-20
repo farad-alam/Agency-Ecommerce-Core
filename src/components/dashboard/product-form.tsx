@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition, useEffect, useRef, useCallback } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Plus, Trash2, X, ImageIcon, RotateCcw, ArrowLeft, AlertTriangle } from "lucide-react";
+import { Loader2, Plus, Trash2, X, ImageIcon, RotateCcw, ArrowLeft } from "lucide-react";
 import type { Brand, Category } from "@prisma/client";
 import type { ProductFull } from "@/app/(dashboard)/dashboard/products/[id]/page";
 import { toast } from "sonner";
@@ -23,22 +23,9 @@ interface OptionGroup {
   values: string[];
 }
 
-/** A single generated variant row, possibly backed by an existing DB record */
-interface SyncedVariant {
-  id?: string;          // DB id if it already exists
-  combo: string[];      // e.g. ["S", "Red"]
-  sku: string;
-  price: string;
-  compareAtPrice: string;
-  inventoryQty: string;
-  isNew: boolean;       // newly generated, not yet in DB
-  isRestored: boolean;  // existed, was removed, now re-added
-  skuLocked: boolean;
-}
-
-/** Simple (no-variant) state for a product without options */
-interface SimpleState {
-  id?: string;
+/** Shared product state — price/stock apply to all variants */
+interface SharedState {
+  id?: string;          // id of the first/simple variant
   sku: string;
   price: string;
   compareAtPrice: string;
@@ -73,24 +60,23 @@ function generateSku(title: string, combo: string[] = []): string {
   return optPart ? `${initials}-${optPart}` : `${initials}-001`;
 }
 
-/** Cartesian product of arrays of strings */
+/** Cartesian product — produces all combinations from option groups */
 function cartesian(groups: OptionGroup[]): string[][] {
-  const valueArrays = groups.filter((g) => g.name && g.values.length > 0).map((g) => g.values);
-  if (valueArrays.length === 0) return [];
-  return valueArrays.reduce<string[][]>(
+  const arrays = groups.filter((g) => g.name && g.values.length > 0).map((g) => g.values);
+  if (arrays.length === 0) return [];
+  return arrays.reduce<string[][]>(
     (acc, arr) => acc.flatMap((combo) => arr.map((val) => [...combo, val])),
     [[]]
   );
 }
 
-/** Combo key for stable matching */
+/** Combo key for stable matching against existing DB variants */
 function comboKey(combo: string[]) {
   return combo.map((v) => v.toLowerCase().trim()).join("|");
 }
 
-/** Extract option groups from existing DB variants */
+/** Reconstruct option groups from existing DB variants */
 function extractOptionGroups(variants: ProductFull["variants"]): OptionGroup[] {
-  if (!variants.length) return [{ name: "", values: [] }];
   const groupMap = new Map<string, Set<string>>();
   for (const v of variants) {
     if (v.options && typeof v.options === "object") {
@@ -171,7 +157,7 @@ function PriceInput({
   );
 }
 
-/** Tag input that emits a string[] */
+/** Tag chip input */
 function TagInput({
   values,
   onChange,
@@ -186,9 +172,7 @@ function TagInput({
 
   function commit(raw: string) {
     const trimmed = raw.trim();
-    if (trimmed && !values.includes(trimmed)) {
-      onChange([...values, trimmed]);
-    }
+    if (trimmed && !values.includes(trimmed)) onChange([...values, trimmed]);
     setInputVal("");
   }
 
@@ -217,12 +201,8 @@ function TagInput({
         value={inputVal}
         onChange={(e) => setInputVal(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === ",") {
-            e.preventDefault();
-            commit(inputVal);
-          } else if (e.key === "Backspace" && !inputVal && values.length > 0) {
-            onChange(values.slice(0, -1));
-          }
+          if (e.key === "Enter" || e.key === ",") { e.preventDefault(); commit(inputVal); }
+          else if (e.key === "Backspace" && !inputVal && values.length > 0) onChange(values.slice(0, -1));
         }}
         onBlur={() => { if (inputVal.trim()) commit(inputVal); }}
         placeholder={values.length === 0 ? placeholder : ""}
@@ -243,7 +223,7 @@ export function ProductForm({ product, brands, categories }: Props) {
   const isEditing = !!product;
   const currencySymbol = CURRENCY_SYMBOLS[storeConfig.currency] ?? "$";
 
-  // ─── Product-level state ────────────────────────────────────────────────────
+  // ─── Product-level state ─────────────────────────────────────────────────────
   const [title, setTitle] = useState(product?.title ?? "");
   const [slug, setSlug] = useState(product?.slug ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
@@ -255,107 +235,37 @@ export function ProductForm({ product, brands, categories }: Props) {
     product?.categories.map((c) => c.categoryId) ?? []
   );
   const [showVariants, setShowVariants] = useState(
-    !!product && product.variants.length > 0 &&
+    !!product &&
     product.variants.some((v) => v.options && Object.keys(v.options as object).length > 0)
   );
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // ─── Simple variant state (no options) ─────────────────────────────────────
-  const simpleBase = product?.variants[0];
-  const [simpleState, setSimpleState] = useState<SimpleState>({
-    id: simpleBase?.id,
-    sku: simpleBase?.sku ?? "",
-    price: simpleBase ? String(simpleBase.price) : "",
-    compareAtPrice: simpleBase?.compareAtPrice ? String(simpleBase.compareAtPrice) : "",
-    inventoryQty: simpleBase ? String(simpleBase.inventoryQty) : "0",
-    weightGrams: simpleBase?.weightGrams ? String(simpleBase.weightGrams) : "",
-    barcode: simpleBase?.barcode ?? "",
-    skuLocked: !!simpleBase,
+  // ─── Shared price/stock/sku state (applies to ALL variants) ──────────────────
+  const base = product?.variants[0];
+  const [shared, setShared] = useState<SharedState>({
+    id: base?.id,
+    sku: base?.sku ?? "",
+    price: base ? String(base.price) : "",
+    compareAtPrice: base?.compareAtPrice ? String(base.compareAtPrice) : "",
+    inventoryQty: base ? String(base.inventoryQty) : "",
+    weightGrams: base?.weightGrams ? String(base.weightGrams) : "",
+    barcode: base?.barcode ?? "",
+    skuLocked: !!base,
   });
 
-  // ─── Option-group state ─────────────────────────────────────────────────────
-  const hasExistingOptions = isEditing &&
+  // ─── Option groups state ──────────────────────────────────────────────────────
+  const hasExistingOptions =
+    isEditing &&
     product.variants.some((v) => v.options && Object.keys(v.options as object).length > 0);
 
   const [optionGroups, setOptionGroups] = useState<OptionGroup[]>(
-    hasExistingOptions
-      ? extractOptionGroups(product!.variants)
-      : [{ name: "", values: [] }]
+    hasExistingOptions ? extractOptionGroups(product!.variants) : [{ name: "", values: [] }]
   );
 
-  // ─── Synced variants (derived from optionGroups + existing DB records) ──────
-  const buildSynced = useCallback(
-    (groups: OptionGroup[], currentTitle: string): SyncedVariant[] => {
-      const combos = cartesian(groups);
-      if (combos.length === 0) return [];
-
-      // Map existing DB variants by their combo key
-      const existingByKey = new Map<string, ProductFull["variants"][number]>();
-      if (product) {
-        for (const v of product.variants) {
-          if (v.options && typeof v.options === "object") {
-            const opts = v.options as Record<string, string>;
-            const key = comboKey(Object.values(opts));
-            existingByKey.set(key, v);
-          }
-        }
-      }
-
-      return combos.map((combo) => {
-        const key = comboKey(combo);
-        const existing = existingByKey.get(key);
-        if (existing) {
-          return {
-            id: existing.id,
-            combo,
-            sku: existing.sku,
-            price: String(existing.price),
-            compareAtPrice: existing.compareAtPrice ? String(existing.compareAtPrice) : "",
-            inventoryQty: String(existing.inventoryQty),
-            isNew: false,
-            isRestored: existing.inventoryQty === 0,
-            skuLocked: true,
-          };
-        }
-        return {
-          combo,
-          sku: generateSku(currentTitle, combo),
-          price: "", // blank; admin will use default price field or apply-all
-          compareAtPrice: "",
-          inventoryQty: "",
-          isNew: true,
-          isRestored: false,
-          skuLocked: false,
-        };
-      });
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [product]
-  );
-
-  const [syncedVariants, setSyncedVariants] = useState<SyncedVariant[]>(
-    () => buildSynced(optionGroups, title)
-  );
-
-  // Re-derive synced variants whenever option groups change
-  useEffect(() => {
-    if (showVariants) {
-      setSyncedVariants(buildSynced(optionGroups, title));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [optionGroups, showVariants]);
-
-  // Auto-generate SKU for simple variant when title changes
+  // ─── Auto-generate SKU when title changes ────────────────────────────────────
   useEffect(() => {
     if (!title) return;
-    setSimpleState((prev) =>
-      !prev.skuLocked ? { ...prev, sku: generateSku(title) } : prev
-    );
-    setSyncedVariants((prev) =>
-      prev.map((v) =>
-        !v.skuLocked ? { ...v, sku: generateSku(title, v.combo) } : v
-      )
-    );
+    setShared((prev) => (!prev.skuLocked ? { ...prev, sku: generateSku(title) } : prev));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title]);
 
@@ -366,7 +276,7 @@ export function ProductForm({ product, brands, categories }: Props) {
   }
 
   function updateOptionGroup(i: number, patch: Partial<OptionGroup>) {
-    setOptionGroups((prev) => prev.map((g, idx) => idx === i ? { ...g, ...patch } : g));
+    setOptionGroups((prev) => prev.map((g, idx) => (idx === i ? { ...g, ...patch } : g)));
   }
 
   function addOptionGroup() {
@@ -377,39 +287,14 @@ export function ProductForm({ product, brands, categories }: Props) {
     setOptionGroups((prev) => prev.filter((_, idx) => idx !== i));
   }
 
-  function updateSyncedVariant(i: number, field: keyof SyncedVariant, value: string | boolean) {
-    setSyncedVariants((prev) =>
-      prev.map((v, idx) => {
-        if (idx !== i) return v;
-        const updated = { ...v, [field]: value };
-        if (field === "sku") updated.skuLocked = true;
-        return updated;
-      })
-    );
-  }
-
-  /** Apply a default price/stock to ALL synced variant rows */
-  function applyBulkDefaults(price: string, stock: string) {
-    setSyncedVariants((prev) =>
-      prev.map((v) => ({
-        ...v,
-        price: price || v.price,
-        inventoryQty: stock || v.inventoryQty,
-      }))
-    );
-  }
-
-  // ─── Helper: extract human-readable API errors ────────────────────────────
+  // ─── API error parser ─────────────────────────────────────────────────────────
   async function extractApiError(res: Response, fallback: string): Promise<string> {
     try {
       const data = await res.json();
       if (data.details && typeof data.details === "object") {
         const fieldMap: Record<string, string> = {
-          price: "Price",
-          inventoryQty: "Stock",
-          sku: "SKU",
-          title: "Product Name",
-          slug: "URL Slug",
+          price: "Price", inventoryQty: "Stock", sku: "SKU",
+          title: "Product Name", slug: "URL Slug",
         };
         const msgs = Object.entries(data.details as Record<string, string[]>)
           .map(([field, errors]) => `${fieldMap[field] ?? field}: ${errors.join(", ")}`)
@@ -422,39 +307,34 @@ export function ProductForm({ product, brands, categories }: Props) {
     }
   }
 
-  // ─── Save ────────────────────────────────────────────────────────────────────
+  // ─── Save ─────────────────────────────────────────────────────────────────────
   async function handleSave(saveStatus: "DRAFT" | "ACTIVE" | "ARCHIVED") {
     setError(null);
     setSavingAs(saveStatus);
 
-    // ── Client-side validation ──
+    // Client-side validation
     if (!title.trim()) {
       setError("Product name is required.");
       setSavingAs(null);
       return;
     }
+    if (!shared.price || parseFloat(shared.price) <= 0) {
+      setError("Price is required — enter the amount customers will pay.");
+      setSavingAs(null);
+      return;
+    }
     if (showVariants) {
-      const hasCombo = optionGroups.some((g) => g.name && g.values.length > 0);
-      if (!hasCombo) {
+      const hasOptions = optionGroups.some((g) => g.name && g.values.length > 0);
+      if (!hasOptions) {
         setError("Add at least one option with values, e.g. Size → S, M, L.");
-        setSavingAs(null);
-        return;
-      }
-      if (!defaultPrice || parseFloat(defaultPrice) <= 0) {
-        setError("Please enter a default price for your variants.");
-        setSavingAs(null);
-        return;
-      }
-    } else {
-      if (!simpleState.price || parseFloat(simpleState.price) <= 0) {
-        setError("Price is required — enter the amount customers will pay.");
         setSavingAs(null);
         return;
       }
     }
 
     try {
-      const body = {
+      // ── 1. Save product ──
+      const productBody = {
         title: title.trim(),
         slug: slug.trim(),
         description: description.trim() || undefined,
@@ -469,78 +349,100 @@ export function ProductForm({ product, brands, categories }: Props) {
         const res = await fetch(`/api/products/${product!.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...body, status }),
+          body: JSON.stringify({ ...productBody, status }),
         });
         if (!res.ok) throw new Error(await extractApiError(res, "Update failed"));
       } else {
         const res = await fetch("/api/products", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
+          body: JSON.stringify(productBody),
         });
         if (!res.ok) throw new Error(await extractApiError(res, "Create failed"));
         const created = await res.json();
         productId = created.id;
       }
 
+      const sharedPrice = parseFloat(shared.price) || 0;
+      const sharedCompare = shared.compareAtPrice ? parseFloat(shared.compareAtPrice) : undefined;
+      const sharedStock = shared.inventoryQty ? parseInt(shared.inventoryQty) : 0;
+
       if (!showVariants) {
-        // ── Simple variant ──
+        // ── 2a. Simple product — one variant, no options ──
         const payload = {
-          sku: simpleState.sku.trim() || generateSku(title),
-          price: parseFloat(simpleState.price) || 0,
-          compareAtPrice: simpleState.compareAtPrice ? parseFloat(simpleState.compareAtPrice) : undefined,
-          inventoryQty: parseInt(simpleState.inventoryQty) || 0,
-          weightGrams: simpleState.weightGrams ? parseInt(simpleState.weightGrams) : undefined,
-          barcode: simpleState.barcode.trim() || undefined,
+          sku: shared.sku.trim() || generateSku(title),
+          price: sharedPrice,
+          compareAtPrice: sharedCompare,
+          inventoryQty: sharedStock,
+          weightGrams: shared.weightGrams ? parseInt(shared.weightGrams) : undefined,
+          barcode: shared.barcode.trim() || undefined,
           options: {},
         };
-        if (simpleState.id) {
-          await fetch(`/api/products/${productId}/variants/${simpleState.id}`, {
+        if (shared.id) {
+          const res = await fetch(`/api/products/${productId}/variants/${shared.id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
+          if (!res.ok) throw new Error(await extractApiError(res, "Failed to update variant"));
         } else {
-          await fetch(`/api/products/${productId}/variants`, {
+          const res = await fetch(`/api/products/${productId}/variants`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
+          if (!res.ok) throw new Error(await extractApiError(res, "Failed to create variant"));
         }
       } else {
-        // ── Variant rows ──
-        for (const v of syncedVariants) {
-          const activeGroups = optionGroups.filter((g) => g.name && g.values.length > 0);
+        // ── 2b. Product with options — auto-create one variant per combination ──
+        const combos = cartesian(optionGroups);
+        const activeGroups = optionGroups.filter((g) => g.name && g.values.length > 0);
+
+        // Map existing DB variants by combo key so we can PATCH instead of POST
+        const existingByKey = new Map<string, string>(); // key → variant id
+        if (product) {
+          for (const v of product.variants) {
+            if (v.options && typeof v.options === "object") {
+              const key = comboKey(Object.values(v.options as Record<string, string>));
+              existingByKey.set(key, v.id);
+            }
+          }
+        }
+
+        for (const combo of combos) {
           const optionsObj = Object.fromEntries(
-            activeGroups.map((g, i) => [g.name, v.combo[i] ?? ""])
+            activeGroups.map((g, i) => [g.name, combo[i] ?? ""])
           );
-          const rowPrice = parseFloat(v.price || defaultPrice) || parseFloat(defaultPrice) || 0;
+          const key = comboKey(combo);
+          const existingId = existingByKey.get(key);
+
           const payload = {
-            sku: v.sku.trim() || generateSku(title, v.combo),
-            price: rowPrice,
-            compareAtPrice: v.compareAtPrice ? parseFloat(v.compareAtPrice) : undefined,
-            inventoryQty: v.inventoryQty ? parseInt(v.inventoryQty) : 0, // stock optional
+            sku: generateSku(title, combo),
+            price: sharedPrice,
+            compareAtPrice: sharedCompare,
+            inventoryQty: sharedStock,
             options: optionsObj,
           };
-          if (v.id) {
-            const res = await fetch(`/api/products/${productId}/variants/${v.id}`, {
+
+          if (existingId) {
+            const res = await fetch(`/api/products/${productId}/variants/${existingId}`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
             });
-            if (!res.ok) throw new Error(await extractApiError(res, `Failed to update variant ${v.combo.join("/")}`));
+            if (!res.ok) throw new Error(await extractApiError(res, `Failed to update variant ${combo.join("/")}`));
           } else {
             const res = await fetch(`/api/products/${productId}/variants`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
             });
-            if (!res.ok) throw new Error(await extractApiError(res, `Failed to create variant ${v.combo.join("/")}`));
+            if (!res.ok) throw new Error(await extractApiError(res, `Failed to create variant ${combo.join("/")}`));
           }
         }
       }
 
-      // Auto-inherit SEO from title/description
+      // ── 3. Auto-inherit SEO ──
       const metaTitle = title.trim().slice(0, 70);
       const metaDescription = description.trim().replace(/(<([^>]+)>)/gi, "").slice(0, 160);
       if (metaTitle || metaDescription) {
@@ -572,28 +474,10 @@ export function ProductForm({ product, brands, categories }: Props) {
 
   const isSaving = !!savingAs || isPending;
 
-  // ─── Default price for all variants (required) ───────────────────────────────
-  const [defaultPrice, setDefaultPrice] = useState(
-    hasExistingOptions && product?.variants[0]
-      ? String(product.variants[0].price)
-      : ""
-  );
-
-  // When defaultPrice changes, fill blank price cells
-  useEffect(() => {
-    if (!defaultPrice) return;
-    setSyncedVariants((prev) =>
-      prev.map((v) => (!v.price ? { ...v, price: defaultPrice } : v))
-    );
-  }, [defaultPrice]);
-
-  // ─── Bulk stock apply state ───────────────────────────────────────────────────
-  const [bulkStock, setBulkStock] = useState("");
-
-  // ─── Render ──────────────────────────────────────────────────────────────────
+  // ─── Render ───────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#0f0f10]">
-      {/* ─── Top Header Bar ─────────────────────────────────────────────────── */}
+      {/* ── Sticky Header ─────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-30 flex items-center justify-between px-6 py-4 border-b border-white/[0.07] bg-[#0f0f10]/95 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <Link
@@ -615,9 +499,7 @@ export function ProductForm({ product, brands, categories }: Props) {
         </div>
 
         <div className="flex items-center gap-2">
-          {error && (
-            <p className="text-xs text-rose-400 max-w-xs truncate">{error}</p>
-          )}
+          {error && <p className="text-xs text-rose-400 max-w-xs truncate">{error}</p>}
           {isEditing ? (
             <>
               <button
@@ -658,25 +540,24 @@ export function ProductForm({ product, brands, categories }: Props) {
         </div>
       </div>
 
-      {/* ─── Body ─────────────────────────────────────────────────────────────── */}
+      {/* ── Body ──────────────────────────────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-6">
 
-          {/* ── Left Panel: Media & Visibility ──────────────────────────────── */}
+          {/* ── Left: Images + Visibility ─────────────────────────────────────── */}
           <div className="space-y-4">
 
-            {/* Cover Image */}
+            {/* Images */}
             <div className="rounded-2xl border border-white/[0.07] bg-[#1a1a1d] overflow-hidden">
               <div className="p-5 border-b border-white/[0.06]">
                 <h2 className="text-sm font-semibold text-white">Product Images</h2>
                 <p className="text-[11px] text-zinc-500 mt-0.5">The first image becomes the cover photo</p>
               </div>
-
               {!isEditing ? (
                 <div className="p-6">
-                  <div className="aspect-[4/3] rounded-xl border-2 border-dashed border-white/[0.1] bg-black/20 flex flex-col items-center justify-center gap-3 text-zinc-500 hover:border-indigo-500/40 hover:text-zinc-400 transition cursor-pointer">
+                  <div className="aspect-[4/3] rounded-xl border-2 border-dashed border-white/[0.1] bg-black/20 flex flex-col items-center justify-center gap-3">
                     <div className="h-12 w-12 rounded-2xl bg-white/[0.04] flex items-center justify-center">
-                      <ImageIcon className="h-6 w-6" />
+                      <ImageIcon className="h-6 w-6 text-zinc-500" />
                     </div>
                     <div className="text-center">
                       <p className="text-sm font-medium text-zinc-400">Add images after saving</p>
@@ -688,19 +569,13 @@ export function ProductForm({ product, brands, categories }: Props) {
                 <div className="p-6 space-y-4">
                   {product.media.length > 0 ? (
                     <>
-                      {/* Cover image */}
                       <div className="aspect-[4/3] rounded-xl overflow-hidden bg-black/40 relative group">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={product.media[0].url}
-                          alt={product.media[0].alt ?? product.title}
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={product.media[0].url} alt={product.media[0].alt ?? product.title} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                           <span className="text-xs text-white font-medium bg-black/60 px-3 py-1.5 rounded-lg">Cover Photo</span>
                         </div>
                       </div>
-                      {/* Thumbnails */}
                       {product.media.length > 1 && (
                         <div className="grid grid-cols-4 gap-2">
                           {product.media.slice(1, 4).map((m) => (
@@ -739,7 +614,6 @@ export function ProductForm({ product, brands, categories }: Props) {
             <div className="rounded-2xl border border-white/[0.07] bg-[#1a1a1d] p-5">
               <h2 className="text-sm font-semibold text-white">Visibility</h2>
               <p className="text-[11px] text-zinc-500 mt-0.5 mb-4">Control whether customers can see this product</p>
-
               {isEditing ? (
                 <div className="flex rounded-xl border border-white/[0.09] bg-black/20 p-1 gap-1">
                   {(["ACTIVE", "DRAFT", "ARCHIVED"] as const).map((s) => {
@@ -764,34 +638,28 @@ export function ProductForm({ product, brands, categories }: Props) {
                 </div>
               ) : (
                 <div className="flex rounded-xl border border-white/[0.09] bg-black/20 p-1 gap-1">
-                  <div className="flex-1 py-2 rounded-lg text-xs font-medium text-center text-zinc-500 border border-transparent">
-                    ○ Hidden
-                  </div>
-                  <div className="flex-1 py-2 rounded-lg text-xs font-medium text-center bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-                    ● Published
-                  </div>
+                  <div className="flex-1 py-2 rounded-lg text-xs font-medium text-center text-zinc-500">○ Hidden</div>
+                  <div className="flex-1 py-2 rounded-lg text-xs font-medium text-center bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">● Published</div>
                 </div>
               )}
               <p className="text-[11px] text-zinc-600 mt-3">
                 {isEditing
-                  ? status === "ACTIVE" ? "This product is live and visible to customers." : "This product is currently hidden from customers."
+                  ? status === "ACTIVE" ? "This product is live and visible to customers." : "This product is currently hidden."
                   : "Use the buttons above to choose Draft or Publish when saving."}
               </p>
             </div>
           </div>
 
-          {/* ── Right Panel: Product Details ─────────────────────────────────── */}
+          {/* ── Right: Product Details ─────────────────────────────────────────── */}
           <div className="space-y-4">
 
-            {/* Product Details Card */}
+            {/* Details card */}
             <div className="rounded-2xl border border-white/[0.07] bg-[#1a1a1d] overflow-hidden">
-              {/* Panel Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
                 <div>
                   <h2 className="text-sm font-semibold text-white">Product Details</h2>
                   <p className="text-[11px] text-zinc-500 mt-0.5">Key info to describe and display your product</p>
                 </div>
-                {/* General / Advanced toggle */}
                 <div className="flex rounded-lg border border-white/[0.09] bg-black/20 p-0.5 gap-0.5">
                   <button
                     type="button"
@@ -819,7 +687,7 @@ export function ProductForm({ product, brands, categories }: Props) {
 
                 {!showAdvanced ? (
                   <>
-                    {/* Product Name */}
+                    {/* Name */}
                     <div>
                       <FieldLabel required hint="This is what customers will see on your store">Product Name</FieldLabel>
                       <input
@@ -869,44 +737,44 @@ export function ProductForm({ product, brands, categories }: Props) {
                       </div>
                     </div>
 
-                    {/* Pricing — only shown when no variants */}
-                    {!showVariants && (
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <FieldLabel required hint="The amount customers pay">Selling Price</FieldLabel>
-                          <PriceInput
-                            value={simpleState.price}
-                            onChange={(v) => setSimpleState((s) => ({ ...s, price: v }))}
-                            placeholder="0.00"
-                            symbol={currencySymbol}
-                          />
-                        </div>
-                        <div>
-                          <FieldLabel hint="Leave blank if not on sale">Original Price (Was)</FieldLabel>
-                          <PriceInput
-                            value={simpleState.compareAtPrice}
-                            onChange={(v) => setSimpleState((s) => ({ ...s, compareAtPrice: v }))}
-                            placeholder="Leave blank if no sale"
-                            symbol={currencySymbol}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Stock — optional */}
-                    {!showVariants && (
+                    {/* Price (always visible — applies to all variants too) */}
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <FieldLabel hint="How many units you have in stock. Leave blank if you manage stock offline.">Stock Count (optional)</FieldLabel>
-                        <input
-                          type="number"
-                          min={0}
-                          value={simpleState.inventoryQty}
-                          onChange={(e) => setSimpleState((s) => ({ ...s, inventoryQty: e.target.value }))}
-                          placeholder="0 (optional)"
-                          className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition"
+                        <FieldLabel required hint="The amount customers pay">
+                          {showVariants ? "Price (for all options)" : "Selling Price"}
+                        </FieldLabel>
+                        <PriceInput
+                          value={shared.price}
+                          onChange={(v) => setShared((s) => ({ ...s, price: v }))}
+                          placeholder="0.00"
+                          symbol={currencySymbol}
                         />
                       </div>
-                    )}
+                      <div>
+                        <FieldLabel hint="Leave blank if not on sale">Original Price (Was)</FieldLabel>
+                        <PriceInput
+                          value={shared.compareAtPrice}
+                          onChange={(v) => setShared((s) => ({ ...s, compareAtPrice: v }))}
+                          placeholder="Leave blank if no sale"
+                          symbol={currencySymbol}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Stock (always visible — optional) */}
+                    <div>
+                      <FieldLabel hint="How many units in stock. Leave blank if you track stock offline.">
+                        {showVariants ? "Stock Count (for all options)" : "Stock Count (optional)"}
+                      </FieldLabel>
+                      <input
+                        type="number"
+                        min={0}
+                        value={shared.inventoryQty}
+                        onChange={(e) => setShared((s) => ({ ...s, inventoryQty: e.target.value }))}
+                        placeholder="0 (optional)"
+                        className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition"
+                      />
+                    </div>
 
                     {/* Description */}
                     <div>
@@ -920,17 +788,17 @@ export function ProductForm({ product, brands, categories }: Props) {
                       />
                     </div>
 
-                    {/* Auto SKU display — only for simple products */}
+                    {/* SKU — only for simple products */}
                     {!showVariants && (
                       <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-black/20 border border-white/[0.05]">
                         <div className="flex items-center gap-2">
                           <span className="text-[11px] text-zinc-500">SKU:</span>
-                          <span className="font-mono text-[11px] text-zinc-300">{simpleState.sku || "Auto-generated when you type the name"}</span>
-                          {simpleState.skuLocked && <span className="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded">Custom</span>}
+                          <span className="font-mono text-[11px] text-zinc-300">{shared.sku || "Auto-generated when you type the name"}</span>
+                          {shared.skuLocked && <span className="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded">Custom</span>}
                         </div>
                         <button
                           type="button"
-                          onClick={() => setSimpleState((s) => ({ ...s, sku: generateSku(title), skuLocked: false }))}
+                          onClick={() => setShared((s) => ({ ...s, sku: generateSku(title), skuLocked: false }))}
                           className="text-[11px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition"
                         >
                           <RotateCcw className="h-3 w-3" /> Regenerate
@@ -960,7 +828,7 @@ export function ProductForm({ product, brands, categories }: Props) {
                     </div>
                   </>
                 ) : (
-                  /* ─── Advanced Panel ────────────────────────────────────────── */
+                  /* Advanced panel */
                   <div className="space-y-5">
                     <div>
                       <FieldLabel hint="The URL link for this product page — auto-generated from the name">URL Slug</FieldLabel>
@@ -979,8 +847,8 @@ export function ProductForm({ product, brands, categories }: Props) {
                         <input
                           type="number"
                           min={0}
-                          value={simpleState.weightGrams}
-                          onChange={(e) => setSimpleState((s) => ({ ...s, weightGrams: e.target.value }))}
+                          value={shared.weightGrams}
+                          onChange={(e) => setShared((s) => ({ ...s, weightGrams: e.target.value }))}
                           placeholder="e.g. 500"
                           className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition"
                         />
@@ -989,8 +857,8 @@ export function ProductForm({ product, brands, categories }: Props) {
                         <FieldLabel hint="Barcode, UPC, or GTIN if you have one">Barcode</FieldLabel>
                         <input
                           type="text"
-                          value={simpleState.barcode}
-                          onChange={(e) => setSimpleState((s) => ({ ...s, barcode: e.target.value }))}
+                          value={shared.barcode}
+                          onChange={(e) => setShared((s) => ({ ...s, barcode: e.target.value }))}
                           placeholder="Optional"
                           className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition"
                         />
@@ -1001,20 +869,18 @@ export function ProductForm({ product, brands, categories }: Props) {
               </div>
             </div>
 
-            {/* ── Variant Option Builder Section ──────────────────────────────── */}
+            {/* ── Option Group Builder ─────────────────────────────────────────── */}
             {showVariants && (
               <div className="rounded-2xl border border-white/[0.07] bg-[#1a1a1d] overflow-hidden">
-                {/* Header */}
                 <div className="px-6 py-4 border-b border-white/[0.06]">
                   <h2 className="text-sm font-semibold text-white">Product Options</h2>
                   <p className="text-[11px] text-zinc-500 mt-0.5">
-                    Define what options your product comes in. Combinations are generated automatically.
+                    Define what options your product comes in. All combinations will be created automatically using the price and stock above.
                   </p>
                 </div>
-
                 <div className="p-6 space-y-3">
                   {optionGroups.map((group, gi) => (
-                    <div key={gi} className="rounded-xl border border-white/[0.07] bg-black/20 p-4 space-y-3">
+                    <div key={gi} className="rounded-xl border border-white/[0.07] bg-black/20 p-4">
                       <div className="flex items-center gap-3">
                         {/* Option name */}
                         <div className="w-36 shrink-0">
@@ -1032,17 +898,15 @@ export function ProductForm({ product, brands, categories }: Props) {
                             <option value="Style" />
                           </datalist>
                         </div>
-
-                        {/* Tag input for values */}
+                        {/* Tag values */}
                         <div className="flex-1">
                           <TagInput
                             values={group.values}
                             onChange={(vals) => updateOptionGroup(gi, { values: vals })}
-                            placeholder={group.name === "Size" ? "e.g. S, M, L, XL — press Enter after each" : "Type a value, press Enter"}
+                            placeholder={group.name === "Size" ? "S, M, L, XL — press Enter after each" : "Type a value, press Enter"}
                           />
                         </div>
-
-                        {/* Remove option group */}
+                        {/* Remove */}
                         {optionGroups.length > 1 && (
                           <button
                             type="button"
@@ -1061,135 +925,21 @@ export function ProductForm({ product, brands, categories }: Props) {
                     onClick={addOptionGroup}
                     className="flex items-center gap-1.5 text-[12px] text-indigo-400 hover:text-indigo-300 transition"
                   >
-                    <Plus className="h-3.5 w-3.5" /> Add another option (e.g. Material)
+                    <Plus className="h-3.5 w-3.5" /> Add another option (e.g. Color)
                   </button>
-                </div>
-              </div>
-            )}
 
-            {/* ── Generated Variant Table ─────────────────────────────────────── */}
-            {showVariants && syncedVariants.length > 0 && (
-              <div className="rounded-2xl border border-white/[0.07] bg-[#1a1a1d] overflow-hidden">
-                <div className="px-6 py-4 border-b border-white/[0.06]">
-                  <h2 className="text-sm font-semibold text-white">
-                    All Combinations ({syncedVariants.length})
-                  </h2>
-                  <p className="text-[11px] text-zinc-500 mt-0.5">
-                    Auto-generated from your options above. Set the default price, then fine-tune each row.
-                  </p>
-                </div>
-
-                {/* Default price + bulk stock bar */}
-                <div className="flex items-center gap-4 px-6 py-4 bg-white/[0.02] border-b border-white/[0.05]">
-                  {/* Required default price */}
-                  <div className="flex items-center gap-2">
-                    <label className="text-[12px] font-medium text-zinc-300 whitespace-nowrap">
-                      Default Price <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-400 ml-0.5 align-middle" title="Required" />
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs pointer-events-none">{currencySymbol}</span>
-                      <input
-                        type="number"
-                        min={0}
-                        step="0.01"
-                        value={defaultPrice}
-                        onChange={(e) => setDefaultPrice(e.target.value)}
-                        placeholder="e.g. 35"
-                        className={`w-28 h-9 pl-7 pr-3 rounded-lg border bg-[#111113] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 ${
-                          !defaultPrice ? "border-rose-500/50" : "border-white/[0.09]"
-                        }`}
-                      />
-                    </div>
-                    {!defaultPrice && (
-                      <span className="text-[10px] text-rose-400">Required</span>
-                    )}
-                  </div>
-                  {/* Optional bulk stock */}
-                  <div className="flex items-center gap-2 ml-auto">
-                    <label className="text-[12px] text-zinc-500 whitespace-nowrap">Apply stock to all:</label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={bulkStock}
-                      onChange={(e) => setBulkStock(e.target.value)}
-                      placeholder="e.g. 50"
-                      className="w-24 h-9 px-3 rounded-lg border border-white/[0.09] bg-[#111113] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!bulkStock) return;
-                        setSyncedVariants((prev) =>
-                          prev.map((v) => ({ ...v, inventoryQty: bulkStock }))
-                        );
-                      }}
-                      disabled={!bulkStock}
-                      className="h-9 px-3 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-xs font-medium text-white disabled:opacity-40 transition"
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
-
-
-                {/* Table */}
-                <div className="divide-y divide-white/[0.04]">
-                  {syncedVariants.map((v, vi) => (
-                    <div
-                      key={v.id ?? vi}
-                      className={`flex items-center gap-3 px-6 py-3 ${v.isNew || v.isRestored ? "bg-amber-500/[0.04]" : ""}`}
-                    >
-                      {/* Combo label */}
-                      <div className="flex items-center gap-2 w-48 shrink-0">
-                        <span className="text-sm font-medium text-zinc-200 truncate">
-                          {v.combo.join(" / ")}
+                  {/* Combination preview */}
+                  {cartesian(optionGroups).length > 0 && (
+                    <div className="pt-3 border-t border-white/[0.05]">
+                      <p className="text-[11px] text-zinc-500">
+                        {cartesian(optionGroups).length} combination{cartesian(optionGroups).length !== 1 ? "s" : ""} will be created →{" "}
+                        <span className="text-zinc-400">
+                          {cartesian(optionGroups).slice(0, 4).map((c) => c.join("/")).join(", ")}
+                          {cartesian(optionGroups).length > 4 ? ` + ${cartesian(optionGroups).length - 4} more` : ""}
                         </span>
-                        {(v.isNew || v.isRestored) && (
-                          <span className="flex items-center gap-1 text-[10px] font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 px-1.5 py-0.5 rounded whitespace-nowrap">
-                            <AlertTriangle className="h-2.5 w-2.5" />
-                            {v.isRestored ? "Restocked" : "New"} — add stock
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Price */}
-                      <div className="relative flex-1 min-w-0">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs pointer-events-none">{currencySymbol}</span>
-                        <input
-                          type="number"
-                          min={0}
-                          step="0.01"
-                          value={v.price}
-                          onChange={(e) => updateSyncedVariant(vi, "price", e.target.value)}
-                          placeholder="Price"
-                          className="w-full h-9 pl-7 pr-3 rounded-lg border border-white/[0.09] bg-[#111113] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-                        />
-                      </div>
-
-                      {/* Stock */}
-                      <input
-                        type="number"
-                        min={0}
-                        value={v.inventoryQty}
-                        onChange={(e) => updateSyncedVariant(vi, "inventoryQty", e.target.value)}
-                        placeholder="Stock"
-                        className="w-20 shrink-0 h-9 px-3 rounded-lg border border-white/[0.09] bg-[#111113] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-                      />
-
-                      {/* SKU badge */}
-                      <div className="flex items-center gap-1 shrink-0">
-                        <span className="font-mono text-[10px] text-zinc-500">{v.sku}</span>
-                        <button
-                          type="button"
-                          title="Regenerate SKU"
-                          onClick={() => updateSyncedVariant(vi, "sku", generateSku(title, v.combo))}
-                          className="text-zinc-700 hover:text-zinc-400 transition"
-                        >
-                          <RotateCcw className="h-3 w-3" />
-                        </button>
-                      </div>
+                      </p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             )}
