@@ -388,15 +388,17 @@ export function ProductForm({ product, brands, categories }: Props) {
               if (!uploadRes.ok) throw new Error("Cloudinary upload failed");
               const uploadData = await uploadRes.json();
 
-              await fetch(`/api/products/${productId}/media`, {
+              const confirmRes = await fetch("/api/media/confirm", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   cloudinaryId: uploadData.public_id,
                   url: uploadData.secure_url,
+                  productId,
                   alt: file.name,
                 }),
               });
+              if (!confirmRes.ok) throw new Error("Failed to link media to product");
             }
           } catch (uploadErr) {
             console.error("Image upload error:", uploadErr);
