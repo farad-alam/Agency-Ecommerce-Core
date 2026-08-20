@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Trash2, X, ImageIcon, RotateCcw, ChevronDown, ChevronUp, ArrowLeft } from "lucide-react";
+import { Loader2, Plus, Trash2, X, ImageIcon, RotateCcw, ArrowLeft, AlertTriangle } from "lucide-react";
 import type { Brand, Category } from "@prisma/client";
 import type { ProductFull } from "@/app/(dashboard)/dashboard/products/[id]/page";
 import { toast } from "sonner";
@@ -19,12 +17,27 @@ interface Props {
   categories: Category[];
 }
 
-interface VariantOption {
-  key: string;
-  value: string;
+/** One option group, e.g. {name:"Size", values:["S","M","XL"]} */
+interface OptionGroup {
+  name: string;
+  values: string[];
 }
 
-interface VariantState {
+/** A single generated variant row, possibly backed by an existing DB record */
+interface SyncedVariant {
+  id?: string;          // DB id if it already exists
+  combo: string[];      // e.g. ["S", "Red"]
+  sku: string;
+  price: string;
+  compareAtPrice: string;
+  inventoryQty: string;
+  isNew: boolean;       // newly generated, not yet in DB
+  isRestored: boolean;  // existed, was removed, now re-added
+  skuLocked: boolean;
+}
+
+/** Simple (no-variant) state for a product without options */
+interface SimpleState {
   id?: string;
   sku: string;
   price: string;
@@ -32,7 +45,6 @@ interface VariantState {
   inventoryQty: string;
   weightGrams: string;
   barcode: string;
-  options: VariantOption[];
   skuLocked: boolean;
 }
 
@@ -46,7 +58,7 @@ function slugify(text: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-function generateSku(title: string, options: VariantOption[]): string {
+function generateSku(title: string, combo: string[] = []): string {
   if (!title) return "";
   const initials = title
     .split(/\s+/)
@@ -54,12 +66,45 @@ function generateSku(title: string, options: VariantOption[]): string {
     .map((w) => w[0].toUpperCase())
     .join("")
     .slice(0, 5);
-  const optVals = options
-    .map((o) => o.value.trim())
+  const optPart = combo
+    .map((v) => v.trim().toUpperCase().replace(/\s+/g, "").slice(0, 4))
     .filter(Boolean)
-    .map((v) => v.toUpperCase().replace(/\s+/g, "").slice(0, 4))
     .join("-");
-  return optVals ? `${initials}-${optVals}` : `${initials}-001`;
+  return optPart ? `${initials}-${optPart}` : `${initials}-001`;
+}
+
+/** Cartesian product of arrays of strings */
+function cartesian(groups: OptionGroup[]): string[][] {
+  const valueArrays = groups.filter((g) => g.name && g.values.length > 0).map((g) => g.values);
+  if (valueArrays.length === 0) return [];
+  return valueArrays.reduce<string[][]>(
+    (acc, arr) => acc.flatMap((combo) => arr.map((val) => [...combo, val])),
+    [[]]
+  );
+}
+
+/** Combo key for stable matching */
+function comboKey(combo: string[]) {
+  return combo.map((v) => v.toLowerCase().trim()).join("|");
+}
+
+/** Extract option groups from existing DB variants */
+function extractOptionGroups(variants: ProductFull["variants"]): OptionGroup[] {
+  if (!variants.length) return [{ name: "", values: [] }];
+  const groupMap = new Map<string, Set<string>>();
+  for (const v of variants) {
+    if (v.options && typeof v.options === "object") {
+      for (const [k, val] of Object.entries(v.options as Record<string, string>)) {
+        if (!groupMap.has(k)) groupMap.set(k, new Set());
+        groupMap.get(k)!.add(String(val));
+      }
+    }
+  }
+  if (groupMap.size === 0) return [{ name: "", values: [] }];
+  return Array.from(groupMap.entries()).map(([name, valSet]) => ({
+    name,
+    values: Array.from(valSet),
+  }));
 }
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
@@ -126,6 +171,67 @@ function PriceInput({
   );
 }
 
+/** Tag input that emits a string[] */
+function TagInput({
+  values,
+  onChange,
+  placeholder,
+}: {
+  values: string[];
+  onChange: (vals: string[]) => void;
+  placeholder?: string;
+}) {
+  const [inputVal, setInputVal] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function commit(raw: string) {
+    const trimmed = raw.trim();
+    if (trimmed && !values.includes(trimmed)) {
+      onChange([...values, trimmed]);
+    }
+    setInputVal("");
+  }
+
+  return (
+    <div
+      className="flex flex-wrap gap-1.5 items-center min-h-[42px] px-3 py-2 rounded-xl border border-white/[0.09] bg-[#111113] cursor-text"
+      onClick={() => inputRef.current?.focus()}
+    >
+      {values.map((v) => (
+        <span
+          key={v}
+          className="flex items-center gap-1 rounded-md px-2 py-0.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[11px] font-medium"
+        >
+          {v}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onChange(values.filter((x) => x !== v)); }}
+            className="text-indigo-400 hover:text-rose-400 transition"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </span>
+      ))}
+      <input
+        ref={inputRef}
+        value={inputVal}
+        onChange={(e) => setInputVal(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault();
+            commit(inputVal);
+          } else if (e.key === "Backspace" && !inputVal && values.length > 0) {
+            onChange(values.slice(0, -1));
+          }
+        }}
+        onBlur={() => { if (inputVal.trim()) commit(inputVal); }}
+        placeholder={values.length === 0 ? placeholder : ""}
+        className="flex-1 min-w-[80px] bg-transparent text-sm text-zinc-200 placeholder:text-zinc-600 outline-none"
+      />
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function ProductForm({ product, brands, categories }: Props) {
@@ -137,7 +243,7 @@ export function ProductForm({ product, brands, categories }: Props) {
   const isEditing = !!product;
   const currencySymbol = CURRENCY_SYMBOLS[storeConfig.currency] ?? "$";
 
-  // ─── Form State ─────────────────────────────────────────────────────────────
+  // ─── Product-level state ────────────────────────────────────────────────────
   const [title, setTitle] = useState(product?.title ?? "");
   const [slug, setSlug] = useState(product?.slug ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
@@ -149,55 +255,130 @@ export function ProductForm({ product, brands, categories }: Props) {
     product?.categories.map((c) => c.categoryId) ?? []
   );
   const [showVariants, setShowVariants] = useState(
-    !!product && product.variants.length > 1
+    !!product && product.variants.length > 0 &&
+    product.variants.some((v) => v.options && Object.keys(v.options as object).length > 0)
   );
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // ─── Variant State ───────────────────────────────────────────────────────────
-  const [variants, setVariants] = useState<VariantState[]>(
-    product?.variants.map((v) => {
-      const optsArray: VariantOption[] = [];
-      if (v.options && typeof v.options === "object") {
-        Object.entries(v.options as Record<string, string>).forEach(([k, val]) =>
-          optsArray.push({ key: k, value: val })
-        );
-      }
-      if (!optsArray.length) optsArray.push({ key: "", value: "" });
-      return {
-        id: v.id,
-        sku: v.sku,
-        price: String(v.price),
-        compareAtPrice: v.compareAtPrice ? String(v.compareAtPrice) : "",
-        inventoryQty: String(v.inventoryQty),
-        weightGrams: v.weightGrams ? String(v.weightGrams) : "",
-        barcode: v.barcode || "",
-        options: optsArray,
-        skuLocked: true,
-      };
-    }) ?? [
-      { sku: "", price: "", compareAtPrice: "", inventoryQty: "0", weightGrams: "", barcode: "", options: [{ key: "", value: "" }], skuLocked: false },
-    ]
+  // ─── Simple variant state (no options) ─────────────────────────────────────
+  const simpleBase = product?.variants[0];
+  const [simpleState, setSimpleState] = useState<SimpleState>({
+    id: simpleBase?.id,
+    sku: simpleBase?.sku ?? "",
+    price: simpleBase ? String(simpleBase.price) : "",
+    compareAtPrice: simpleBase?.compareAtPrice ? String(simpleBase.compareAtPrice) : "",
+    inventoryQty: simpleBase ? String(simpleBase.inventoryQty) : "0",
+    weightGrams: simpleBase?.weightGrams ? String(simpleBase.weightGrams) : "",
+    barcode: simpleBase?.barcode ?? "",
+    skuLocked: !!simpleBase,
+  });
+
+  // ─── Option-group state ─────────────────────────────────────────────────────
+  const hasExistingOptions = isEditing &&
+    product.variants.some((v) => v.options && Object.keys(v.options as object).length > 0);
+
+  const [optionGroups, setOptionGroups] = useState<OptionGroup[]>(
+    hasExistingOptions
+      ? extractOptionGroups(product!.variants)
+      : [{ name: "", values: [] }]
   );
 
-  // ─── Auto-generate SKU on title change ──────────────────────────────────────
+  // ─── Synced variants (derived from optionGroups + existing DB records) ──────
+  const buildSynced = useCallback(
+    (groups: OptionGroup[], currentTitle: string): SyncedVariant[] => {
+      const combos = cartesian(groups);
+      if (combos.length === 0) return [];
+
+      // Map existing DB variants by their combo key
+      const existingByKey = new Map<string, ProductFull["variants"][number]>();
+      if (product) {
+        for (const v of product.variants) {
+          if (v.options && typeof v.options === "object") {
+            const opts = v.options as Record<string, string>;
+            const key = comboKey(Object.values(opts));
+            existingByKey.set(key, v);
+          }
+        }
+      }
+
+      return combos.map((combo) => {
+        const key = comboKey(combo);
+        const existing = existingByKey.get(key);
+        if (existing) {
+          return {
+            id: existing.id,
+            combo,
+            sku: existing.sku,
+            price: String(existing.price),
+            compareAtPrice: existing.compareAtPrice ? String(existing.compareAtPrice) : "",
+            inventoryQty: String(existing.inventoryQty),
+            isNew: false,
+            isRestored: existing.inventoryQty === 0,
+            skuLocked: true,
+          };
+        }
+        return {
+          combo,
+          sku: generateSku(currentTitle, combo),
+          price: simpleState.price || "",
+          compareAtPrice: simpleState.compareAtPrice || "",
+          inventoryQty: "0",
+          isNew: true,
+          isRestored: false,
+          skuLocked: false,
+        };
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [product]
+  );
+
+  const [syncedVariants, setSyncedVariants] = useState<SyncedVariant[]>(
+    () => buildSynced(optionGroups, title)
+  );
+
+  // Re-derive synced variants whenever option groups change
+  useEffect(() => {
+    if (showVariants) {
+      setSyncedVariants(buildSynced(optionGroups, title));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [optionGroups, showVariants]);
+
+  // Auto-generate SKU for simple variant when title changes
   useEffect(() => {
     if (!title) return;
-    setVariants((prev) =>
+    setSimpleState((prev) =>
+      !prev.skuLocked ? { ...prev, sku: generateSku(title) } : prev
+    );
+    setSyncedVariants((prev) =>
       prev.map((v) =>
-        !v.skuLocked && !v.id ? { ...v, sku: generateSku(title, showVariants ? v.options : []) } : v
+        !v.skuLocked ? { ...v, sku: generateSku(title, v.combo) } : v
       )
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title]);
 
-  // ─── Handlers ───────────────────────────────────────────────────────────────
+  // ─── Handlers ────────────────────────────────────────────────────────────────
   function handleTitleChange(val: string) {
     setTitle(val);
     if (!isEditing) setSlug(slugify(val));
   }
 
-  function updateVariant(i: number, field: keyof VariantState, value: string | VariantOption[] | boolean) {
-    setVariants((prev) =>
+  function updateOptionGroup(i: number, patch: Partial<OptionGroup>) {
+    setOptionGroups((prev) => prev.map((g, idx) => idx === i ? { ...g, ...patch } : g));
+  }
+
+  function addOptionGroup() {
+    setOptionGroups((prev) => [...prev, { name: "", values: [] }]);
+  }
+
+  function removeOptionGroup(i: number) {
+    setOptionGroups((prev) => prev.filter((_, idx) => idx !== i));
+  }
+
+  function updateSyncedVariant(i: number, field: keyof SyncedVariant, value: string | boolean) {
+    setSyncedVariants((prev) =>
       prev.map((v, idx) => {
         if (idx !== i) return v;
         const updated = { ...v, [field]: value };
@@ -207,41 +388,15 @@ export function ProductForm({ product, brands, categories }: Props) {
     );
   }
 
-  function resetSku(i: number) {
-    setVariants((prev) =>
-      prev.map((v, idx) =>
-        idx === i ? { ...v, sku: generateSku(title, showVariants ? v.options : []), skuLocked: false } : v
-      )
+  /** Apply a default price/stock to ALL synced variant rows */
+  function applyBulkDefaults(price: string, stock: string) {
+    setSyncedVariants((prev) =>
+      prev.map((v) => ({
+        ...v,
+        price: price || v.price,
+        inventoryQty: stock || v.inventoryQty,
+      }))
     );
-  }
-
-  function addVariantRow() {
-    setVariants((prev) => [
-      ...prev,
-      { sku: generateSku(title, []), price: prev[0]?.price || "", compareAtPrice: "", inventoryQty: "0", weightGrams: "", barcode: "", options: [{ key: "", value: "" }], skuLocked: false },
-    ]);
-  }
-
-  function removeVariantRow(i: number) {
-    setVariants((prev) => prev.filter((_, idx) => idx !== i));
-  }
-
-  function updateOption(vi: number, oi: number, field: "key" | "value", val: string) {
-    const variant = variants[vi];
-    const newOpts = variant.options.map((o, idx) => idx === oi ? { ...o, [field]: val } : o);
-    const updated = { ...variant, options: newOpts };
-    if (!variant.skuLocked && !variant.id) updated.sku = generateSku(title, newOpts);
-    setVariants((prev) => prev.map((v, idx) => idx === vi ? updated : v));
-  }
-
-  function addOption(vi: number) {
-    const opts = [...variants[vi].options, { key: "", value: "" }];
-    updateVariant(vi, "options", opts);
-  }
-
-  function removeOption(vi: number, oi: number) {
-    const opts = variants[vi].options.filter((_, idx) => idx !== oi);
-    updateVariant(vi, "options", opts);
   }
 
   // ─── Save ────────────────────────────────────────────────────────────────────
@@ -249,11 +404,20 @@ export function ProductForm({ product, brands, categories }: Props) {
     setError(null);
     setSavingAs(saveStatus);
 
-    const hasValidVariant = variants.some((v) => v.sku.trim());
-    if (!hasValidVariant) {
-      setError("At least one variant with a valid SKU is required.");
-      setSavingAs(null);
-      return;
+    // Validate
+    if (showVariants) {
+      const hasCombo = optionGroups.some((g) => g.name && g.values.length > 0);
+      if (!hasCombo) {
+        setError("Add at least one option with values (e.g. Size → S, M, L).");
+        setSavingAs(null);
+        return;
+      }
+    } else {
+      if (!simpleState.price) {
+        setError("Price is required.");
+        setSavingAs(null);
+        return;
+      }
     }
 
     try {
@@ -261,7 +425,7 @@ export function ProductForm({ product, brands, categories }: Props) {
         title: title.trim(),
         slug: slug.trim(),
         description: description.trim() || undefined,
-        status: isEditing ? status : (saveStatus === "ARCHIVED" ? "DRAFT" : saveStatus),
+        status: isEditing ? status : saveStatus === "ARCHIVED" ? "DRAFT" : saveStatus,
         brandId: brandId === "none" ? null : brandId,
         categoryIds: selectedCategoryIds,
       };
@@ -285,27 +449,19 @@ export function ProductForm({ product, brands, categories }: Props) {
         productId = (await res.json()).id;
       }
 
-      for (const variant of variants) {
-        if (!variant.sku.trim()) continue;
-        const optionsObj = showVariants
-          ? variant.options.reduce((acc, o) => {
-              if (o.key.trim() && o.value.trim()) acc[o.key.trim()] = o.value.trim();
-              return acc;
-            }, {} as Record<string, string>)
-          : {};
-
+      if (!showVariants) {
+        // ── Simple variant ──
         const payload = {
-          sku: variant.sku.trim(),
-          price: parseFloat(variant.price) || 0,
-          compareAtPrice: variant.compareAtPrice ? parseFloat(variant.compareAtPrice) : undefined,
-          inventoryQty: parseInt(variant.inventoryQty) || 0,
-          weightGrams: variant.weightGrams ? parseInt(variant.weightGrams) : undefined,
-          barcode: variant.barcode.trim() || undefined,
-          options: optionsObj,
+          sku: simpleState.sku.trim() || generateSku(title),
+          price: parseFloat(simpleState.price) || 0,
+          compareAtPrice: simpleState.compareAtPrice ? parseFloat(simpleState.compareAtPrice) : undefined,
+          inventoryQty: parseInt(simpleState.inventoryQty) || 0,
+          weightGrams: simpleState.weightGrams ? parseInt(simpleState.weightGrams) : undefined,
+          barcode: simpleState.barcode.trim() || undefined,
+          options: {},
         };
-
-        if (variant.id) {
-          await fetch(`/api/products/${productId}/variants/${variant.id}`, {
+        if (simpleState.id) {
+          await fetch(`/api/products/${productId}/variants/${simpleState.id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -316,6 +472,34 @@ export function ProductForm({ product, brands, categories }: Props) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
+        }
+      } else {
+        // ── Variant rows ──
+        for (const v of syncedVariants) {
+          const activeGroups = optionGroups.filter((g) => g.name && g.values.length > 0);
+          const optionsObj = Object.fromEntries(
+            activeGroups.map((g, i) => [g.name, v.combo[i] ?? ""])
+          );
+          const payload = {
+            sku: v.sku.trim() || generateSku(title, v.combo),
+            price: parseFloat(v.price) || 0,
+            compareAtPrice: v.compareAtPrice ? parseFloat(v.compareAtPrice) : undefined,
+            inventoryQty: parseInt(v.inventoryQty) || 0,
+            options: optionsObj,
+          };
+          if (v.id) {
+            await fetch(`/api/products/${productId}/variants/${v.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+          } else {
+            await fetch(`/api/products/${productId}/variants`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+          }
         }
       }
 
@@ -350,6 +534,10 @@ export function ProductForm({ product, brands, categories }: Props) {
   }
 
   const isSaving = !!savingAs || isPending;
+
+  // ─── Bulk defaults state (for variant table) ─────────────────────────────────
+  const [bulkPrice, setBulkPrice] = useState("");
+  const [bulkStock, setBulkStock] = useState("");
 
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -630,40 +818,44 @@ export function ProductForm({ product, brands, categories }: Props) {
                       </div>
                     </div>
 
-                    {/* Pricing */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <FieldLabel required hint="The amount customers pay">Selling Price</FieldLabel>
-                        <PriceInput
-                          value={variants[0]?.price ?? ""}
-                          onChange={(v) => updateVariant(0, "price", v)}
-                          placeholder="0.00"
-                          symbol={currencySymbol}
-                        />
+                    {/* Pricing — only shown when no variants */}
+                    {!showVariants && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <FieldLabel required hint="The amount customers pay">Selling Price</FieldLabel>
+                          <PriceInput
+                            value={simpleState.price}
+                            onChange={(v) => setSimpleState((s) => ({ ...s, price: v }))}
+                            placeholder="0.00"
+                            symbol={currencySymbol}
+                          />
+                        </div>
+                        <div>
+                          <FieldLabel hint="Leave blank if not on sale">Original Price (Was)</FieldLabel>
+                          <PriceInput
+                            value={simpleState.compareAtPrice}
+                            onChange={(v) => setSimpleState((s) => ({ ...s, compareAtPrice: v }))}
+                            placeholder="Leave blank if no sale"
+                            symbol={currencySymbol}
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <FieldLabel hint="Leave blank if not on sale">Original Price (Was)</FieldLabel>
-                        <PriceInput
-                          value={variants[0]?.compareAtPrice ?? ""}
-                          onChange={(v) => updateVariant(0, "compareAtPrice", v)}
-                          placeholder="Leave blank if no sale"
-                          symbol={currencySymbol}
-                        />
-                      </div>
-                    </div>
+                    )}
 
-                    {/* Stock */}
-                    <div>
-                      <FieldLabel required hint="How many units do you currently have available?">Stock Count</FieldLabel>
-                      <input
-                        type="number"
-                        min={0}
-                        value={variants[0]?.inventoryQty ?? "0"}
-                        onChange={(e) => updateVariant(0, "inventoryQty", e.target.value)}
-                        placeholder="e.g. 50"
-                        className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition"
-                      />
-                    </div>
+                    {/* Stock — only shown when no variants */}
+                    {!showVariants && (
+                      <div>
+                        <FieldLabel required hint="How many units do you currently have available?">Stock Count</FieldLabel>
+                        <input
+                          type="number"
+                          min={0}
+                          value={simpleState.inventoryQty}
+                          onChange={(e) => setSimpleState((s) => ({ ...s, inventoryQty: e.target.value }))}
+                          placeholder="e.g. 50"
+                          className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition"
+                        />
+                      </div>
+                    )}
 
                     {/* Description */}
                     <div>
@@ -677,21 +869,23 @@ export function ProductForm({ product, brands, categories }: Props) {
                       />
                     </div>
 
-                    {/* Auto SKU display */}
-                    <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-black/20 border border-white/[0.05]">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-zinc-500">SKU:</span>
-                        <span className="font-mono text-[11px] text-zinc-300">{variants[0]?.sku || "Auto-generated when you type the name"}</span>
-                        {variants[0]?.skuLocked && <span className="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded">Custom</span>}
+                    {/* Auto SKU display — only for simple products */}
+                    {!showVariants && (
+                      <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-black/20 border border-white/[0.05]">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] text-zinc-500">SKU:</span>
+                          <span className="font-mono text-[11px] text-zinc-300">{simpleState.sku || "Auto-generated when you type the name"}</span>
+                          {simpleState.skuLocked && <span className="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded">Custom</span>}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSimpleState((s) => ({ ...s, sku: generateSku(title), skuLocked: false }))}
+                          className="text-[11px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition"
+                        >
+                          <RotateCcw className="h-3 w-3" /> Regenerate
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => resetSku(0)}
-                        className="text-[11px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition"
-                      >
-                        <RotateCcw className="h-3 w-3" /> Regenerate
-                      </button>
-                    </div>
+                    )}
 
                     {/* Variants toggle */}
                     <div className="pt-2 border-t border-white/[0.06]">
@@ -734,8 +928,8 @@ export function ProductForm({ product, brands, categories }: Props) {
                         <input
                           type="number"
                           min={0}
-                          value={variants[0]?.weightGrams ?? ""}
-                          onChange={(e) => updateVariant(0, "weightGrams", e.target.value)}
+                          value={simpleState.weightGrams}
+                          onChange={(e) => setSimpleState((s) => ({ ...s, weightGrams: e.target.value }))}
                           placeholder="e.g. 500"
                           className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition"
                         />
@@ -744,8 +938,8 @@ export function ProductForm({ product, brands, categories }: Props) {
                         <FieldLabel hint="Barcode, UPC, or GTIN if you have one">Barcode</FieldLabel>
                         <input
                           type="text"
-                          value={variants[0]?.barcode ?? ""}
-                          onChange={(e) => updateVariant(0, "barcode", e.target.value)}
+                          value={simpleState.barcode}
+                          onChange={(e) => setSimpleState((s) => ({ ...s, barcode: e.target.value }))}
                           placeholder="Optional"
                           className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition"
                         />
@@ -756,105 +950,171 @@ export function ProductForm({ product, brands, categories }: Props) {
               </div>
             </div>
 
-            {/* ── Variants Section ──────────────────────────────────────────── */}
+            {/* ── Variant Option Builder Section ──────────────────────────────── */}
             {showVariants && (
               <div className="rounded-2xl border border-white/[0.07] bg-[#1a1a1d] overflow-hidden">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
-                  <div>
-                    <h2 className="text-sm font-semibold text-white">Product Variations</h2>
-                    <p className="text-[11px] text-zinc-500 mt-0.5">Each row = one variation (e.g. Size S, Size M, Size L)</p>
-                  </div>
+                {/* Header */}
+                <div className="px-6 py-4 border-b border-white/[0.06]">
+                  <h2 className="text-sm font-semibold text-white">Product Options</h2>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">
+                    Define what options your product comes in. Combinations are generated automatically.
+                  </p>
+                </div>
+
+                <div className="p-6 space-y-3">
+                  {optionGroups.map((group, gi) => (
+                    <div key={gi} className="rounded-xl border border-white/[0.07] bg-black/20 p-4 space-y-3">
+                      <div className="flex items-center gap-3">
+                        {/* Option name */}
+                        <div className="w-36 shrink-0">
+                          <input
+                            value={group.name}
+                            onChange={(e) => updateOptionGroup(gi, { name: e.target.value })}
+                            placeholder="e.g. Size"
+                            list="option-name-suggestions"
+                            className="w-full h-9 px-3 rounded-lg border border-white/[0.09] bg-[#111113] text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition"
+                          />
+                          <datalist id="option-name-suggestions">
+                            <option value="Size" />
+                            <option value="Color" />
+                            <option value="Material" />
+                            <option value="Style" />
+                          </datalist>
+                        </div>
+
+                        {/* Tag input for values */}
+                        <div className="flex-1">
+                          <TagInput
+                            values={group.values}
+                            onChange={(vals) => updateOptionGroup(gi, { values: vals })}
+                            placeholder={group.name === "Size" ? "e.g. S, M, L, XL — press Enter after each" : "Type a value, press Enter"}
+                          />
+                        </div>
+
+                        {/* Remove option group */}
+                        {optionGroups.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeOptionGroup(gi)}
+                            className="text-zinc-600 hover:text-rose-400 transition shrink-0"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
                   <button
                     type="button"
-                    onClick={addVariantRow}
-                    className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-white/[0.09] bg-white/[0.03] text-xs font-medium text-zinc-300 hover:bg-white/[0.07] transition"
+                    onClick={addOptionGroup}
+                    className="flex items-center gap-1.5 text-[12px] text-indigo-400 hover:text-indigo-300 transition"
                   >
-                    <Plus className="h-3.5 w-3.5" />
-                    Add Variation
+                    <Plus className="h-3.5 w-3.5" /> Add another option (e.g. Material)
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── Generated Variant Table ─────────────────────────────────────── */}
+            {showVariants && syncedVariants.length > 0 && (
+              <div className="rounded-2xl border border-white/[0.07] bg-[#1a1a1d] overflow-hidden">
+                <div className="px-6 py-4 border-b border-white/[0.06]">
+                  <h2 className="text-sm font-semibold text-white">
+                    All Combinations ({syncedVariants.length})
+                  </h2>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">
+                    Auto-generated from your options above. Set default price & stock, then fine-tune each row.
+                  </p>
+                </div>
+
+                {/* Bulk fill bar */}
+                <div className="flex items-center gap-3 px-6 py-3 bg-white/[0.02] border-b border-white/[0.05]">
+                  <span className="text-[11px] text-zinc-500 whitespace-nowrap">Apply to all:</span>
+                  <div className="relative flex-1 max-w-[140px]">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs pointer-events-none">{currencySymbol}</span>
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={bulkPrice}
+                      onChange={(e) => setBulkPrice(e.target.value)}
+                      placeholder="Price"
+                      className="w-full h-8 pl-7 pr-3 rounded-lg border border-white/[0.09] bg-[#111113] text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                    />
+                  </div>
+                  <input
+                    type="number"
+                    min={0}
+                    value={bulkStock}
+                    onChange={(e) => setBulkStock(e.target.value)}
+                    placeholder="Stock qty"
+                    className="flex-1 max-w-[120px] h-8 px-3 rounded-lg border border-white/[0.09] bg-[#111113] text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => applyBulkDefaults(bulkPrice, bulkStock)}
+                    disabled={!bulkPrice && !bulkStock}
+                    className="h-8 px-3 rounded-lg bg-indigo-600/80 hover:bg-indigo-600 text-xs font-medium text-white disabled:opacity-40 transition"
+                  >
+                    Apply
                   </button>
                 </div>
 
-                <div className="p-6 space-y-4">
-                  {variants.map((v, vi) => (
-                    <div key={v.id || vi} className="rounded-xl border border-white/[0.07] bg-black/20 p-5 space-y-4 relative">
-                      {!v.id && variants.length > 1 && (
+                {/* Table */}
+                <div className="divide-y divide-white/[0.04]">
+                  {syncedVariants.map((v, vi) => (
+                    <div
+                      key={v.id ?? vi}
+                      className={`flex items-center gap-3 px-6 py-3 ${v.isNew || v.isRestored ? "bg-amber-500/[0.04]" : ""}`}
+                    >
+                      {/* Combo label */}
+                      <div className="flex items-center gap-2 w-48 shrink-0">
+                        <span className="text-sm font-medium text-zinc-200 truncate">
+                          {v.combo.join(" / ")}
+                        </span>
+                        {(v.isNew || v.isRestored) && (
+                          <span className="flex items-center gap-1 text-[10px] font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 px-1.5 py-0.5 rounded whitespace-nowrap">
+                            <AlertTriangle className="h-2.5 w-2.5" />
+                            {v.isRestored ? "Restocked" : "New"} — add stock
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Price */}
+                      <div className="relative flex-1 min-w-0">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs pointer-events-none">{currencySymbol}</span>
+                        <input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          value={v.price}
+                          onChange={(e) => updateSyncedVariant(vi, "price", e.target.value)}
+                          placeholder="Price"
+                          className="w-full h-9 pl-7 pr-3 rounded-lg border border-white/[0.09] bg-[#111113] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                        />
+                      </div>
+
+                      {/* Stock */}
+                      <input
+                        type="number"
+                        min={0}
+                        value={v.inventoryQty}
+                        onChange={(e) => updateSyncedVariant(vi, "inventoryQty", e.target.value)}
+                        placeholder="Stock"
+                        className="w-20 shrink-0 h-9 px-3 rounded-lg border border-white/[0.09] bg-[#111113] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                      />
+
+                      {/* SKU badge */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="font-mono text-[10px] text-zinc-500">{v.sku}</span>
                         <button
                           type="button"
-                          onClick={() => removeVariantRow(vi)}
-                          className="absolute top-4 right-4 text-zinc-600 hover:text-rose-400 transition"
+                          title="Regenerate SKU"
+                          onClick={() => updateSyncedVariant(vi, "sku", generateSku(title, v.combo))}
+                          className="text-zinc-700 hover:text-zinc-400 transition"
                         >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      )}
-
-                      {/* Attributes */}
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <FieldLabel>Attributes (e.g. Size → Medium, Color → Blue)</FieldLabel>
-                          <button
-                            type="button"
-                            onClick={() => addOption(vi)}
-                            className="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition"
-                          >
-                            <Plus className="h-3 w-3" /> Add
-                          </button>
-                        </div>
-                        <div className="space-y-2">
-                          {v.options.map((opt, oi) => (
-                            <div key={oi} className="flex items-center gap-2">
-                              <input
-                                value={opt.key}
-                                onChange={(e) => updateOption(vi, oi, "key", e.target.value)}
-                                placeholder="Attribute (e.g. Size)"
-                                className="flex-1 h-9 px-3 rounded-lg border border-white/[0.09] bg-[#111113] text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition"
-                              />
-                              <input
-                                value={opt.value}
-                                onChange={(e) => updateOption(vi, oi, "value", e.target.value)}
-                                placeholder="Value (e.g. Medium)"
-                                className="flex-1 h-9 px-3 rounded-lg border border-white/[0.09] bg-[#111113] text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition"
-                              />
-                              {v.options.length > 1 && (
-                                <button type="button" onClick={() => removeOption(vi, oi)} className="text-zinc-600 hover:text-rose-400 transition">
-                                  <X className="h-4 w-4" />
-                                </button>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Price / Stock */}
-                      <div className="grid grid-cols-3 gap-3">
-                        <div>
-                          <FieldLabel required>Price</FieldLabel>
-                          <PriceInput value={v.price} onChange={(val) => updateVariant(vi, "price", val)} placeholder="0.00" symbol={currencySymbol} />
-                        </div>
-                        <div>
-                          <FieldLabel>Original Price</FieldLabel>
-                          <PriceInput value={v.compareAtPrice} onChange={(val) => updateVariant(vi, "compareAtPrice", val)} placeholder="Was…" symbol={currencySymbol} />
-                        </div>
-                        <div>
-                          <FieldLabel required>Stock</FieldLabel>
-                          <input
-                            type="number" min={0}
-                            value={v.inventoryQty}
-                            onChange={(e) => updateVariant(vi, "inventoryQty", e.target.value)}
-                            placeholder="0"
-                            className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition"
-                          />
-                        </div>
-                      </div>
-
-                      {/* SKU */}
-                      <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-black/20 border border-white/[0.05]">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-zinc-500 uppercase tracking-wider">SKU</span>
-                          <span className="font-mono text-[11px] text-zinc-300">{v.sku || "Auto-generated"}</span>
-                          {v.skuLocked && <span className="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1 py-0.5 rounded">Custom</span>}
-                        </div>
-                        <button type="button" onClick={() => resetSku(vi)} className="text-[10px] text-zinc-600 hover:text-zinc-300 flex items-center gap-1 transition">
-                          <RotateCcw className="h-2.5 w-2.5" /> Reset
+                          <RotateCcw className="h-3 w-3" />
                         </button>
                       </div>
                     </div>
@@ -862,6 +1122,7 @@ export function ProductForm({ product, brands, categories }: Props) {
                 </div>
               </div>
             )}
+
           </div>
         </div>
       </div>
