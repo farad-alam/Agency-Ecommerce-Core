@@ -616,13 +616,21 @@ export function ProductForm({ product, brands, categories }: Props) {
                             <img src={URL.createObjectURL(f)} alt="Preview" className="w-full h-full object-cover" />
                           </div>
                         ))}
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="aspect-square rounded-lg border-2 border-dashed border-white/[0.1] bg-black/20 flex items-center justify-center text-zinc-600 hover:text-zinc-400 hover:border-indigo-500/40 transition"
-                        >
+                        <label className="aspect-square rounded-lg border-2 border-dashed border-white/[0.1] bg-black/20 flex items-center justify-center text-zinc-600 hover:text-zinc-400 hover:border-indigo-500/40 transition cursor-pointer group">
                           <Plus className="h-5 w-5" />
-                        </button>
+                          <input
+                            type="file"
+                            className="hidden"
+                            multiple
+                            accept="image/*"
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files.length > 0) {
+                                setPendingFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
+                              }
+                              e.target.value = ""; // reset
+                            }}
+                          />
+                        </label>
                       </div>
 
                       <div className="flex gap-2">
@@ -636,33 +644,37 @@ export function ProductForm({ product, brands, categories }: Props) {
                       </div>
                     </>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
+                    <label
+                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                      onDrop={(e) => {
+                        e.preventDefault(); e.stopPropagation();
+                        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                          setPendingFiles((prev) => [...prev, ...Array.from(e.dataTransfer.files)]);
+                        }
+                      }}
                       className="w-full aspect-[4/3] rounded-xl border-2 border-dashed border-white/[0.1] bg-black/20 hover:border-indigo-500/40 hover:bg-indigo-500/5 transition flex flex-col items-center justify-center gap-3 cursor-pointer group"
                     >
-                      <div className="h-12 w-12 rounded-2xl bg-white/[0.04] group-hover:bg-indigo-500/20 flex items-center justify-center transition">
+                      <div className="h-12 w-12 rounded-2xl bg-white/[0.04] group-hover:bg-indigo-500/20 flex items-center justify-center transition pointer-events-none">
                         <Plus className="h-6 w-6 text-zinc-500 group-hover:text-indigo-400" />
                       </div>
-                      <div className="text-center">
-                        <p className="text-sm font-medium text-zinc-400 group-hover:text-indigo-300">Click to add images</p>
+                      <div className="text-center pointer-events-none">
+                        <p className="text-sm font-medium text-zinc-400 group-hover:text-indigo-300">Click or drag images here</p>
                         <p className="text-xs text-zinc-600 mt-0.5">JPEG, PNG, WEBP up to 5MB</p>
                       </div>
-                    </button>
+                      <input
+                        type="file"
+                        className="hidden"
+                        multiple
+                        accept="image/*"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files.length > 0) {
+                            setPendingFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
+                          }
+                          e.target.value = ""; // reset
+                        }}
+                      />
+                    </label>
                   )}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    multiple
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files) {
-                        setPendingFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
-                      }
-                      e.target.value = ""; // reset
-                    }}
-                  />
                 </div>
               ) : (
                 <div className="p-6 space-y-4">
