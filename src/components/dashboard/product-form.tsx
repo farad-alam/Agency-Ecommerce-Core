@@ -630,7 +630,8 @@ export function ProductForm({ product, brands, categories }: Props) {
                             accept="image/*"
                             onChange={(e) => {
                               if (e.target.files && e.target.files.length > 0) {
-                                setPendingFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
+                                const newFiles = Array.from(e.target.files);
+                                setPendingFiles((prev) => [...prev, ...newFiles]);
                               }
                               e.target.value = ""; // reset
                             }}
@@ -673,7 +674,8 @@ export function ProductForm({ product, brands, categories }: Props) {
                         accept="image/*"
                         onChange={(e) => {
                           if (e.target.files && e.target.files.length > 0) {
-                            setPendingFiles((prev) => [...prev, ...Array.from(e.target.files!)]);
+                            const newFiles = Array.from(e.target.files);
+                            setPendingFiles((prev) => [...prev, ...newFiles]);
                           }
                           e.target.value = ""; // reset
                         }}
