@@ -320,9 +320,9 @@ export function ProductForm({ product, brands, categories }: Props) {
         return {
           combo,
           sku: generateSku(currentTitle, combo),
-          price: simpleState.price || "",
-          compareAtPrice: simpleState.compareAtPrice || "",
-          inventoryQty: "0",
+          price: "", // blank; admin will use default price field or apply-all
+          compareAtPrice: "",
+          inventoryQty: "",
           isNew: true,
           isRestored: false,
           skuLocked: false,
@@ -399,22 +399,55 @@ export function ProductForm({ product, brands, categories }: Props) {
     );
   }
 
+  // ─── Helper: extract human-readable API errors ────────────────────────────
+  async function extractApiError(res: Response, fallback: string): Promise<string> {
+    try {
+      const data = await res.json();
+      if (data.details && typeof data.details === "object") {
+        const fieldMap: Record<string, string> = {
+          price: "Price",
+          inventoryQty: "Stock",
+          sku: "SKU",
+          title: "Product Name",
+          slug: "URL Slug",
+        };
+        const msgs = Object.entries(data.details as Record<string, string[]>)
+          .map(([field, errors]) => `${fieldMap[field] ?? field}: ${errors.join(", ")}`)
+          .join(" · ");
+        return msgs || data.error || fallback;
+      }
+      return data.error || fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
   // ─── Save ────────────────────────────────────────────────────────────────────
   async function handleSave(saveStatus: "DRAFT" | "ACTIVE" | "ARCHIVED") {
     setError(null);
     setSavingAs(saveStatus);
 
-    // Validate
+    // ── Client-side validation ──
+    if (!title.trim()) {
+      setError("Product name is required.");
+      setSavingAs(null);
+      return;
+    }
     if (showVariants) {
       const hasCombo = optionGroups.some((g) => g.name && g.values.length > 0);
       if (!hasCombo) {
-        setError("Add at least one option with values (e.g. Size → S, M, L).");
+        setError("Add at least one option with values, e.g. Size → S, M, L.");
+        setSavingAs(null);
+        return;
+      }
+      if (!defaultPrice || parseFloat(defaultPrice) <= 0) {
+        setError("Please enter a default price for your variants.");
         setSavingAs(null);
         return;
       }
     } else {
-      if (!simpleState.price) {
-        setError("Price is required.");
+      if (!simpleState.price || parseFloat(simpleState.price) <= 0) {
+        setError("Price is required — enter the amount customers will pay.");
         setSavingAs(null);
         return;
       }
@@ -438,15 +471,16 @@ export function ProductForm({ product, brands, categories }: Props) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...body, status }),
         });
-        if (!res.ok) throw new Error((await res.json()).error ?? "Update failed");
+        if (!res.ok) throw new Error(await extractApiError(res, "Update failed"));
       } else {
         const res = await fetch("/api/products", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        if (!res.ok) throw new Error((await res.json()).error ?? "Create failed");
-        productId = (await res.json()).id;
+        if (!res.ok) throw new Error(await extractApiError(res, "Create failed"));
+        const created = await res.json();
+        productId = created.id;
       }
 
       if (!showVariants) {
@@ -480,25 +514,28 @@ export function ProductForm({ product, brands, categories }: Props) {
           const optionsObj = Object.fromEntries(
             activeGroups.map((g, i) => [g.name, v.combo[i] ?? ""])
           );
+          const rowPrice = parseFloat(v.price || defaultPrice) || parseFloat(defaultPrice) || 0;
           const payload = {
             sku: v.sku.trim() || generateSku(title, v.combo),
-            price: parseFloat(v.price) || 0,
+            price: rowPrice,
             compareAtPrice: v.compareAtPrice ? parseFloat(v.compareAtPrice) : undefined,
-            inventoryQty: parseInt(v.inventoryQty) || 0,
+            inventoryQty: v.inventoryQty ? parseInt(v.inventoryQty) : 0, // stock optional
             options: optionsObj,
           };
           if (v.id) {
-            await fetch(`/api/products/${productId}/variants/${v.id}`, {
+            const res = await fetch(`/api/products/${productId}/variants/${v.id}`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
             });
+            if (!res.ok) throw new Error(await extractApiError(res, `Failed to update variant ${v.combo.join("/")}`));
           } else {
-            await fetch(`/api/products/${productId}/variants`, {
+            const res = await fetch(`/api/products/${productId}/variants`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
             });
+            if (!res.ok) throw new Error(await extractApiError(res, `Failed to create variant ${v.combo.join("/")}`));
           }
         }
       }
@@ -535,8 +572,22 @@ export function ProductForm({ product, brands, categories }: Props) {
 
   const isSaving = !!savingAs || isPending;
 
-  // ─── Bulk defaults state (for variant table) ─────────────────────────────────
-  const [bulkPrice, setBulkPrice] = useState("");
+  // ─── Default price for all variants (required) ───────────────────────────────
+  const [defaultPrice, setDefaultPrice] = useState(
+    hasExistingOptions && product?.variants[0]
+      ? String(product.variants[0].price)
+      : ""
+  );
+
+  // When defaultPrice changes, fill blank price cells
+  useEffect(() => {
+    if (!defaultPrice) return;
+    setSyncedVariants((prev) =>
+      prev.map((v) => (!v.price ? { ...v, price: defaultPrice } : v))
+    );
+  }, [defaultPrice]);
+
+  // ─── Bulk stock apply state ───────────────────────────────────────────────────
   const [bulkStock, setBulkStock] = useState("");
 
   // ─── Render ──────────────────────────────────────────────────────────────────
@@ -842,16 +893,16 @@ export function ProductForm({ product, brands, categories }: Props) {
                       </div>
                     )}
 
-                    {/* Stock — only shown when no variants */}
+                    {/* Stock — optional */}
                     {!showVariants && (
                       <div>
-                        <FieldLabel required hint="How many units do you currently have available?">Stock Count</FieldLabel>
+                        <FieldLabel hint="How many units you have in stock. Leave blank if you manage stock offline.">Stock Count (optional)</FieldLabel>
                         <input
                           type="number"
                           min={0}
                           value={simpleState.inventoryQty}
                           onChange={(e) => setSimpleState((s) => ({ ...s, inventoryQty: e.target.value }))}
-                          placeholder="e.g. 50"
+                          placeholder="0 (optional)"
                           className="w-full h-12 px-4 rounded-xl border border-white/[0.09] bg-[#111113] text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition"
                         />
                       </div>
@@ -1024,42 +1075,62 @@ export function ProductForm({ product, brands, categories }: Props) {
                     All Combinations ({syncedVariants.length})
                   </h2>
                   <p className="text-[11px] text-zinc-500 mt-0.5">
-                    Auto-generated from your options above. Set default price & stock, then fine-tune each row.
+                    Auto-generated from your options above. Set the default price, then fine-tune each row.
                   </p>
                 </div>
 
-                {/* Bulk fill bar */}
-                <div className="flex items-center gap-3 px-6 py-3 bg-white/[0.02] border-b border-white/[0.05]">
-                  <span className="text-[11px] text-zinc-500 whitespace-nowrap">Apply to all:</span>
-                  <div className="relative flex-1 max-w-[140px]">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs pointer-events-none">{currencySymbol}</span>
+                {/* Default price + bulk stock bar */}
+                <div className="flex items-center gap-4 px-6 py-4 bg-white/[0.02] border-b border-white/[0.05]">
+                  {/* Required default price */}
+                  <div className="flex items-center gap-2">
+                    <label className="text-[12px] font-medium text-zinc-300 whitespace-nowrap">
+                      Default Price <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-400 ml-0.5 align-middle" title="Required" />
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs pointer-events-none">{currencySymbol}</span>
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={defaultPrice}
+                        onChange={(e) => setDefaultPrice(e.target.value)}
+                        placeholder="e.g. 35"
+                        className={`w-28 h-9 pl-7 pr-3 rounded-lg border bg-[#111113] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 ${
+                          !defaultPrice ? "border-rose-500/50" : "border-white/[0.09]"
+                        }`}
+                      />
+                    </div>
+                    {!defaultPrice && (
+                      <span className="text-[10px] text-rose-400">Required</span>
+                    )}
+                  </div>
+                  {/* Optional bulk stock */}
+                  <div className="flex items-center gap-2 ml-auto">
+                    <label className="text-[12px] text-zinc-500 whitespace-nowrap">Apply stock to all:</label>
                     <input
                       type="number"
                       min={0}
-                      step="0.01"
-                      value={bulkPrice}
-                      onChange={(e) => setBulkPrice(e.target.value)}
-                      placeholder="Price"
-                      className="w-full h-8 pl-7 pr-3 rounded-lg border border-white/[0.09] bg-[#111113] text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                      value={bulkStock}
+                      onChange={(e) => setBulkStock(e.target.value)}
+                      placeholder="e.g. 50"
+                      className="w-24 h-9 px-3 rounded-lg border border-white/[0.09] bg-[#111113] text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
                     />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!bulkStock) return;
+                        setSyncedVariants((prev) =>
+                          prev.map((v) => ({ ...v, inventoryQty: bulkStock }))
+                        );
+                      }}
+                      disabled={!bulkStock}
+                      className="h-9 px-3 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-xs font-medium text-white disabled:opacity-40 transition"
+                    >
+                      Apply
+                    </button>
                   </div>
-                  <input
-                    type="number"
-                    min={0}
-                    value={bulkStock}
-                    onChange={(e) => setBulkStock(e.target.value)}
-                    placeholder="Stock qty"
-                    className="flex-1 max-w-[120px] h-8 px-3 rounded-lg border border-white/[0.09] bg-[#111113] text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => applyBulkDefaults(bulkPrice, bulkStock)}
-                    disabled={!bulkPrice && !bulkStock}
-                    className="h-8 px-3 rounded-lg bg-indigo-600/80 hover:bg-indigo-600 text-xs font-medium text-white disabled:opacity-40 transition"
-                  >
-                    Apply
-                  </button>
                 </div>
+
 
                 {/* Table */}
                 <div className="divide-y divide-white/[0.04]">
