@@ -377,9 +377,12 @@ export function ProductForm({ product, brands, categories }: Props) {
               const formData = new FormData();
               formData.append("file", file);
               formData.append("api_key", signatureParams.apiKey);
-              formData.append("timestamp", signatureParams.timestamp);
+              formData.append("timestamp", signatureParams.timestamp.toString());
               formData.append("signature", signatureParams.signature);
               formData.append("folder", signatureParams.folder);
+              if (signatureParams.eager) {
+                formData.append("eager", signatureParams.eager);
+              }
 
               const uploadRes = await fetch(
                 `https://api.cloudinary.com/v1_1/${signatureParams.cloudName}/image/upload`,
