@@ -20,7 +20,14 @@ export const InviteStaffInputSchema = z.object({
   role: z.enum(["STAFF", "ADMIN"]),
 });
 
+export const AcceptInviteInputSchema = z.object({
+  token: z.string(),
+  password: z.string().min(8),
+  name: z.string().min(2),
+});
+
 export type RegisterInput = z.infer<typeof RegisterInputSchema>;
 export type ForgotPasswordInput = z.infer<typeof ForgotPasswordInputSchema>;
 export type ResetPasswordInput = z.infer<typeof ResetPasswordInputSchema>;
 export type InviteStaffInput = z.infer<typeof InviteStaffInputSchema>;
+export type AcceptInviteInput = z.infer<typeof AcceptInviteInputSchema>;

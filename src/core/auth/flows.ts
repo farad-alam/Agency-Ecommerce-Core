@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { Errors } from "@/core/errors";
-import { RegisterInput, ForgotPasswordInput, ResetPasswordInput, InviteStaffInput } from "./types";
+import { RegisterInput, ForgotPasswordInput, ResetPasswordInput, InviteStaffInput, AcceptInviteInput } from "./types";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
@@ -142,4 +142,49 @@ export async function inviteStaff(input: InviteStaffInput, inviterId: string) {
   console.log(`[STUB] Staff invite token for ${input.email} (${input.role}): ${token}`);
   
   return invite;
+}
+
+export async function acceptStaffInvite(input: AcceptInviteInput) {
+  const invite = await db.staffInvite.findUnique({
+    where: { token: input.token },
+  });
+
+  if (!invite || invite.acceptedAt || invite.expiresAt < new Date()) {
+    throw Errors.businessRule("Invalid or expired invite token", "TOKEN_INVALID");
+  }
+
+  const existingUser = await db.user.findUnique({
+    where: { email: invite.email },
+  });
+
+  if (existingUser) {
+    throw Errors.conflict("User with this email already exists");
+  }
+
+  const hashedPassword = await bcrypt.hash(input.password, 10);
+
+  const user = await db.$transaction(async (tx) => {
+    const newUser = await tx.user.create({
+      data: {
+        email: invite.email,
+        name: input.name,
+        passwordHash: hashedPassword,
+        role: invite.role,
+      },
+    });
+
+    await tx.staffInvite.update({
+      where: { id: invite.id },
+      data: { acceptedAt: new Date() },
+    });
+
+    return newUser;
+  });
+
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+  };
 }
