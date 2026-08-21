@@ -28,6 +28,9 @@ export default async function OrdersPage(props: {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight text-white">Orders</h1>
+        <Link href="/dashboard/orders/new" className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-500 transition-colors">
+          Create Order
+        </Link>
       </div>
 
       <Card className="border-white/[0.08] bg-black/40 backdrop-blur-xl">
@@ -71,7 +74,7 @@ export default async function OrdersPage(props: {
                       <Badge variant={
                         order.status === "PENDING" ? "outline" : 
                         order.status === "FULFILLED" ? "default" : "secondary"
-                      }>
+                      } className={order.status === "PENDING" ? "bg-amber-500/10 text-amber-500 border-amber-500/20" : ""}>
                         {order.status}
                       </Badge>
                     </td>
