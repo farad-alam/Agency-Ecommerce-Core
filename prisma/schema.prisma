@@ -58,6 +58,18 @@ enum ReviewStatus {
   REJECTED
 }
 
+enum MfsProvider {
+  BKASH
+  NAGAD
+  ROCKET
+}
+
+enum MfsPaymentStatus {
+  PENDING_VERIFICATION
+  VERIFIED
+  REJECTED
+}
+
 enum TaxMode {
   NONE
   FLAT_RATE
@@ -341,6 +353,7 @@ model Order {
   updatedAt       DateTime         @updatedAt
   refunds         Refund[]
   statusHistory   OrderStatusEvent[]
+  mfsPayment      MfsPayment?
 
   @@index([userId])
   @@index([status])
@@ -423,6 +436,38 @@ model ShippingRate {
   minSubtotalForFree Decimal?     @db.Decimal(10, 2)
 
   @@index([zoneId])
+}
+
+// ─── MFS Payment ─────────────────────────────────────────────────────────────
+
+model MfsAccount {
+  id            String      @id @default(cuid())
+  provider      MfsProvider
+  accountNumber String
+  accountName   String?
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([provider])
+}
+
+model MfsPayment {
+  id              String           @id @default(cuid())
+  orderId         String           @unique
+  order           Order            @relation(fields: [orderId], references: [id])
+  provider        MfsProvider
+  senderNumber    String
+  transactionId   String
+  status          MfsPaymentStatus @default(PENDING_VERIFICATION)
+  verifiedBy      String?
+  verifiedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([orderId])
+  @@index([status])
 }
 
 // ─── Reviews ──────────────────────────────────────────────────────────────────

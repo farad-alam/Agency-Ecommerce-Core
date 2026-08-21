@@ -3,6 +3,7 @@ import { Errors } from "@/core/errors";
 import { CheckoutInput } from "./types";
 import { getOrCreateCart } from "@/core/cart";
 import { Prisma } from "@prisma/client";
+import { storeConfig } from "@/config/store.config";
 
 function generateOrderNumber(): string {
   // Simple order number generator e.g. ORD-20260726-XXXX
@@ -62,9 +63,9 @@ export async function processCheckout(
     });
   }
 
-  // In a real app, calculate shipping and taxes based on address. 
-  // For Sprint 2 stub, we assume 0 for now.
-  const shippingTotal = 0;
+  // In a real app, calculate shipping and taxes based on address.
+  // Flat shipping rate applies across all of Bangladesh.
+  const shippingTotal = storeConfig.shipping.flatRateBDT;
   const taxTotal = 0;
   const discountTotal = 0; // Coupons later
   const total = subtotal + shippingTotal + taxTotal - discountTotal;

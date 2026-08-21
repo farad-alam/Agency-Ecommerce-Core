@@ -18,6 +18,9 @@ export interface StoreConfig {
     decrementOn: "on_checkout" | "on_payment";
     lowStockThreshold: number;
   };
+  shipping: {
+    flatRateBDT: number; // Flat shipping charge applied to every order
+  };
   email: {
     adminAlertEmails: string[];
     lowStockThreshold: number;
@@ -53,6 +56,10 @@ export const storeConfig: StoreConfig = {
     allowOversell: false,
     decrementOn: "on_checkout",
     lowStockThreshold: 5,
+  },
+
+  shipping: {
+    flatRateBDT: 150, // Flat 150 BDT shipping all over Bangladesh
   },
 
   email: {

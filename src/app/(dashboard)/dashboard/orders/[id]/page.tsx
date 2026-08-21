@@ -4,6 +4,7 @@ import { getOrder } from "@/core/orders";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { MfsPaymentCard } from "@/components/dashboard/mfs-payment-card";
 
 export const metadata: Metadata = {
   title: "Order Details",
@@ -107,6 +108,8 @@ export default async function OrderDetailsPage(props: {
               {shippingAddress?.phone && <p>Phone: {shippingAddress.phone}</p>}
             </div>
           </Card>
+
+          <MfsPaymentCard orderId={order.id} mfsPayment={order.mfsPayment} />
         </div>
       </div>
     </div>

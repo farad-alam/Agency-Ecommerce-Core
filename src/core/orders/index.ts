@@ -14,7 +14,8 @@ export const orderInclude = {
   },
   statusHistory: {
     orderBy: { createdAt: "desc" } as const,
-  }
+  },
+  mfsPayment: true,
 } satisfies Prisma.OrderInclude;
 
 export type OrderFull = Prisma.OrderGetPayload<{ include: typeof orderInclude }>;
