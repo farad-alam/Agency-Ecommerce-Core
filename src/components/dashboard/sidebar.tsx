@@ -36,7 +36,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Collections", href: "/dashboard/collections", icon: LayoutList },
   { label: "Inventory", href: "/dashboard/inventory", icon: Package },
   { label: "Coupons", href: "/dashboard/coupons", icon: Percent },
-  { label: "Shipping", href: "/dashboard/shipping", icon: Truck },
   { label: "Reviews", href: "/dashboard/reviews", icon: MessageSquare },
   { label: "Media", href: "/dashboard/media", icon: Image },
   { label: "Analytics", href: "/dashboard/analytics", icon: BarChart2, adminOnly: true },
