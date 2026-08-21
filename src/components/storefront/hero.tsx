@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChevronDown, ShoppingBag, Star } from "lucide-react";
 
 export type HeroSlide = {
   eyebrow?: string;
@@ -16,129 +15,99 @@ export type HeroSlide = {
   secondaryCtaHref?: string;
 };
 
-const SLIDE_INTERVAL_MS = 6000;
-
-export function HeroSlideshow({ slides }: { slides: HeroSlide[] }) {
-  const [current, setCurrent] = useState(0);
-  const [paused, setPaused] = useState(false);
-
-  useEffect(() => {
-    if (paused) return;
-
-    const timer = setInterval(() => {
-      setCurrent((i) => (i + 1) % slides.length);
-    }, SLIDE_INTERVAL_MS);
-
-    return () => clearInterval(timer);
-  }, [paused, slides.length]);
-
-  const goTo = (index: number) => {
-    setCurrent((index + slides.length) % slides.length);
-  };
+export function Hero({ slides }: { slides: HeroSlide[] }) {
+  const slide = slides[0];
 
   return (
     <section
-      aria-roledescription="carousel"
-      aria-label="Featured slides"
-      className="relative min-h-[70vh] overflow-hidden bg-gray-900"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
+      aria-label="Featured slide"
+      className="relative overflow-visible bg-[#D3113D]"
     >
-      {slides.map((slide, i) => {
-        const active = i === current;
+      <div className="mx-auto max-w-7xl px-4 lg:px-8 py-16 lg:py-24">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8 items-center">
+          {/* Left — copy */}
+          <div className="lg:col-span-7 flex flex-col items-start text-left space-y-7">
+            {slide.eyebrow && (
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-white">
+                {slide.eyebrow}
+              </span>
+            )}
+            <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-white">
+              {slide.title}
+            </h1>
+            {slide.description && (
+              <p className="max-w-xl text-lg md:text-xl text-white/85">
+                {slide.description}
+              </p>
+            )}
+            {(slide.ctaLabel || slide.secondaryCtaLabel) && (
+              <div className="flex flex-wrap items-center gap-4 pt-2">
+                {slide.ctaLabel && (
+                  <Link
+                    href={slide.ctaHref}
+                    className="inline-flex items-center gap-2.5 rounded-full bg-[#F56C73] px-8 py-3.5 text-base font-medium text-white shadow-[0_10px_30px_rgba(245,108,115,0.45)] hover:bg-[#ED2746] transition-colors"
+                  >
+                    {slide.ctaLabel}
+                    <ShoppingBag className="h-4 w-4" />
+                  </Link>
+                )}
+                {slide.secondaryCtaLabel && (
+                  <Link
+                    href={slide.secondaryCtaHref ?? slide.ctaHref}
+                    className="inline-flex items-center gap-2.5 rounded-full border-2 border-white/70 bg-transparent px-8 py-3.5 text-base font-medium text-white hover:bg-white/10 transition-colors"
+                  >
+                    {slide.secondaryCtaLabel}
+                    <ChevronDown className="h-4 w-4" />
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
 
-        return (
-          <div
-            key={slide.imageUrl}
-            className={`absolute inset-0 transition-opacity duration-700 ${active ? "opacity-100" : "opacity-0 pointer-events-none"}`}
-            aria-hidden={!active}
-          >
-            <Image
-              src={slide.imageUrl}
-              alt=""
-              fill
-              priority={i === 0}
-              sizes="100vw"
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-black/40" />
-            <div className="relative z-10 flex items-center justify-center px-4">
-              <div className="max-w-2xl mx-auto text-center space-y-6">
-                {slide.eyebrow && (
-                  <span className="inline-block rounded-full bg-white/10 backdrop-blur px-4 py-1.5 text-xs font-medium uppercase tracking-wide text-white">
-                    {slide.eyebrow}
+          {/* Right — circular image + floating review card */}
+          <div className="lg:col-span-5 lg:-mt-10 relative">
+            <div className="relative mx-auto aspect-square w-full max-w-[420px] lg:max-w-none overflow-hidden rounded-full bg-[#FDE9EC]">
+              <Image
+                src={slide.imageUrl}
+                alt=""
+                fill
+                priority
+                sizes="(max-width: 1024px) 420px, 460px"
+                className="object-cover"
+              />
+            </div>
+
+            <div className="absolute -left-4 sm:-left-8 -bottom-8 flex items-center gap-3 rounded-full bg-[#FDE9EC] py-3 pl-4 pr-6 shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
+              <div className="flex -space-x-2">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#FDE9EC] bg-[#F56C73] text-[10px] font-bold text-white">
+                  SM
+                </span>
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#FDE9EC] bg-[#ED2746] text-[10px] font-bold text-white">
+                  AR
+                </span>
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#FDE9EC] bg-[#1A1A1A] text-[10px] font-bold text-white">
+                  J
+                </span>
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-xs font-bold text-[#1A1A1A]">Our Happy Customer</p>
+                <div className="flex items-center gap-1 text-[#1A1A1A]">
+                  <span className="flex text-[#ED2746]">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-3 w-3 ${i < 4 ? "fill-[#ED2746]" : "fill-[#ED2746]/30 text-[#ED2746]/30"}`}
+                      />
+                    ))}
                   </span>
-                )}
-                <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white">
-                  {slide.title}
-                </h1>
-                {slide.description && (
-                  <p className="text-lg md:text-xl text-gray-200">
-                    {slide.description}
-                  </p>
-                )}
-                {(slide.ctaLabel || slide.secondaryCtaLabel) && (
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-                    {slide.ctaLabel && (
-                      <Link
-                        href={slide.ctaHref}
-                        tabIndex={active ? undefined : -1}
-                        className="bg-white text-black px-8 py-4 rounded-md font-medium hover:bg-gray-100 transition-colors"
-                      >
-                        {slide.ctaLabel}
-                      </Link>
-                    )}
-                    {slide.secondaryCtaLabel && (
-                      <Link
-                        href={slide.secondaryCtaHref ?? slide.ctaHref}
-                        tabIndex={active ? undefined : -1}
-                        className="border border-white/40 text-white px-8 py-4 rounded-md font-medium hover:bg-white/10 transition-colors"
-                      >
-                        {slide.secondaryCtaLabel}
-                      </Link>
-                    )}
-                  </div>
-                )}
+                  <span className="text-[11px] font-bold">4.5</span>
+                  <span className="text-[11px] text-[#1A1A1A]/60">(453k Reviews)</span>
+                </div>
               </div>
             </div>
           </div>
-        );
-      })}
-
-      {slides.length > 1 && (
-        <>
-          <button
-            type="button"
-            onClick={() => goTo(current - 1)}
-            aria-label="Previous slide"
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <button
-            type="button"
-            onClick={() => goTo(current + 1)}
-            aria-label="Next slide"
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
-          >
-            <ChevronRight className="h-6 w-6" />
-          </button>
-          <div className="absolute bottom-4 inset-x-0 z-10 flex items-center justify-center gap-2">
-            {slides.map((slide, i) => (
-              <button
-                key={slide.imageUrl}
-                type="button"
-                onClick={() => goTo(i)}
-                aria-label={`Go to slide ${i + 1} of ${slides.length}`}
-                aria-current={i === current}
-                className={`rounded-full transition-all ${i === current ? "bg-white w-8 h-2.5" : "bg-white/40 hover:bg-white/70 w-2.5 h-2.5"}`}
-              />
-            ))}
-          </div>
-        </>
-      )}
+        </div>
+      </div>
     </section>
   );
 }

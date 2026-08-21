@@ -9,7 +9,7 @@ export default function StorefrontLayout({
 }) {
   return (
     <CartProvider>
-      <div className="flex min-h-screen flex-col bg-white">
+      <div className="flex min-h-screen flex-col bg-[#FDF1F3]">
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />

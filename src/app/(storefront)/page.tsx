@@ -2,40 +2,47 @@ import { getStorefrontCollections, getStorefrontProducts } from "@/storefront-sd
 import Link from "next/link";
 import Image from "next/image";
 import { ProductCard } from "@/components/storefront/product-card";
-import { HeroSlideshow, type HeroSlide } from "@/components/storefront/hero";
+import { Hero, type HeroSlide } from "@/components/storefront/hero";
 
 const heroSlides: HeroSlide[] = [
   {
-    eyebrow: "The Core Collection",
+    eyebrow: "Agency Ecommerce Core",
     title: "The Core Collection",
     description:
       "Discover our curated selection of premium products, built to demonstrate the power of Agency Ecommerce Core.",
     imageUrl:
-      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop",
-    ctaLabel: "Shop All Products",
+      "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=1000&auto=format&fit=crop",
+    ctaLabel: "Shop Now",
     ctaHref: "/products",
-    secondaryCtaLabel: "New Arrivals",
-    secondaryCtaHref: "/products?collection=new-arrivals",
+    secondaryCtaLabel: "All Categories",
+    secondaryCtaHref: "/products?category=apparel",
+  },
+];
+
+const heroCategories = [
+  {
+    label: "Electronics",
+    href: "/products?category=electronics",
+    imageUrl:
+      "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=200&auto=format&fit=crop",
   },
   {
-    eyebrow: "New Arrivals",
-    title: "Fresh From the Shelf",
-    description: "The latest drops, from noise-cancelling headphones to everyday essentials.",
+    label: "Apparel",
+    href: "/products?category=apparel",
     imageUrl:
-      "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=2070&auto=format&fit=crop",
-    ctaLabel: "Explore New Arrivals",
-    ctaHref: "/products?collection=new-arrivals",
+      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=200&auto=format&fit=crop",
   },
   {
-    eyebrow: "Summer Sale",
-    title: "Seasonal Deals Worth Splashing Out On",
-    description: "Everyday favourites, now at their best prices of the season.",
+    label: "Home & Living",
+    href: "/products?category=home",
     imageUrl:
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=2070&auto=format&fit=crop",
-    ctaLabel: "Shop Summer Sale",
-    ctaHref: "/products?collection=summer-sale",
-    secondaryCtaLabel: "View All Products",
-    secondaryCtaHref: "/products",
+      "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?q=80&w=200&auto=format&fit=crop",
+  },
+  {
+    label: "New Arrivals",
+    href: "/products?collection=new-arrivals",
+    imageUrl:
+      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=200&auto=format&fit=crop",
   },
 ];
 
@@ -48,7 +55,35 @@ export default async function StorefrontHomepage() {
   return (
     <div className="flex flex-col gap-16 pb-16">
       {/* Hero Section */}
-      <HeroSlideshow slides={heroSlides} />
+      <Hero slides={heroSlides} />
+
+      {/* Category pills straddling the hero seam */}
+      <section className="relative z-10">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 -mt-20 lg:-mt-24">
+            {heroCategories.map((cat) => (
+              <Link
+                key={cat.href}
+                href={cat.href}
+                className="group flex items-center gap-3 rounded-full bg-gradient-to-r from-[#F56C73] to-[#D3113D] py-2.5 pl-2.5 pr-6 shadow-[0_10px_25px_rgba(211,17,61,0.25)] transition-transform hover:-translate-y-0.5"
+              >
+                <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-white">
+                  <Image
+                    src={cat.imageUrl}
+                    alt=""
+                    fill
+                    sizes="40px"
+                    className="object-cover"
+                  />
+                </span>
+                <span className="font-heading text-lg font-medium text-white">
+                  {cat.label}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Featured Collections */}
       <section className="container mx-auto px-4 space-y-8">
