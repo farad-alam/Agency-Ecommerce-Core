@@ -4,6 +4,7 @@ import { CheckoutInput } from "./types";
 import { getOrCreateCart } from "@/core/cart";
 import { Prisma } from "@prisma/client";
 import { storeConfig } from "@/config/store.config";
+import { validateCoupon, incrementCouponUsage } from "@/core/coupons";
 
 function generateOrderNumber(): string {
   // Simple order number generator e.g. ORD-20260726-XXXX
@@ -67,8 +68,22 @@ export async function processCheckout(
   // Flat shipping rate applies across all of Bangladesh.
   const shippingTotal = storeConfig.shipping.flatRateBDT;
   const taxTotal = 0;
-  const discountTotal = 0; // Coupons later
-  const total = subtotal + shippingTotal + taxTotal - discountTotal;
+
+  // Apply coupon if one was set on the cart
+  let discountTotal = 0;
+  let couponCode: string | null = cart.couponCode ?? null;
+  let isFreeShipping = false;
+
+  if (couponCode) {
+    const validation = await validateCoupon(couponCode, subtotal);
+    discountTotal = validation.discountAmount;
+    if (validation.coupon.type === "FREE_SHIPPING") {
+      isFreeShipping = true;
+    }
+  }
+
+  const finalShipping = isFreeShipping ? 0 : shippingTotal;
+  const total = subtotal + finalShipping + taxTotal - discountTotal;
 
   // 3. Create Order & decrement inventory atomically
   const order = await db.$transaction(async (tx) => {
@@ -82,11 +97,12 @@ export async function processCheckout(
         guestEmail: identity.userId ? null : input.guestEmail,
         status: "PENDING",
         subtotal,
-        shippingTotal,
+        shippingTotal: finalShipping,
         taxTotal,
         discountTotal,
         total,
-        currency: "BDT", // Store default from store.config.ts in future
+        currency: storeConfig.currency,
+        couponCode,
         shippingAddress: input.shippingAddress as Prisma.InputJsonValue,
         billingAddress: billingAddress as Prisma.InputJsonValue,
         notes: input.notes,
@@ -112,12 +128,17 @@ export async function processCheckout(
     }
 
     // Clear cart
-    await tx.cartItem.deleteMany({
-      where: { cartId: cart.id },
-    });
+    await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+    // Clear coupon from cart
+    await tx.cart.update({ where: { id: cart.id }, data: { couponCode: null } });
 
     return newOrder;
   });
+
+  // Increment coupon usage AFTER the transaction succeeds
+  if (couponCode) {
+    await incrementCouponUsage(couponCode);
+  }
 
   return order;
 }
