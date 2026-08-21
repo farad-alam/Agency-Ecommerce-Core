@@ -14,35 +14,17 @@ export default async function ProductsPage(props: {
 }) {
   const searchParams = await props.searchParams;
   
-  // Resolve slugs to IDs if necessary, or pass slugs to SDK if SDK supports it.
-  // Wait, the SDK currently expects categoryId, brandId.
-  // Let's resolve the slugs to IDs here to keep the SDK clean, or modify SDK later.
-  // For simplicity, let's look up the category/brand by slug.
-  
-  let categoryId = undefined;
-  let brandId = undefined;
+  const page = searchParams.page ? parseInt(searchParams.page) : 1;
+
   let collectionId = undefined;
-
-  if (searchParams.category) {
-    const cat = await db.category.findUnique({ where: { slug: searchParams.category } });
-    if (cat) categoryId = cat.id;
-  }
-  
-  if (searchParams.brand) {
-    const brand = await db.brand.findUnique({ where: { slug: searchParams.brand } });
-    if (brand) brandId = brand.id;
-  }
-
   if (searchParams.collection) {
     const col = await db.collection.findUnique({ where: { slug: searchParams.collection } });
     if (col) collectionId = col.id;
   }
 
-  const page = searchParams.page ? parseInt(searchParams.page) : 1;
-
   const result = await getStorefrontProducts({
-    categoryId,
-    brandId,
+    categorySlug: searchParams.category,
+    brandSlug: searchParams.brand,
     collectionId,
     search: searchParams.search,
     page,

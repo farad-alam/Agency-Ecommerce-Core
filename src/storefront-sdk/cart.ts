@@ -1,6 +1,8 @@
 "use server";
 
 import { getOrCreateCart, addToCart, updateCartItem, removeCartItem } from "@/core/cart";
+import { validateCoupon } from "@/core/coupons";
+import { db } from "@/lib/db";
 import { CartItemInput, UpdateCartItemInput } from "@/core/cart/types";
 import { cookies } from "next/headers";
 import { auth } from "@/lib/auth";
@@ -56,4 +58,31 @@ export async function removeProductFromCart(itemId: string) {
   const cart = await getOrCreateCart({ userId, sessionId });
   
   return await removeCartItem(cart.id, itemId);
+}
+
+export async function applyStorefrontCoupon(code: string) {
+  const { userId, sessionId } = await getAuthIdentifiers();
+  const cart = await getOrCreateCart({ userId, sessionId });
+  
+  const subtotal = cart.items.reduce(
+    (sum, item) => sum + Number(item.variant.price) * item.quantity,
+    0
+  );
+  
+  const validation = await validateCoupon(code, subtotal);
+  
+  await db.cart.update({
+    where: { id: cart.id },
+    data: { couponCode: validation.coupon.code },
+  });
+  
+  return validation;
+}
+
+export async function removeStorefrontCoupon() {
+  const { userId, sessionId } = await getAuthIdentifiers();
+  const cart = await getOrCreateCart({ userId, sessionId });
+  
+  await db.cart.update({ where: { id: cart.id }, data: { couponCode: null } });
+  return true;
 }
