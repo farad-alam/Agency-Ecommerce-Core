@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 
 export function Navbar() {
-  const { itemCount } = useCart();
+  const { itemCount, openDrawer } = useCart();
   const { data: session } = useSession();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -39,14 +39,14 @@ export function Navbar() {
             <User className="h-5 w-5" />
             <span className="sr-only sm:not-sr-only">{session ? "Account" : "Sign In"}</span>
           </Link>
-          <Link href="/cart" className={`relative flex items-center p-2 ${linkClass}`}>
+          <button onClick={openDrawer} className={`relative flex items-center p-2 ${linkClass}`}>
             <ShoppingCart className="h-5 w-5" />
             {itemCount > 0 && (
               <span className={`absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none transform translate-x-1/4 -translate-y-1/4 rounded-full ${isHome ? "bg-white text-[#D3113D]" : "bg-black text-white"}`}>
                 {itemCount}
               </span>
             )}
-          </Link>
+          </button>
           <button 
             className={`md:hidden p-2 ${isHome ? "text-white" : "text-gray-600"}`}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

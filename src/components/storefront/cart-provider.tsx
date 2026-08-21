@@ -1,23 +1,39 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useTransition } from "react";
-import { getActiveCart, addProductToCart, updateProductInCart, removeProductFromCart } from "@/storefront-sdk/cart";
-import { Prisma } from "@prisma/client";
+import {
+  getActiveCart,
+  addProductToCart,
+  updateProductInCart,
+  removeProductFromCart,
+  applyStorefrontCoupon,
+  removeStorefrontCoupon,
+} from "@/storefront-sdk/cart";
 import { CartItemInput } from "@/core/cart/types";
 import { toast } from "sonner";
 import { CartFull } from "@/core/cart";
+
+const SHIPPING_COST = 150; // flat rate in BDT
 
 interface CartContextType {
   cart: CartFull | null;
   isLoading: boolean;
   isPending: boolean;
+  isDrawerOpen: boolean;
+  openDrawer: () => void;
+  closeDrawer: () => void;
   refreshCart: () => Promise<void>;
   addItem: (input: CartItemInput) => Promise<void>;
   updateItem: (itemId: string, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
+  applyCoupon: (code: string) => Promise<void>;
+  removeCoupon: () => Promise<void>;
   itemCount: number;
   subtotal: number;
+  discountAmount: number;
+  shippingCost: number;
   total: number;
+  couponCode: string | null;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -26,6 +42,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartFull | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [discountAmount, setDiscountAmount] = useState(0);
 
   const refreshCart = async () => {
     try {
@@ -47,7 +65,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       try {
         const updatedCart = await addProductToCart(input);
         setCart(updatedCart);
-        toast.success("Added to cart");
+        setIsDrawerOpen(true);
       } catch (error: any) {
         toast.error(error.message || "Failed to add item to cart");
       }
@@ -61,7 +79,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setCart(updatedCart);
       } catch (error: any) {
         toast.error(error.message || "Failed to update quantity");
-        // Revert optimistically if needed, here we just refresh
         refreshCart();
       }
     });
@@ -79,12 +96,64 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const applyCoupon = async (code: string) => {
+    startTransition(async () => {
+      try {
+        const result = await applyStorefrontCoupon(code);
+        setDiscountAmount(result.discountAmount);
+        await refreshCart();
+        toast.success(`Coupon applied! You save BDT ${result.discountAmount.toLocaleString()}`);
+      } catch (error: any) {
+        toast.error(error.message || "Invalid coupon code");
+      }
+    });
+  };
+
+  const removeCoupon = async () => {
+    startTransition(async () => {
+      try {
+        await removeStorefrontCoupon();
+        setDiscountAmount(0);
+        await refreshCart();
+        toast.success("Coupon removed");
+      } catch (error: any) {
+        toast.error(error.message || "Failed to remove coupon");
+      }
+    });
+  };
+
   const itemCount = cart?.items.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0;
-  const subtotal = cart?.items.reduce((acc: number, item: any) => acc + (Number(item.variant?.price || item.price || 0) * item.quantity), 0) || 0;
-  const total = subtotal; // Add tax/shipping later
+  const subtotal = cart?.items.reduce(
+    (acc: number, item: any) => acc + (Number(item.variant?.price ?? 0) * item.quantity),
+    0
+  ) || 0;
+  const shippingCost = itemCount > 0 ? SHIPPING_COST : 0;
+  const couponCode = cart?.couponCode ?? null;
+  const total = Math.max(0, subtotal + shippingCost - discountAmount);
 
   return (
-    <CartContext.Provider value={{ cart, isLoading, isPending, refreshCart, addItem, updateItem, removeItem, itemCount, subtotal, total }}>
+    <CartContext.Provider
+      value={{
+        cart,
+        isLoading,
+        isPending,
+        isDrawerOpen,
+        openDrawer: () => setIsDrawerOpen(true),
+        closeDrawer: () => setIsDrawerOpen(false),
+        refreshCart,
+        addItem,
+        updateItem,
+        removeItem,
+        applyCoupon,
+        removeCoupon,
+        itemCount,
+        subtotal,
+        discountAmount,
+        shippingCost,
+        total,
+        couponCode,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );
