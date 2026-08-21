@@ -2,6 +2,9 @@ import { db } from "@/lib/db";
 import { Errors } from "@/core/errors";
 import { Prisma } from "@prisma/client";
 import { UpdateOrderStatusInput } from "./types";
+import * as React from "react";
+import { sendEmail } from "@/lib/email";
+import { OrderStatusEmail } from "@/components/emails/order-status";
 
 export const orderInclude = {
   items: true,
@@ -104,7 +107,24 @@ export async function updateOrderStatus(id: string, input: UpdateOrderStatusInpu
     });
   });
 
-  // Sprint 4: Trigger email notifications based on status change here
+  // Trigger email notifications based on status change here
+  const emailToSendTo = order.user?.email || order.guestEmail;
+  if (emailToSendTo && ["SHIPPED", "CANCELLED", "DELIVERED"].includes(input.status)) {
+    const address = order.shippingAddress as Record<string, string>;
+    const customerName = order.user?.name || address?.firstName || "Customer";
+    
+    // We intentionally don't await to avoid blocking the API response
+    sendEmail({
+      to: emailToSendTo,
+      subject: `Order Update - ${order.orderNumber} is now ${input.status}`,
+      react: React.createElement(OrderStatusEmail, {
+        orderNumber: order.orderNumber,
+        customerName: customerName,
+        status: input.status,
+        note: input.note || undefined
+      })
+    });
+  }
 
   return updatedOrder;
 }

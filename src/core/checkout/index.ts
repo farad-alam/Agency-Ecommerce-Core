@@ -1,10 +1,13 @@
 import { db } from "@/lib/db";
 import { Errors } from "@/core/errors";
 import { CheckoutInput } from "./types";
-import { getOrCreateCart } from "@/core/cart";
-import { Prisma } from "@prisma/client";
 import { storeConfig } from "@/config/store.config";
 import { validateCoupon, incrementCouponUsage } from "@/core/coupons";
+import { getOrCreateCart } from "@/core/cart";
+import { Prisma } from "@prisma/client";
+import * as React from "react";
+import { sendEmail } from "@/lib/email";
+import { OrderConfirmationEmail } from "@/components/emails/order-confirmation";
 
 function generateOrderNumber(): string {
   // Simple order number generator e.g. ORD-20260726-XXXX
@@ -138,6 +141,30 @@ export async function processCheckout(
   // Increment coupon usage AFTER the transaction succeeds
   if (couponCode) {
     await incrementCouponUsage(couponCode);
+  }
+
+  // Send Order Confirmation Email
+  const customerEmail = identity.userId ? (await db.user.findUnique({ where: { id: identity.userId } }))?.email : input.guestEmail;
+  if (customerEmail) {
+    const address = input.shippingAddress as Record<string, string>;
+    const addressString = `${address.line1}\n${address.city}, ${address.region} ${address.postalCode}\n${address.country}`;
+    
+    // We intentionally don't await the email to avoid blocking the checkout response
+    sendEmail({
+      to: customerEmail,
+      subject: `Order Confirmation - ${order.orderNumber}`,
+      react: React.createElement(OrderConfirmationEmail, {
+        orderNumber: order.orderNumber,
+        customerName: address.firstName || "Customer",
+        total: `${Number(order.total).toLocaleString()} BDT`,
+        items: orderItemsData.map(item => ({
+          title: item.productTitle as string,
+          quantity: item.quantity,
+          price: `${Number(item.price).toLocaleString()} BDT`
+        })),
+        shippingAddress: addressString
+      })
+    });
   }
 
   return order;

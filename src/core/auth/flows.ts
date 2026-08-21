@@ -3,6 +3,11 @@ import { Errors } from "@/core/errors";
 import { RegisterInput, ForgotPasswordInput, ResetPasswordInput, InviteStaffInput, AcceptInviteInput } from "./types";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import * as React from "react";
+import { sendEmail } from "@/lib/email";
+import { PasswordResetEmail } from "@/components/emails/password-reset";
+import { StaffInviteEmail } from "@/components/emails/staff-invite";
+import { env } from "@/lib/env";
 
 export async function registerUser(input: RegisterInput, sessionId?: string) {
   const existingUser = await db.user.findUnique({
@@ -84,8 +89,17 @@ export async function generatePasswordResetToken(input: ForgotPasswordInput) {
     },
   });
 
-  // Sprint 4: integrate with Resend
-  console.log(`[STUB] Password reset token for ${user.email}: ${token}`);
+  // Send email via Resend
+  const resetLink = `${env.NEXT_PUBLIC_SITE_URL}/reset-password?token=${token}`;
+  await sendEmail({
+    to: user.email,
+    subject: "Reset your password",
+    react: React.createElement(PasswordResetEmail, { 
+      userFirstname: user.name || "Customer", 
+      resetPasswordLink: resetLink 
+    }),
+  });
+
   return token;
 }
 
@@ -138,9 +152,17 @@ export async function inviteStaff(input: InviteStaffInput, inviterId: string) {
     },
   });
 
-  // Sprint 4: email via Resend
-  console.log(`[STUB] Staff invite token for ${input.email} (${input.role}): ${token}`);
-  
+  // Send email via Resend
+  const inviteLink = `${env.NEXT_PUBLIC_SITE_URL}/invite?token=${token}`;
+  await sendEmail({
+    to: input.email,
+    subject: "You've been invited to join the store dashboard",
+    react: React.createElement(StaffInviteEmail, { 
+      role: input.role, 
+      inviteLink: inviteLink 
+    }),
+  });
+
   return invite;
 }
 
