@@ -85,7 +85,7 @@ export default async function CheckoutSuccessPage(props: {
             href="/products"
             className="flex-1 flex items-center justify-center gap-2 py-3 px-6 bg-black text-white rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors"
           >
-            Continue Shopping
+            Shop More
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

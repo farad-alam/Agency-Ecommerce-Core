@@ -72,10 +72,11 @@ export default function CheckoutPage() {
   }, []);
 
   const redirectIfEmpty = useCallback(() => {
+    if (isSubmitting) return;
     if (!isLoading && (!cart || cart.items.length === 0)) {
       router.push("/cart");
     }
-  }, [isLoading, cart, router]);
+  }, [isLoading, cart, router, isSubmitting]);
 
   useEffect(() => {
     redirectIfEmpty();
