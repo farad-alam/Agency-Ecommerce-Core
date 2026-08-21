@@ -16,6 +16,12 @@ export const CheckoutInputSchema = z.object({
   shippingAddress: AddressInputSchema,
   billingAddress: AddressInputSchema.optional().nullable(),
   notes: z.string().optional(),
+  paymentMethod: z.enum(["COD", "MFS"]),
+  mfsPayment: z.object({
+    provider: z.enum(["BKASH", "NAGAD", "ROCKET"]),
+    senderNumber: z.string(),
+    transactionId: z.string(),
+  }).optional(),
 });
 
 export type AddressInput = z.infer<typeof AddressInputSchema>;

@@ -106,6 +106,7 @@ export async function processCheckout(
         total,
         currency: storeConfig.currency,
         couponCode,
+        paymentProvider: input.paymentMethod.toLowerCase(),
         shippingAddress: input.shippingAddress as Prisma.InputJsonValue,
         billingAddress: billingAddress as Prisma.InputJsonValue,
         notes: input.notes,
@@ -114,6 +115,15 @@ export async function processCheckout(
             data: orderItemsData,
           },
         },
+        ...(input.paymentMethod === "MFS" && input.mfsPayment ? {
+          mfsPayment: {
+            create: {
+              provider: input.mfsPayment.provider,
+              senderNumber: input.mfsPayment.senderNumber,
+              transactionId: input.mfsPayment.transactionId,
+            }
+          }
+        } : {})
       },
       include: {
         items: true,

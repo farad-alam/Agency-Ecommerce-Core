@@ -57,6 +57,8 @@ export default function CheckoutPage() {
   const [transactionId, setTransactionId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [paymentMethod, setPaymentMethod] = useState<"COD" | "MFS">("COD");
+
   const selectedAccount = mfsAccounts.find((a) => a.provider === selectedProvider);
 
   useEffect(() => {
@@ -86,7 +88,7 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedProvider || !senderNumber || !transactionId) {
+    if (paymentMethod === "MFS" && (!selectedProvider || !senderNumber || !transactionId)) {
       toast.error("Please complete the payment details.");
       return;
     }
@@ -105,19 +107,25 @@ export default function CheckoutPage() {
         phone: formData.phone,
       };
 
-      const order = await submitCheckout({
+      const payload: any = {
         guestEmail: formData.email,
         shippingAddress: address,
         billingAddress: address,
-        mfsPayment: {
+        paymentMethod: paymentMethod,
+      };
+
+      if (paymentMethod === "MFS") {
+        payload.mfsPayment = {
           provider: selectedProvider,
           senderNumber,
           transactionId,
-        },
-      } as any);
+        };
+      }
+
+      const order = await submitCheckout(payload);
 
       await refreshCart();
-      router.push(`/checkout/success?orderNumber=${order.orderNumber}`);
+      router.push(`/checkout/success?orderNumber=${order.orderNumber}&method=${paymentMethod.toLowerCase()}`);
     } catch (error: any) {
       toast.error(error.message || "Failed to place order. Please try again.");
       setIsSubmitting(false);
@@ -279,10 +287,41 @@ export default function CheckoutPage() {
                   Payment
                 </h2>
 
-                {mfsAccounts.length === 0 ? (
-                  <p className="text-sm text-gray-500">No payment methods configured. Please contact the store.</p>
-                ) : (
-                  <>
+                {/* Method selector */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("COD")}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      paymentMethod === "COD" ? "border-black bg-gray-50" : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-sm">Cash on Delivery</span>
+                      {paymentMethod === "COD" && <CheckCircle2 className="w-5 h-5 text-black" />}
+                    </div>
+                    <span className="text-xs text-gray-500">Pay when your order arrives</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("MFS")}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      paymentMethod === "MFS" ? "border-black bg-gray-50" : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-sm">Mobile Banking</span>
+                      {paymentMethod === "MFS" && <CheckCircle2 className="w-5 h-5 text-black" />}
+                    </div>
+                    <span className="text-xs text-gray-500">Pay now via bKash, Nagad, etc.</span>
+                  </button>
+                </div>
+
+                {paymentMethod === "MFS" && (
+                  mfsAccounts.length === 0 ? (
+                    <p className="text-sm text-gray-500">No payment methods configured. Please contact the store.</p>
+                  ) : (
+                    <div className="space-y-5 animate-in fade-in slide-in-from-top-2">
                     {/* Provider selector */}
                     <div>
                       <p className="text-sm font-medium text-gray-700 mb-3">Select Payment Method</p>
@@ -365,14 +404,15 @@ export default function CheckoutPage() {
                         />
                       </div>
                     </div>
-                  </>
+                    </div>
+                  )
                 )}
               </section>
 
               {/* Submit */}
               <button
                 type="submit"
-                disabled={isSubmitting || mfsAccounts.length === 0}
+                disabled={isSubmitting || (paymentMethod === "MFS" && mfsAccounts.length === 0)}
                 className="w-full bg-black text-white py-4 rounded-xl font-bold text-base hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}

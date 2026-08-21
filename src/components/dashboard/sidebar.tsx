@@ -16,6 +16,7 @@ import {
   MessageSquare,
   Percent,
   LayoutList,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { label: "Products", href: "/dashboard/products", icon: Package },
   { label: "Orders", href: "/dashboard/orders", icon: ShoppingCart },
+  { label: "Payments", href: "/dashboard/payments", icon: CreditCard },
   { label: "Customers", href: "/dashboard/customers", icon: Users },
   { label: "Categories", href: "/dashboard/categories", icon: Layers },
   { label: "Brands", href: "/dashboard/brands", icon: Tag },

@@ -2,10 +2,11 @@ import Link from "next/link";
 import { CheckCircle2, Package, ArrowRight, Clock } from "lucide-react";
 
 export default async function CheckoutSuccessPage(props: {
-  searchParams: Promise<{ orderNumber?: string }>;
+  searchParams: Promise<{ orderNumber?: string; method?: string }>;
 }) {
   const searchParams = await props.searchParams;
   const orderNumber = searchParams.orderNumber ?? "—";
+  const method = searchParams.method ?? "mfs";
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-16">
@@ -29,25 +30,37 @@ export default async function CheckoutSuccessPage(props: {
           </div>
         </div>
 
-        {/* Payment verification notice */}
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-left space-y-2">
-          <div className="flex items-center gap-2 text-amber-700">
-            <Clock className="w-5 h-5 flex-shrink-0" />
-            <p className="font-semibold text-sm">Payment Verification Pending</p>
+        {/* Payment / COD Notice */}
+        {method === "cod" ? (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 text-left space-y-2">
+            <div className="flex items-center gap-2 text-blue-700">
+              <Package className="w-5 h-5 flex-shrink-0" />
+              <p className="font-semibold text-sm">Order Confirmed</p>
+            </div>
+            <p className="text-sm text-blue-700 leading-relaxed">
+              Our team member will call you shortly to confirm your order. Please keep your phone reachable. You will pay for the order when it arrives.
+            </p>
           </div>
-          <p className="text-sm text-amber-700 leading-relaxed">
-            We have received your order and are verifying your payment. You will receive a confirmation email once your payment is verified and your order is confirmed.
-          </p>
-        </div>
+        ) : (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-left space-y-2">
+            <div className="flex items-center gap-2 text-amber-700">
+              <Clock className="w-5 h-5 flex-shrink-0" />
+              <p className="font-semibold text-sm">Payment Verification Pending</p>
+            </div>
+            <p className="text-sm text-amber-700 leading-relaxed">
+              We have received your order and are verifying your payment. You will receive a confirmation email once your payment is verified and your order is confirmed.
+            </p>
+          </div>
+        )}
 
         {/* What's next */}
         <div className="bg-white border border-gray-100 rounded-2xl p-5 text-left space-y-4">
           <h3 className="font-semibold text-sm text-gray-700">What happens next?</h3>
           <div className="space-y-3">
             {[
-              { icon: "1", text: "Our team verifies your payment (usually within 1–2 hours)" },
-              { icon: "2", text: "You receive an email confirmation once verified" },
-              { icon: "3", text: "We prepare and ship your order within 1–2 business days" },
+              ...(method === "mfs" ? [{ icon: "1", text: "Our team verifies your payment (usually within 1–2 hours)" }] : []),
+              { icon: method === "mfs" ? "2" : "1", text: "You receive an email confirmation once verified" },
+              { icon: method === "mfs" ? "3" : "2", text: "We prepare and ship your order within 1–2 business days" },
             ].map((step) => (
               <div key={step.icon} className="flex items-start gap-3">
                 <span className="w-6 h-6 rounded-full bg-black text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
