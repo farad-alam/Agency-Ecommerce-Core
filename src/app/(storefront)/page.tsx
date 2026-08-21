@@ -2,6 +2,42 @@ import { getStorefrontCollections, getStorefrontProducts } from "@/storefront-sd
 import Link from "next/link";
 import Image from "next/image";
 import { ProductCard } from "@/components/storefront/product-card";
+import { HeroSlideshow, type HeroSlide } from "@/components/storefront/hero";
+
+const heroSlides: HeroSlide[] = [
+  {
+    eyebrow: "The Core Collection",
+    title: "The Core Collection",
+    description:
+      "Discover our curated selection of premium products, built to demonstrate the power of Agency Ecommerce Core.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop",
+    ctaLabel: "Shop All Products",
+    ctaHref: "/products",
+    secondaryCtaLabel: "New Arrivals",
+    secondaryCtaHref: "/products?collection=new-arrivals",
+  },
+  {
+    eyebrow: "New Arrivals",
+    title: "Fresh From the Shelf",
+    description: "The latest drops, from noise-cancelling headphones to everyday essentials.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=2070&auto=format&fit=crop",
+    ctaLabel: "Explore New Arrivals",
+    ctaHref: "/products?collection=new-arrivals",
+  },
+  {
+    eyebrow: "Summer Sale",
+    title: "Seasonal Deals Worth Splashing Out On",
+    description: "Everyday favourites, now at their best prices of the season.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=2070&auto=format&fit=crop",
+    ctaLabel: "Shop Summer Sale",
+    ctaHref: "/products?collection=summer-sale",
+    secondaryCtaLabel: "View All Products",
+    secondaryCtaHref: "/products",
+  },
+];
 
 export default async function StorefrontHomepage() {
   const [collections, newArrivals] = await Promise.all([
@@ -12,29 +48,7 @@ export default async function StorefrontHomepage() {
   return (
     <div className="flex flex-col gap-16 pb-16">
       {/* Hero Section */}
-      <section className="relative h-[70vh] bg-gray-900 text-white flex items-center justify-center overflow-hidden">
-        <Image
-          src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop"
-          alt="Hero background"
-          fill
-          className="object-cover opacity-50"
-          priority
-        />
-        <div className="relative z-10 text-center space-y-6 px-4">
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight">The Core Collection</h1>
-          <p className="text-lg md:text-xl text-gray-200 max-w-2xl mx-auto">
-            Discover our curated selection of premium products, built to demonstrate the power of Agency Ecommerce Core.
-          </p>
-          <div className="pt-4">
-            <Link 
-              href="/products" 
-              className="bg-white text-black px-8 py-4 rounded-md font-medium hover:bg-gray-100 transition-colors inline-block"
-            >
-              Shop All Products
-            </Link>
-          </div>
-        </div>
-      </section>
+      <HeroSlideshow slides={heroSlides} />
 
       {/* Featured Collections */}
       <section className="container mx-auto px-4 space-y-8">
