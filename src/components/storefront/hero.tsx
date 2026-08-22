@@ -236,21 +236,15 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
         {/* ── NAVBAR SPACER ── */}
         <div style={{ height: "64px", flexShrink: 0 }} />
 
-        {/* ── HEADLINES: 2 lines — "YOUR LOOK" / "YOUR RULES." ── */}
+        {/* ── HEADLINE TOP: "YOUR LOOK" ── */}
         <div aria-hidden="true" style={{ position: "relative", zIndex: 5, padding: "8px 16px 0", pointerEvents: "none", flexShrink: 0 }}>
-          {/* Line 1: YOUR LOOK */}
           <div style={{ display: "flex", gap: "0.15em", overflow: "hidden" }}>
             <span className="sx-clip-reveal sx-clip-delay-1" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "10vw", letterSpacing: "-0.03em", lineHeight: 1, color: "#F5F2ED", whiteSpace: "nowrap" }}>YOUR</span>
             <span className="sx-clip-reveal sx-clip-delay-2" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "10vw", letterSpacing: "-0.03em", lineHeight: 1, color: "#8B0D1A", whiteSpace: "nowrap" }}>&nbsp;LOOK</span>
           </div>
-          {/* Line 2: YOUR RULES. */}
-          <div style={{ display: "flex", gap: "0.15em", overflow: "hidden" }}>
-            <span className="sx-clip-reveal sx-clip-delay-3" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "10vw", letterSpacing: "-0.03em", lineHeight: 1, color: "transparent", WebkitTextStroke: "1.5px #F5F2ED", whiteSpace: "nowrap" } as React.CSSProperties}>YOUR</span>
-            <span className="sx-clip-reveal sx-clip-delay-4" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "10vw", letterSpacing: "-0.03em", lineHeight: 1, color: "#F5F2ED", whiteSpace: "nowrap" }}>&nbsp;RULES.</span>
-          </div>
         </div>
 
-        {/* ── MODEL IMAGE — fixed small height, no overflow ── */}
+        {/* ── MODEL IMAGE — fixed small height, in the middle ── */}
         <div style={{ position: "relative", height: "36svh", flexShrink: 0, zIndex: 3, marginTop: "4px" }}>
           <Image
             src={slide.imageUrl}
@@ -261,6 +255,15 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
             className="object-contain object-bottom"
           />
         </div>
+
+        {/* ── HEADLINE BOTTOM: "YOUR RULES." ── */}
+        <div aria-hidden="true" style={{ position: "relative", zIndex: 5, padding: "0 16px", pointerEvents: "none", flexShrink: 0 }}>
+          <div style={{ display: "flex", gap: "0.15em", overflow: "hidden" }}>
+            <span className="sx-clip-reveal sx-clip-delay-3" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "10vw", letterSpacing: "-0.03em", lineHeight: 1, color: "transparent", WebkitTextStroke: "1.5px #F5F2ED", whiteSpace: "nowrap" } as React.CSSProperties}>YOUR</span>
+            <span className="sx-clip-reveal sx-clip-delay-4" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "10vw", letterSpacing: "-0.03em", lineHeight: 1, color: "#F5F2ED", whiteSpace: "nowrap" }}>&nbsp;RULES.</span>
+          </div>
+        </div>
+
 
         {/* ── CONTENT: eyebrow + CTA + stats ── */}
         <div style={{ position: "relative", zIndex: 5, padding: "10px 16px 0", boxSizing: "border-box", flexShrink: 0 }}>
