@@ -491,3 +491,17 @@ model Review {
   @@index([productId])
   @@index([status])
 }
+
+// ─── App State ────────────────────────────────────────────────────────────────
+
+model StoreSettings {
+  id               String   @id @default("global")
+  storeName        String   @default("Agency Ecommerce")
+  contactEmail     String   @default("admin@store.com")
+  currency         String   @default("BDT")
+  timezone         String   @default("Asia/Dhaka")
+  taxMode          String   @default("NONE")
+  taxRate          Float    @default(0)
+  shippingFlatRate Float    @default(150)
+  updatedAt        DateTime @updatedAt
+}
