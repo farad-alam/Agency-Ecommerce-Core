@@ -119,8 +119,37 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
       {/* ── MAIN AREA ─────────────────────────────────────── */}
       <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
 
-        {/* Red glow behind model */}
-        <div aria-hidden="true" style={{ position: "absolute", left: "50%", top: "40%", transform: "translate(-50%,-40%)", width: "38vw", height: "70%", background: "radial-gradient(ellipse at center, rgba(139,13,26,0.13) 0%, transparent 70%)", pointerEvents: "none", zIndex: 0 }} />
+        {/* ── CINEMATIC SMOKY RED BACKGROUND ──────────────── */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: `
+              radial-gradient(ellipse at 50% 50%, rgba(139, 13, 26, 0.15) 0%, transparent 65%),
+              radial-gradient(circle at 0% 0%, rgba(139, 13, 26, 0.08) 0%, transparent 40%),
+              radial-gradient(circle at 100% 100%, rgba(139, 13, 26, 0.12) 0%, transparent 50%)
+            `,
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+        {/* Core spotlight directly behind model to simulate backlight/smoke */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: "40%",
+            transform: "translate(-50%,-40%)",
+            width: "50vw",
+            height: "80%",
+            background: "radial-gradient(ellipse at center, rgba(139, 13, 26, 0.45) 0%, rgba(139, 13, 26, 0.1) 40%, transparent 70%)",
+            filter: "blur(60px)",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
 
         {/* ═══════════════════════════════════════════════════
             BIG TEXT — z-index 1, behind model (z-index 20)
