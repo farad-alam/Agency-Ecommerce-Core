@@ -128,7 +128,7 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
             the model's space without any grid clipping.
         ═══════════════════════════════════════════════════ */}
 
-        {/* LEFT: YOUR (flush) / LOOK (indented → K goes behind model) */}
+        {/* LEFT TOP: YOUR (flush) / LOOK (indented → K goes behind model) */}
         <div
           aria-hidden="true"
           style={{ position: "absolute", left: "40px", top: "56px", zIndex: 1, pointerEvents: "none" }}
@@ -153,31 +153,20 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           </div>
         </div>
 
-        {/* RIGHT: YOUR (indented → Y goes behind model) / RULES (flush right) */}
+        {/* RIGHT TOP: Badge + italic text + NEW DROP card */}
         <div
-          aria-hidden="true"
-          style={{ position: "absolute", right: "40px", top: "56px", zIndex: 1, pointerEvents: "none", textAlign: "right" }}
+          style={{ position: "absolute", right: "40px", top: "56px", zIndex: 5, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "12px", maxWidth: "300px" }}
         >
-          {/* YOUR — indented ~14vw from right so Y crosses into model */}
-          <div style={{ overflow: "hidden", paddingRight: "14vw" }}>
-            <span
-              className="sx-clip-reveal sx-clip-delay-1"
-              style={{ ...WORD_BASE, color: "transparent", WebkitTextStroke: "1.5px #F5F2ED" } as React.CSSProperties}
-            >
-              YOUR
-            </span>
+          <div className="sx-fade-in">
+            <CircularBadge />
           </div>
-          {/* RULES — flush right */}
-          <div style={{ overflow: "hidden" }}>
-            <span
-              className="sx-clip-reveal sx-clip-delay-2"
-              style={{ ...WORD_BASE, color: "#F5F2ED" }}
-            >
-              RULES.
-            </span>
+          <p className="sx-fade-in sx-fade-delay-1" style={{ fontFamily: "'Inter',system-ui", fontSize: "13px", fontStyle: "italic", color: "#9A9A8E", lineHeight: 1.65, textAlign: "right" }}>
+            Modern Silhouettes. Premium Fabrics.<br />Limitless Expression.
+          </p>
+          <div style={{ width: "100%" }}>
+            <NewDropCard />
           </div>
         </div>
-
         {/* ═══════════════════════════════════════════════════
             MODEL — z-index 20, on top of text
         ═══════════════════════════════════════════════════ */}
@@ -204,22 +193,17 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
         </div>
 
         {/* ═══════════════════════════════════════════════════
-            BOTTOM CONTENT — description / CTA / badge / card
+            BOTTOM CONTENT
         ═══════════════════════════════════════════════════ */}
+        {/* Left Bottom: description + CTA */}
         <div
           style={{
             position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
+            bottom: "28px",
+            left: "40px",
             zIndex: 5,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-            padding: "0 40px 28px",
           }}
         >
-          {/* Left: description + CTA */}
           <div className="sx-fade-in sx-fade-delay-1" style={{ maxWidth: "320px" }}>
             <p style={{ fontFamily: "'Inter',system-ui", fontSize: "14px", color: "#9A9A8E", lineHeight: 1.75, marginBottom: "20px" }}>
               {slide.description ?? "Future-ready streetwear crafted for creators, trendsetters, and everyday explorers."}
@@ -229,18 +213,30 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
+        </div>
 
-          {/* Right: badge + italic text + NEW DROP card */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "12px", maxWidth: "300px" }}>
-            <div className="sx-fade-in">
-              <CircularBadge />
-            </div>
-            <p className="sx-fade-in sx-fade-delay-1" style={{ fontFamily: "'Inter',system-ui", fontSize: "13px", fontStyle: "italic", color: "#9A9A8E", lineHeight: 1.65, textAlign: "right" }}>
-              Modern Silhouettes. Premium Fabrics.<br />Limitless Expression.
-            </p>
-            <div style={{ width: "100%" }}>
-              <NewDropCard />
-            </div>
+        {/* Right Bottom: YOUR (indented) / RULES (flush right) */}
+        <div
+          aria-hidden="true"
+          style={{ position: "absolute", right: "40px", bottom: "16px", zIndex: 1, pointerEvents: "none", textAlign: "right" }}
+        >
+          {/* YOUR — indented ~14vw from right so Y crosses into model */}
+          <div style={{ overflow: "hidden", paddingRight: "14vw" }}>
+            <span
+              className="sx-clip-reveal sx-clip-delay-1"
+              style={{ ...WORD_BASE, color: "transparent", WebkitTextStroke: "1.5px #F5F2ED" } as React.CSSProperties}
+            >
+              YOUR
+            </span>
+          </div>
+          {/* RULES — flush right */}
+          <div style={{ overflow: "hidden" }}>
+            <span
+              className="sx-clip-reveal sx-clip-delay-2"
+              style={{ ...WORD_BASE, color: "#F5F2ED" }}
+            >
+              RULES.
+            </span>
           </div>
         </div>
       </div>{/* end main area */}
