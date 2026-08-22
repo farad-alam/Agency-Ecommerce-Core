@@ -266,25 +266,10 @@ export default function CheckoutPage() {
                 </div>
               </section>
 
-              {/* Shipping Method */}
-              <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                <h2 className="text-base font-bold flex items-center gap-2 mb-4">
-                  <span className="w-6 h-6 rounded-full bg-black text-white text-xs flex items-center justify-center">3</span>
-                  Delivery
-                </h2>
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <div>
-                    <p className="font-semibold text-sm">Standard Delivery — Bangladesh</p>
-                    <p className="text-xs text-gray-500 mt-0.5">3–5 business days</p>
-                  </div>
-                  <span className="font-bold text-sm">BDT {shippingCost.toLocaleString()}</span>
-                </div>
-              </section>
-
               {/* MFS Payment */}
               <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
                 <h2 className="text-base font-bold flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-black text-white text-xs flex items-center justify-center">4</span>
+                  <span className="w-6 h-6 rounded-full bg-black text-white text-xs flex items-center justify-center">3</span>
                   Payment
                 </h2>
 
