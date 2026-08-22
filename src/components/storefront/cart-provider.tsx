@@ -100,6 +100,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     startTransition(async () => {
       try {
         const result = await applyStorefrontCoupon(code);
+        if ('error' in result) {
+          toast.error(result.error);
+          return;
+        }
         setDiscountAmount(result.discountAmount);
         await refreshCart();
         toast.success(`Coupon applied! You save BDT ${result.discountAmount.toLocaleString()}`);

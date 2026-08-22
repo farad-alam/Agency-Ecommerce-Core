@@ -61,22 +61,26 @@ export async function removeProductFromCart(itemId: string) {
 }
 
 export async function applyStorefrontCoupon(code: string) {
-  const { userId, sessionId } = await getAuthIdentifiers();
-  const cart = await getOrCreateCart({ userId, sessionId });
-  
-  const subtotal = cart.items.reduce(
-    (sum, item) => sum + Number(item.variant.price) * item.quantity,
-    0
-  );
-  
-  const validation = await validateCoupon(code, subtotal);
-  
-  await db.cart.update({
-    where: { id: cart.id },
-    data: { couponCode: validation.coupon.code },
-  });
-  
-  return validation;
+  try {
+    const { userId, sessionId } = await getAuthIdentifiers();
+    const cart = await getOrCreateCart({ userId, sessionId });
+    
+    const subtotal = cart.items.reduce(
+      (sum, item) => sum + Number(item.variant.price) * item.quantity,
+      0
+    );
+    
+    const validation = await validateCoupon(code, subtotal);
+    
+    await db.cart.update({
+      where: { id: cart.id },
+      data: { couponCode: validation.coupon.code },
+    });
+    
+    return validation;
+  } catch (error: any) {
+    return { error: error.message || "Invalid coupon code" };
+  }
 }
 
 export async function removeStorefrontCoupon() {
