@@ -290,44 +290,7 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
         </div>
       </div>{/* end main area */}
 
-      {/* ── STATS BAR ─────────────────────────────────────── */}
-      <div
-        className="sx-fade-in sx-fade-delay-2"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "16px 40px",
-          borderTop: "1px solid #1E1E1E",
-          background: "#0B0B0B",
-          position: "relative",
-          zIndex: 5,
-          flexShrink: 0,
-        }}
-      >
-        <div style={{ display: "flex", gap: "48px" }}>
-          {STATS.map(({ value, label }) => (
-            <div key={label}>
-              <span style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontSize: "clamp(18px, 2vw, 26px)", fontWeight: 900, color: "#F5F2ED", display: "block", lineHeight: 1 }}>
-                {value}
-              </span>
-              <span style={{ fontFamily: "'Inter',system-ui", fontSize: "11px", color: "#9A9A8E", marginTop: "3px", display: "block" }}>
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <span style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontSize: "10px", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#9A9A8E" }}>
-            🌐&nbsp;/ Nationwide Delivery
-          </span>
-          <div style={{ display: "flex", gap: "6px" }}>
-            {[0, 1, 2].map((i) => (
-              <div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: i === 0 ? "#8B0D1A" : "#2A2A2A" }} />
-            ))}
-          </div>
-        </div>
-      </div>
+
 
       {/* ── TICKER ────────────────────────────────────────── */}
       <Ticker />
