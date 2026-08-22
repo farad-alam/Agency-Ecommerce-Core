@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function OrdersPage(props: {
-  searchParams: Promise<{ page?: string; search?: string; status?: string }>;
+  searchParams: Promise<{ page?: string; search?: string; status?: string; paymentStatus?: string }>;
 }) {
   const searchParams = await props.searchParams;
   await requireDashboardAccess();
@@ -23,6 +23,7 @@ export default async function OrdersPage(props: {
     limit: 20,
     search: searchParams.search,
     status: searchParams.status,
+    paymentStatus: searchParams.paymentStatus,
   });
 
   return (
@@ -36,6 +37,85 @@ export default async function OrdersPage(props: {
         >
           Create Order
         </button>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-black/40 backdrop-blur-xl p-4 rounded-xl border border-white/[0.08]">
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+          {/* Status Tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+            <Link
+              href={`/dashboard/orders?${new URLSearchParams({
+                ...(searchParams.search ? { search: searchParams.search } : {}),
+                ...(searchParams.paymentStatus ? { paymentStatus: searchParams.paymentStatus } : {}),
+              }).toString()}`}
+              className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
+                !searchParams.status ? "bg-white/[0.1] text-white" : "text-zinc-400 hover:text-white hover:bg-white/[0.05]"
+              }`}
+            >
+              All Status
+            </Link>
+            {["PENDING", "PROCESSING", "SHIPPED", "DELIVERED"].map((status) => (
+              <Link
+                key={status}
+                href={`/dashboard/orders?${new URLSearchParams({
+                  status,
+                  ...(searchParams.search ? { search: searchParams.search } : {}),
+                  ...(searchParams.paymentStatus ? { paymentStatus: searchParams.paymentStatus } : {}),
+                }).toString()}`}
+                className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
+                  searchParams.status === status ? "bg-white/[0.1] text-white" : "text-zinc-400 hover:text-white hover:bg-white/[0.05]"
+                }`}
+              >
+                {status.charAt(0) + status.slice(1).toLowerCase()}
+              </Link>
+            ))}
+          </div>
+
+          {/* Vertical Divider */}
+          <div className="hidden sm:block w-px bg-white/[0.08]" />
+
+          {/* Payment Status Tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+            <Link
+              href={`/dashboard/orders?${new URLSearchParams({
+                ...(searchParams.search ? { search: searchParams.search } : {}),
+                ...(searchParams.status ? { status: searchParams.status } : {}),
+              }).toString()}`}
+              className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
+                !searchParams.paymentStatus ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "text-zinc-400 hover:text-white hover:bg-white/[0.05]"
+              }`}
+            >
+              Any Payment
+            </Link>
+            <Link
+              href={`/dashboard/orders?${new URLSearchParams({
+                paymentStatus: "PAID",
+                ...(searchParams.search ? { search: searchParams.search } : {}),
+                ...(searchParams.status ? { status: searchParams.status } : {}),
+              }).toString()}`}
+              className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
+                searchParams.paymentStatus === "PAID" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "text-zinc-400 hover:text-white hover:bg-white/[0.05]"
+              }`}
+            >
+              Paid Only
+            </Link>
+          </div>
+        </div>
+
+        {/* Search */}
+        <form className="relative w-full md:w-64">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input
+            type="text"
+            name="search"
+            defaultValue={searchParams.search}
+            placeholder="Search orders, emails..."
+            className="w-full pl-9 pr-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded-md text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+          />
+          {searchParams.status && <input type="hidden" name="status" value={searchParams.status} />}
+          {searchParams.paymentStatus && <input type="hidden" name="paymentStatus" value={searchParams.paymentStatus} />}
+        </form>
       </div>
 
       <Card className="border-white/[0.08] bg-black/40 backdrop-blur-xl">

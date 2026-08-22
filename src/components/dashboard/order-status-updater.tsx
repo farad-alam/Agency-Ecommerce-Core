@@ -15,9 +15,6 @@ export function OrderStatusUpdater({ orderId, currentStatus }: { orderId: string
     const newStatus = e.target.value;
     if (newStatus === currentStatus) return;
     
-    // Immediately revert the select UI back to currentStatus
-    // We only visually change it AFTER a successful API update.
-    e.target.value = currentStatus;
     setPendingStatus(newStatus);
   };
 
@@ -46,7 +43,7 @@ export function OrderStatusUpdater({ orderId, currentStatus }: { orderId: string
     <>
       <div className="relative flex items-center">
         <select
-          defaultValue={currentStatus}
+          value={currentStatus}
           onChange={handleSelectChange}
           disabled={isUpdating}
           className="appearance-none bg-zinc-800 border border-zinc-700 text-white font-medium text-sm rounded-md pl-4 pr-10 py-2 hover:bg-zinc-700 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 cursor-pointer"

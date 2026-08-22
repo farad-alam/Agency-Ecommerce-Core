@@ -27,6 +27,7 @@ export async function getOrders(params: {
   page?: number;
   limit?: number;
   status?: string;
+  paymentStatus?: string;
   search?: string;
 }) {
   const page = params.page || 1;
@@ -37,6 +38,9 @@ export async function getOrders(params: {
 
   if (params.status) {
     where.status = params.status as any; // Cast needed due to prisma enum typing
+  }
+  if (params.paymentStatus) {
+    where.paymentStatus = params.paymentStatus as any;
   }
 
   if (params.search) {
