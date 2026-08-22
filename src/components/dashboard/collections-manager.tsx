@@ -139,10 +139,10 @@ export function CollectionsManager({ initialCollections }: { initialCollections:
             </div>
             <div className="space-y-1.5">
               <Label className="text-zinc-300">Status</Label>
-              <select value={status} onChange={(e) => setStatus(e.target.value as typeof status)} className="w-full rounded-md border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-sm text-zinc-300">
-                <option value="DRAFT">Draft</option>
-                <option value="ACTIVE">Active</option>
-                <option value="ARCHIVED">Archived</option>
+              <select value={status} onChange={(e) => setStatus(e.target.value as typeof status)} className="w-full rounded-md border border-white/[0.08] bg-zinc-900/50 px-3 py-2 text-sm text-zinc-300 focus:outline-none focus:border-indigo-500">
+                <option className="bg-zinc-900 text-zinc-300" value="DRAFT">Draft</option>
+                <option className="bg-zinc-900 text-zinc-300" value="ACTIVE">Active</option>
+                <option className="bg-zinc-900 text-zinc-300" value="ARCHIVED">Archived</option>
               </select>
             </div>
             <div className="flex gap-3">
