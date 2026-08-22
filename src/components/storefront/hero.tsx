@@ -245,7 +245,7 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
         </div>
 
         {/* ── MODEL IMAGE — fixed small height, pulled up over text ── */}
-        <div style={{ position: "relative", height: "40svh", flexShrink: 0, zIndex: 5, marginTop: "-48px" }}>
+        <div style={{ position: "relative", height: "40svh", flexShrink: 0, zIndex: 5, marginTop: "-72px" }}>
           <Image
             src={slide.imageUrl}
             alt="SalarX — Men's fashion model"
