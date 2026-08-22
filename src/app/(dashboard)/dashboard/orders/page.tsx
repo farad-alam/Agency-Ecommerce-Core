@@ -104,17 +104,29 @@ export default async function OrdersPage(props: {
         </div>
 
         {/* Search */}
-        <form className="relative w-full md:w-64">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input
-            type="text"
-            name="search"
-            defaultValue={searchParams.search}
-            placeholder="Search orders, emails..."
-            className="w-full pl-9 pr-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded-md text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-          />
-          {searchParams.status && <input type="hidden" name="status" value={searchParams.status} />}
-          {searchParams.paymentStatus && <input type="hidden" name="paymentStatus" value={searchParams.paymentStatus} />}
+        <form className="relative w-full md:w-auto flex gap-2">
+          <div className="relative w-full md:w-64">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input
+              key={searchParams.search || 'empty'}
+              type="text"
+              name="search"
+              defaultValue={searchParams.search}
+              placeholder="Search orders, emails..."
+              className="w-full pl-9 pr-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded-md text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+            />
+            {searchParams.status && <input type="hidden" name="status" value={searchParams.status} />}
+            {searchParams.paymentStatus && <input type="hidden" name="paymentStatus" value={searchParams.paymentStatus} />}
+          </div>
+          {(searchParams.search || searchParams.status || searchParams.paymentStatus) && (
+            <Link 
+              href="/dashboard/orders"
+              className="flex items-center justify-center px-3 py-2 bg-zinc-800/50 border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition-colors"
+              title="Clear all filters"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </Link>
+          )}
         </form>
       </div>
 
