@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Play } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export type HeroSlide = {
   eyebrow?: string;
@@ -15,6 +16,18 @@ export type HeroSlide = {
   secondaryCtaLabel?: string;
   secondaryCtaHref?: string;
 };
+
+/* ── Mobile detection hook ───────────────────────────────── */
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check, { passive: true });
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile;
+}
 
 /* ── Rotating circular badge ─────────────────────────────── */
 function CircularBadge() {
@@ -80,7 +93,7 @@ function NewDropCard() {
   );
 }
 
-/* ── Shared big-word style ───────────────────────────────── */
+/* ── Shared big-word style (desktop) ─────────────────────── */
 const WORD_BASE: React.CSSProperties = {
   fontFamily: "'Montserrat', Arial, sans-serif",
   fontWeight: 900,
@@ -91,31 +104,36 @@ const WORD_BASE: React.CSSProperties = {
   display: "block",
 };
 
-const STATS = [
-  { value: "500+",   label: "Happy Customers" },
-  { value: "4.9★",   label: "Customer Rating" },
-  { value: "All BD", label: "Nationwide Delivery" },
-];
+/* ── Shared big-word style (mobile) ─────────────────────── */
+const WORD_BASE_MOBILE: React.CSSProperties = {
+  fontFamily: "'Montserrat', Arial, sans-serif",
+  fontWeight: 900,
+  fontSize: "clamp(44px, 13vw, 72px)",
+  letterSpacing: "-0.04em",
+  lineHeight: 0.9,
+  whiteSpace: "nowrap",
+  display: "block",
+};
 
 /* ── Floating Stat Card ──────────────────────────────────── */
-function FloatingStat({ value, label, floatDelay, style }: { value: string, label: string, floatDelay: string, style?: React.CSSProperties }) {
+function FloatingStat({ value, label, floatDelay, style, mobile }: { value: string, label: string, floatDelay: string, style?: React.CSSProperties, mobile?: boolean }) {
   return (
     <div className="sx-fade-in sx-fade-delay-2" style={style}>
       <div
-        className="sx-float"
+        className={mobile ? "" : "sx-float"}
         style={{
           animationDelay: floatDelay,
           background: "rgba(11, 11, 11, 0.4)",
           backdropFilter: "blur(12px)",
           border: "1px solid rgba(255, 255, 255, 0.08)",
-          padding: "12px 18px",
+          padding: mobile ? "10px 14px" : "12px 18px",
           borderRadius: "12px",
           display: "inline-flex",
           flexDirection: "column",
           alignItems: "center",
         }}
       >
-        <span style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontSize: "16px", fontWeight: 900, color: "#F5F2ED", lineHeight: 1 }}>
+        <span style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontSize: mobile ? "14px" : "16px", fontWeight: 900, color: "#F5F2ED", lineHeight: 1 }}>
           {value}
         </span>
         <span style={{ fontFamily: "'Inter',system-ui", fontSize: "9px", color: "#9A9A8E", marginTop: "4px", textTransform: "uppercase", letterSpacing: "0.1em", whiteSpace: "nowrap" }}>
@@ -126,12 +144,150 @@ function FloatingStat({ value, label, floatDelay, style }: { value: string, labe
   );
 }
 
+/* ── Shared smoke background layers ─────────────────────── */
+function SmokeBackground() {
+  return (
+    <>
+      {/* Base intense red flood */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "radial-gradient(ellipse at 40% 30%, #cc0a1c 0%, #7a0410 45%, #120102 85%, #000000 100%)",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
+      {/* SVG Procedural Smoke Texture */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: 0.65,
+          mixBlendMode: "overlay",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      >
+        <svg width="100%" height="100%" preserveAspectRatio="none">
+          <filter id="smoke-texture">
+            <feTurbulence type="fractalNoise" baseFrequency="0.009" numOctaves="5" stitchTiles="stitch" />
+            <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 4 -1.5" />
+          </filter>
+          <rect width="100%" height="100%" filter="url(#smoke-texture)" />
+        </svg>
+      </div>
+      {/* Core volumetric spotlight */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: "40%",
+          transform: "translate(-50%,-40%)",
+          width: "80vw",
+          height: "90%",
+          background: "radial-gradient(ellipse at center, rgba(255, 30, 50, 0.4) 0%, rgba(200, 10, 25, 0.15) 50%, transparent 70%)",
+          filter: "blur(60px)",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
+    </>
+  );
+}
+
 /* ════════════════════════════════════════════════════════════
    HERO
 ════════════════════════════════════════════════════════════ */
 export function Hero({ slides }: { slides: HeroSlide[] }) {
   const slide = slides[0];
+  const isMobile = useIsMobile();
 
+  /* ── MOBILE LAYOUT ─────────────────────────────────────── */
+  if (isMobile) {
+    return (
+      <section
+        aria-label="Hero"
+        style={{
+          background: "#0B0B0B",
+          minHeight: "100svh",
+          display: "flex",
+          flexDirection: "column",
+          paddingTop: "64px", // navbar height
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <SmokeBackground />
+
+        {/* Content stacked column */}
+        <div style={{ position: "relative", zIndex: 5, flex: 1, display: "flex", flexDirection: "column" }}>
+
+          {/* BIG HEADLINE — YOUR / LOOK */}
+          <div aria-hidden="true" style={{ padding: "20px 20px 0", pointerEvents: "none" }}>
+            <div style={{ overflow: "hidden" }}>
+              <span className="sx-clip-reveal sx-clip-delay-1" style={{ ...WORD_BASE_MOBILE, color: "#F5F2ED" }}>
+                YOUR
+              </span>
+            </div>
+            <div style={{ overflow: "hidden", paddingLeft: "8vw" }}>
+              <span className="sx-clip-reveal sx-clip-delay-2" style={{ ...WORD_BASE_MOBILE, color: "#8B0D1A" }}>
+                LOOK
+              </span>
+            </div>
+          </div>
+
+          {/* MODEL IMAGE */}
+          <div style={{ position: "relative", width: "100%", height: "52svh", flexShrink: 0 }}>
+            <Image
+              src={slide.imageUrl}
+              alt="SalarX — Men's fashion model"
+              fill
+              priority
+              sizes="100vw"
+              className="object-contain object-top"
+              style={{ transform: "scale(1.05)", transformOrigin: "top center" }}
+            />
+          </div>
+
+          {/* EYEBROW + DESCRIPTION + CTA */}
+          <div className="sx-fade-in sx-fade-delay-1" style={{ padding: "16px 20px 0" }}>
+            <p className="sx-label" style={{ marginBottom: "10px", color: "#000000", fontWeight: 900, whiteSpace: "nowrap", fontSize: "10px" }}>
+              {slide.eyebrow ?? "Men's Fashion. GEN-Z Edition"}
+            </p>
+            <p style={{ fontFamily: "'Inter',system-ui", fontSize: "13px", color: "rgba(245, 242, 237, 0.85)", lineHeight: 1.7, marginBottom: "18px" }}>
+              {slide.description ?? "Future-ready streetwear crafted for creators, trendsetters, and everyday explorers."}
+            </p>
+            <Link href={slide.ctaHref} className="sx-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "11px", padding: "12px 24px" }}>
+              {slide.ctaLabel ?? "Discover The Collection"}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          {/* FLOATING STATS ROW */}
+          <div className="sx-fade-in sx-fade-delay-2" style={{ display: "flex", gap: "10px", justifyContent: "center", padding: "20px 16px 0" }}>
+            <FloatingStat value="500+" label="Happy Customers" floatDelay="0s" mobile />
+            <FloatingStat value="4.9★" label="Customer Rating" floatDelay="0s" mobile />
+            <FloatingStat value="All BD" label="Nationwide Delivery" floatDelay="0s" mobile />
+          </div>
+
+          {/* NEW DROP CARD */}
+          <div style={{ padding: "16px 20px 20px" }}>
+            <NewDropCard />
+          </div>
+
+        </div>
+
+        {/* TICKER */}
+        <Ticker />
+      </section>
+    );
+  }
+
+  /* ── DESKTOP LAYOUT ────────────────────────────────────── */
   return (
     <section
       aria-label="Hero"
@@ -145,65 +301,13 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
         overflow: "hidden",
       }}
     >
-      {/* ── INTENSE SMOKY RED BACKGROUND (Matches Reference) ──────────────── */}
-      {/* Base intense red flood */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "radial-gradient(ellipse at 40% 30%, #cc0a1c 0%, #7a0410 45%, #120102 85%, #000000 100%)",
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      />
-      
-      {/* SVG Procedural Smoke Texture */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          inset: 0,
-          opacity: 0.65, /* High opacity for distinct physical smoke */
-          mixBlendMode: "overlay", /* Overlay creates dark shadows and bright highlights (volumetric feel) */
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      >
-        <svg width="100%" height="100%" preserveAspectRatio="none">
-          <filter id="smoke-texture">
-            {/* Lower frequency = bigger clouds, higher octaves = more wispy detail */}
-            <feTurbulence type="fractalNoise" baseFrequency="0.009" numOctaves="5" stitchTiles="stitch" />
-            {/* High contrast alpha channel to create distinct clumps of smoke instead of a uniform haze */}
-            <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 4 -1.5" />
-          </filter>
-          <rect width="100%" height="100%" filter="url(#smoke-texture)" />
-        </svg>
-      </div>
+      <SmokeBackground />
 
-      {/* Core volumetric spotlight directly behind model */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          left: "50%",
-          top: "40%", /* adjust to center */
-          transform: "translate(-50%,-40%)",
-          width: "60vw",
-          height: "90%",
-          background: "radial-gradient(ellipse at center, rgba(255, 30, 50, 0.4) 0%, rgba(200, 10, 25, 0.15) 50%, transparent 70%)",
-          filter: "blur(60px)",
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      />
       {/* ── MAIN AREA ─────────────────────────────────────── */}
       <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
 
         {/* ═══════════════════════════════════════════════════
             BIG TEXT — z-index 1, behind model (z-index 20)
-            Absolutely positioned so words bleed freely into
-            the model's space without any grid clipping.
         ═══════════════════════════════════════════════════ */}
 
         {/* LEFT TOP: YOUR (flush) / LOOK (indented → K goes behind model) */}
@@ -246,6 +350,7 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
             <NewDropCard />
           </div>
         </div>
+
         {/* ═══════════════════════════════════════════════════
             MODEL — z-index 20, on top of text
         ═══════════════════════════════════════════════════ */}
@@ -322,8 +427,6 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           </div>
         </div>
       </div>{/* end main area */}
-
-
 
       {/* ── TICKER ────────────────────────────────────────── */}
       <Ticker />

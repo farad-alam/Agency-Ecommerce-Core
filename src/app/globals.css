@@ -303,3 +303,13 @@
 .sx-float {
   animation: sx-float-anim 4s ease-in-out infinite;
 }
+
+/* ============================================================
+   MOBILE OVERRIDES (≤ 639px)
+   ============================================================ */
+@media (max-width: 639px) {
+  /* Disable floating animation on mobile — prevents jitter */
+  .sx-float {
+    animation: none;
+  }
+}
