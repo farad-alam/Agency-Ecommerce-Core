@@ -32,6 +32,22 @@ export async function processCheckout(
     throw Errors.validation({ guestEmail: ["Guest email is required for anonymous checkout"] });
   }
 
+  // Check MFS transaction ID uniqueness to prevent reuse
+  if (input.paymentMethod === "MFS" && input.mfsPayment) {
+    const existingPayment = await db.mfsPayment.findFirst({
+      where: {
+        provider: input.mfsPayment.provider,
+        transactionId: input.mfsPayment.transactionId,
+      },
+    });
+    if (existingPayment) {
+      throw Errors.businessRule(
+        `Transaction ID ${input.mfsPayment.transactionId} has already been used for a previous order.`,
+        "DUPLICATE_TRANSACTION_ID"
+      );
+    }
+  }
+
   // 2. Validate inventory & calculate totals
   let subtotal = 0;
   
