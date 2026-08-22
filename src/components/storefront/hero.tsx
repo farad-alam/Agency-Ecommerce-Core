@@ -208,119 +208,122 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
 
   /* ── MOBILE LAYOUT ─────────────────────────────────────── */
   if (isMobile) {
+    const mobileText: React.CSSProperties = {
+      fontFamily: "'Montserrat',Arial,sans-serif",
+      fontWeight: 900,
+      fontSize: "15vw",
+      letterSpacing: "-0.04em",
+      lineHeight: 0.88,
+      whiteSpace: "nowrap",
+      display: "block",
+    };
+    const mobileTextSm: React.CSSProperties = {
+      ...mobileText,
+      fontSize: "11vw",
+    };
+
     return (
       <section
         aria-label="Hero"
         style={{
           background: "#0B0B0B",
-          minHeight: "100svh",
+          height: "100svh",
           display: "flex",
           flexDirection: "column",
-          paddingTop: "64px",
           position: "relative",
-          overflowX: "hidden",
-          overflowY: "auto",
+          overflow: "hidden",
           width: "100%",
-          maxWidth: "100vw",
         }}
       >
         <SmokeBackground />
 
-        {/* Content column — all within 100vw */}
-        <div style={{ position: "relative", zIndex: 5, flex: 1, display: "flex", flexDirection: "column", width: "100%", boxSizing: "border-box" }}>
+        {/* ── FULL-BLEED MODEL IMAGE (top ~60%) ──────────── */}
+        <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
+          <Image
+            src={slide.imageUrl}
+            alt="SalarX — Men's fashion model"
+            fill
+            priority
+            sizes="100vw"
+            className="object-contain object-top"
+            style={{ objectPosition: "center top" }}
+          />
+          {/* gradient fade so lower content is readable */}
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(to bottom, transparent 30%, rgba(11,11,11,0.6) 55%, #0B0B0B 75%)",
+          }} />
+        </div>
 
-          {/* ── TOP ROW: Headlines + Model side by side ── */}
-          <div style={{ display: "flex", alignItems: "flex-start", width: "100%", padding: "16px 0 0" }}>
+        {/* ── NAVBAR SPACER ─────────────────────────────── */}
+        <div style={{ height: "64px", flexShrink: 0 }} />
 
-            {/* Left: YOUR / LOOK */}
-            <div aria-hidden="true" style={{ flex: "0 0 auto", paddingLeft: "16px", paddingTop: "8px", pointerEvents: "none", zIndex: 2 }}>
-              <div style={{ overflow: "hidden" }}>
-                <span
-                  className="sx-clip-reveal sx-clip-delay-1"
-                  style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "clamp(34px, 10vw, 54px)", letterSpacing: "-0.04em", lineHeight: 0.9, whiteSpace: "nowrap", display: "block", color: "#F5F2ED" }}
-                >
-                  YOUR
-                </span>
-              </div>
-              <div style={{ overflow: "hidden", paddingLeft: "8px" }}>
-                <span
-                  className="sx-clip-reveal sx-clip-delay-2"
-                  style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "clamp(34px, 10vw, 54px)", letterSpacing: "-0.04em", lineHeight: 0.9, whiteSpace: "nowrap", display: "block", color: "#8B0D1A" }}
-                >
-                  LOOK
-                </span>
-              </div>
-            </div>
-
-            {/* Right: Model Image — takes remaining width */}
-            <div style={{ flex: 1, position: "relative", height: "46svh", overflow: "hidden" }}>
-              <Image
-                src={slide.imageUrl}
-                alt="SalarX — Men's fashion model"
-                fill
-                priority
-                sizes="60vw"
-                className="object-contain object-top"
-              />
-            </div>
+        {/* ── TOP-LEFT HEADLINE ─────────────────────────── */}
+        <div aria-hidden="true" style={{ position: "relative", zIndex: 5, padding: "12px 16px 0", pointerEvents: "none" }}>
+          <div style={{ overflow: "hidden" }}>
+            <span className="sx-clip-reveal sx-clip-delay-1" style={{ ...mobileText, color: "#F5F2ED" }}>YOUR</span>
           </div>
+          <div style={{ overflow: "hidden", paddingLeft: "8vw" }}>
+            <span className="sx-clip-reveal sx-clip-delay-2" style={{ ...mobileText, color: "#8B0D1A" }}>LOOK</span>
+          </div>
+        </div>
 
-          {/* ── EYEBROW + DESCRIPTION + CTA ── */}
-          <div className="sx-fade-in sx-fade-delay-1" style={{ padding: "14px 16px 0", boxSizing: "border-box" }}>
-            <p className="sx-label" style={{ marginBottom: "8px", color: "#000000", fontWeight: 900, fontSize: "9px", whiteSpace: "nowrap" }}>
+        {/* ── SPACER pushes content to bottom ────────────── */}
+        <div style={{ flex: 1 }} />
+
+        {/* ── BOTTOM CONTENT ZONE (sits over gradient) ──── */}
+        <div style={{ position: "relative", zIndex: 5, padding: "0 16px", boxSizing: "border-box", width: "100%" }}>
+
+          {/* Eyebrow + description + CTA */}
+          <div className="sx-fade-in sx-fade-delay-1">
+            <p className="sx-label" style={{ marginBottom: "6px", color: "#8B0D1A", fontSize: "9px", whiteSpace: "nowrap" }}>
               {slide.eyebrow ?? "Men's Fashion. GEN-Z Edition"}
             </p>
-            <p style={{ fontFamily: "'Inter',system-ui", fontSize: "12px", color: "rgba(245, 242, 237, 0.85)", lineHeight: 1.65, marginBottom: "14px" }}>
+            <p style={{ fontFamily: "'Inter',system-ui", fontSize: "12px", color: "rgba(245,242,237,0.85)", lineHeight: 1.6, marginBottom: "12px" }}>
               {slide.description ?? "Future-ready streetwear crafted for creators, trendsetters, and everyday explorers."}
             </p>
-            <Link href={slide.ctaHref} className="sx-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "10px", padding: "11px 20px" }}>
+            <Link href={slide.ctaHref} className="sx-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "10px", padding: "10px 20px", marginBottom: "14px" }}>
               {slide.ctaLabel ?? "Discover The Collection"}
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
-          {/* ── FLOATING STATS ROW ── */}
-          <div className="sx-fade-in sx-fade-delay-2" style={{ display: "flex", gap: "8px", justifyContent: "center", padding: "16px 16px 0", boxSizing: "border-box" }}>
-            <FloatingStat value="500+" label="Happy Customers" floatDelay="0s" mobile />
-            <FloatingStat value="4.9★" label="Customer Rating" floatDelay="0s" mobile />
-            <FloatingStat value="All BD" label="Nationwide Delivery" floatDelay="0s" mobile />
+          {/* Stats row — flex with equal width, no overflow */}
+          <div className="sx-fade-in sx-fade-delay-2" style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+            {[
+              { value: "500+", label: "Happy\nCustomers" },
+              { value: "4.9★", label: "Customer\nRating" },
+              { value: "All BD", label: "Nationwide\nDelivery" },
+            ].map(({ value, label }) => (
+              <div key={value} style={{ flex: 1, background: "rgba(11,11,11,0.5)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", padding: "8px 4px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <span style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontSize: "13px", fontWeight: 900, color: "#F5F2ED", lineHeight: 1 }}>{value}</span>
+                <span style={{ fontFamily: "'Inter',system-ui", fontSize: "8px", color: "#9A9A8E", marginTop: "3px", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center", whiteSpace: "pre-line" }}>{label}</span>
+              </div>
+            ))}
           </div>
 
-          {/* ── NEW DROP CARD ── */}
-          <div style={{ padding: "14px 16px 0", boxSizing: "border-box" }}>
+          {/* New Drop Card — full width */}
+          <div className="sx-fade-in sx-fade-delay-2" style={{ marginBottom: "10px" }}>
             <NewDropCard />
           </div>
 
-          {/* ── YOUR / RULES — bottom, smaller mobile size ── */}
-          <div
-            aria-hidden="true"
-            style={{ padding: "10px 16px 12px", pointerEvents: "none", textAlign: "right", boxSizing: "border-box" }}
-          >
-            <div style={{ overflow: "hidden", paddingRight: "6vw" }}>
-              <span
-                className="sx-clip-reveal sx-clip-delay-1"
-                style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "clamp(28px, 8.5vw, 48px)", letterSpacing: "-0.04em", lineHeight: 0.9, whiteSpace: "nowrap", display: "block", color: "transparent", WebkitTextStroke: "1px #F5F2ED" } as React.CSSProperties}
-              >
-                YOUR
-              </span>
+          {/* YOUR / RULES — bottom right */}
+          <div aria-hidden="true" style={{ textAlign: "right", pointerEvents: "none" }}>
+            <div style={{ overflow: "hidden", paddingRight: "4vw" }}>
+              <span className="sx-clip-reveal sx-clip-delay-1" style={{ ...mobileTextSm, color: "transparent", WebkitTextStroke: "1px rgba(245,242,237,0.6)" } as React.CSSProperties}>YOUR</span>
             </div>
             <div style={{ overflow: "hidden" }}>
-              <span
-                className="sx-clip-reveal sx-clip-delay-2"
-                style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "clamp(28px, 8.5vw, 48px)", letterSpacing: "-0.04em", lineHeight: 0.9, whiteSpace: "nowrap", display: "block", color: "#F5F2ED" }}
-              >
-                RULES.
-              </span>
+              <span className="sx-clip-reveal sx-clip-delay-2" style={{ ...mobileTextSm, color: "rgba(245,242,237,0.8)" }}>RULES.</span>
             </div>
           </div>
-
         </div>
 
-        {/* ── TICKER ── */}
+        {/* ── TICKER ─────────────────────────────────────── */}
         <Ticker />
       </section>
     );
   }
+
 
   /* ── DESKTOP LAYOUT ────────────────────────────────────── */
   return (
