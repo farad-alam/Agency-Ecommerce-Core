@@ -2,7 +2,6 @@ import { CartProvider } from "@/components/storefront/cart-provider";
 import { Navbar } from "@/components/storefront/navbar";
 import { Footer } from "@/components/storefront/footer";
 import { MiniCartDrawer } from "@/components/storefront/mini-cart-drawer";
-import { AnnouncementBar } from "@/components/storefront/announcement-bar";
 import { WhatsAppFab } from "@/components/storefront/whatsapp-fab";
 
 export default function StorefrontLayout({
@@ -13,7 +12,6 @@ export default function StorefrontLayout({
   return (
     <CartProvider>
       <div className="flex min-h-screen flex-col" style={{ background: "#0B0B0B" }}>
-        <AnnouncementBar />
         <Navbar />
         <MiniCartDrawer />
         <main className="flex-1">{children}</main>
