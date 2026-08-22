@@ -236,21 +236,17 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
         {/* ── NAVBAR SPACER ── */}
         <div style={{ height: "64px", flexShrink: 0 }} />
 
-        {/* ── ALL HEADLINES: YOUR LOOK / YOUR RULES. ── */}
+        {/* ── HEADLINES: 2 lines — "YOUR LOOK" / "YOUR RULES." ── */}
         <div aria-hidden="true" style={{ position: "relative", zIndex: 5, padding: "8px 16px 0", pointerEvents: "none", flexShrink: 0 }}>
-          {/* YOUR LOOK */}
-          <div style={{ overflow: "hidden" }}>
-            <span className="sx-clip-reveal sx-clip-delay-1" style={{ ...H, color: "#F5F2ED" }}>YOUR</span>
+          {/* Line 1: YOUR LOOK */}
+          <div style={{ display: "flex", gap: "0.15em", overflow: "hidden" }}>
+            <span className="sx-clip-reveal sx-clip-delay-1" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "10vw", letterSpacing: "-0.03em", lineHeight: 1, color: "#F5F2ED", whiteSpace: "nowrap" }}>YOUR</span>
+            <span className="sx-clip-reveal sx-clip-delay-2" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "10vw", letterSpacing: "-0.03em", lineHeight: 1, color: "#8B0D1A", whiteSpace: "nowrap" }}>&nbsp;LOOK</span>
           </div>
-          <div style={{ overflow: "hidden", paddingLeft: "8vw", marginBottom: "4px" }}>
-            <span className="sx-clip-reveal sx-clip-delay-2" style={{ ...H, color: "#8B0D1A" }}>LOOK</span>
-          </div>
-          {/* YOUR RULES */}
-          <div style={{ overflow: "hidden", paddingRight: "8vw", textAlign: "right" }}>
-            <span className="sx-clip-reveal sx-clip-delay-3" style={{ ...H, color: "transparent", WebkitTextStroke: "1.5px #F5F2ED" } as React.CSSProperties}>YOUR</span>
-          </div>
-          <div style={{ overflow: "hidden", textAlign: "right" }}>
-            <span className="sx-clip-reveal sx-clip-delay-4" style={{ ...H, color: "#F5F2ED" }}>RULES.</span>
+          {/* Line 2: YOUR RULES. */}
+          <div style={{ display: "flex", gap: "0.15em", overflow: "hidden" }}>
+            <span className="sx-clip-reveal sx-clip-delay-3" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "10vw", letterSpacing: "-0.03em", lineHeight: 1, color: "transparent", WebkitTextStroke: "1.5px #F5F2ED", whiteSpace: "nowrap" } as React.CSSProperties}>YOUR</span>
+            <span className="sx-clip-reveal sx-clip-delay-4" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "10vw", letterSpacing: "-0.03em", lineHeight: 1, color: "#F5F2ED", whiteSpace: "nowrap" }}>&nbsp;RULES.</span>
           </div>
         </div>
 
