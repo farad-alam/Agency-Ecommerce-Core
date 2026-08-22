@@ -65,20 +65,22 @@ type WordProps = {
   variant?: "solid" | "outline" | "red";
   delay?: string;
   align?: "left" | "right";
+  indent?: string; /* positive = push toward center (right for left col, left for right col) */
 };
-function Word({ children, variant = "solid", delay = "0s", align = "left" }: WordProps) {
+function Word({ children, variant = "solid", delay = "0s", align = "left", indent }: WordProps) {
   const color =
     variant === "red"    ? "#8B0D1A" :
     variant === "outline"? "transparent" : "#F5F2ED";
   const stroke = variant === "outline" ? "1.5px #F5F2ED" : "none";
 
   return (
-    <div style={{ overflow: "hidden", lineHeight: 1 }}>
+    /* NO overflow:hidden — text must bleed freely into model area */
+    <div style={{ lineHeight: 1, paddingLeft: align === "left" ? indent : undefined, paddingRight: align === "right" ? indent : undefined }}>
       <span
         className="sx-clip-reveal block"
         style={{
           fontFamily: "'Montserrat', Arial, sans-serif",
-          fontSize: "clamp(60px, 9.5vw, 148px)",
+          fontSize: "clamp(72px, 12vw, 190px)",
           fontWeight: 900,
           letterSpacing: "-0.04em",
           lineHeight: 0.88,
@@ -87,6 +89,7 @@ function Word({ children, variant = "solid", delay = "0s", align = "left" }: Wor
           display: "block",
           animationDelay: delay,
           textAlign: align,
+          whiteSpace: "nowrap",
         }}
       >
         {children}
@@ -180,34 +183,20 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           zIndex: 1,
         }}
       >
-        {/* ── LEFT COLUMN ─────────────────────────────── */}
+        {/* ── LEFT COLUMN — YOUR / LOOK ───────────────── */}
         <div
           className="flex flex-col justify-between"
-          style={{ padding: "48px 0 32px 40px" }}
+          style={{ padding: "48px 0 32px 40px", overflow: "visible" }}
         >
-          {/* Top: Eyebrow + big words */}
+          {/* Top: big words — YOUR flush left, LOOK indented right so K bleeds behind model */}
           <div>
-            {/* Eyebrow */}
-            <p
-              className="sx-fade-in"
-              style={{
-                fontFamily: "'Montserrat',Arial,sans-serif",
-                fontSize: "11px",
-                fontWeight: 700,
-                letterSpacing: "0.2em",
-                color: "#9A9A8E",
-                textTransform: "uppercase",
-                marginBottom: "28px",
-                fontStyle: "italic",
-              }}
-            >
-              // {slide.eyebrow ?? "Men's Fashion · 2026"}
-            </p>
+            {/* Eyebrow HIDDEN */}
 
-            {/* Big left words: YOUR / RULES. */}
+            {/* YOUR — left-aligned, normal */}
             <Word variant="solid" delay="0.05s" align="left">YOUR</Word>
             <div style={{ height: "0.05em" }} />
-            <Word variant="red" delay="0.25s" align="left">RULES.</Word>
+            {/* LOOK — heavily indented so the K extends behind the model */}
+            <Word variant="red" delay="0.25s" align="left" indent="22%">LOOK</Word>
           </div>
 
           {/* Bottom: Description + CTA */}
@@ -238,12 +227,12 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           <div
             style={{
               position: "absolute",
-              /* bleed above and below */
-              top: "-20px",
-              bottom: "0",
-              /* bleed left and right into text columns */
-              left: "-60px",
-              right: "-60px",
+              /* bleed fully to top, anchor at bottom */
+              top: "-56px",
+              bottom: "-4px",
+              /* bleed into text columns so model overlaps the text */
+              left: "-80px",
+              right: "-80px",
             }}
           >
             <Image
@@ -254,29 +243,30 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
               sizes="(max-width: 768px) 100vw, 40vw"
               className="object-contain object-bottom"
               style={{
-                transform: "scale(1.2)",
+                transform: "scale(1.25)",
                 transformOrigin: "bottom center",
               }}
             />
           </div>
         </div>
 
-        {/* ── RIGHT COLUMN ────────────────────────────── */}
+        {/* ── RIGHT COLUMN — YOUR / RULES ──────────────── */}
         <div
           className="flex flex-col justify-between"
-          style={{ padding: "48px 40px 32px 0", alignItems: "flex-end" }}
+          style={{ padding: "48px 40px 32px 0", alignItems: "flex-end", overflow: "visible" }}
         >
           {/* Top: Badge + big words */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", width: "100%" }}>
             {/* Circular badge */}
             <div className="sx-fade-in mb-6">
               <CircularBadge />
             </div>
 
-            {/* Big right words: YOUR / LOOK. */}
-            <Word variant="outline" delay="0.15s" align="right">YOUR</Word>
+            {/* YOUR — indented right so Y bleeds behind model from the right side */}
+            <Word variant="outline" delay="0.15s" align="right" indent="22%">YOUR</Word>
             <div style={{ height: "0.05em" }} />
-            <Word variant="solid" delay="0.35s" align="right">LOOK.</Word>
+            {/* RULES — flush right, normal */}
+            <Word variant="solid" delay="0.35s" align="right">RULES.</Word>
           </div>
 
           {/* Bottom: italic subtext + NEW DROP card */}
