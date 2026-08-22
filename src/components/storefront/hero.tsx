@@ -299,8 +299,8 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           aria-hidden="true"
           style={{ position: "absolute", right: "8vw", bottom: "16px", zIndex: 1, pointerEvents: "none", textAlign: "right" }}
         >
-          {/* YOUR — indented ~14vw from right so Y crosses into model */}
-          <div style={{ overflow: "hidden", paddingRight: "14vw" }}>
+          {/* YOUR — indented ~11vw from right so Y crosses into model but isn't fully hidden */}
+          <div style={{ overflow: "hidden", paddingRight: "11vw" }}>
             <span
               className="sx-clip-reveal sx-clip-delay-1"
               style={{ ...WORD_BASE, color: "transparent", WebkitTextStroke: "1.5px #F5F2ED" } as React.CSSProperties}
