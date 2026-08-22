@@ -266,15 +266,27 @@ export async function createVariant(
   productId: string,
   input: CreateVariantInput
 ) {
-  // Check SKU uniqueness
-  const existing = await db.productVariant.findUnique({
-    where: { sku: input.sku },
-    select: { id: true },
-  });
-  if (existing) throw Errors.conflict(`SKU "${input.sku}" already exists`);
+  let finalSku = input.sku;
+  let isUnique = false;
+  let originalSku = finalSku;
+
+  while (!isUnique) {
+    const existing = await db.productVariant.findUnique({
+      where: { sku: finalSku },
+      select: { id: true },
+    });
+    
+    if (existing) {
+      // Regenerate the SKU by appending a short random string so we don't disturb the admin
+      const randomString = Math.random().toString(36).substring(2, 6).toUpperCase();
+      finalSku = `${originalSku}-${randomString}`;
+    } else {
+      isUnique = true;
+    }
+  }
 
   return db.productVariant.create({
-    data: { ...input, productId },
+    data: { ...input, sku: finalSku, productId },
   });
 }
 
