@@ -213,13 +213,13 @@ export function CategoriesManager({ initialCategories }: Props) {
               <select
                 value={parentId}
                 onChange={(e) => setParentId(e.target.value)}
-                className="w-full rounded-md border border-white/[0.08] bg-white/[0.04] px-3 py-2 text-sm text-zinc-300"
+                className="w-full rounded-md border border-white/[0.08] bg-zinc-900/50 px-3 py-2 text-sm text-zinc-300 focus:outline-none focus:border-indigo-500"
               >
-                <option value="">— None (top-level) —</option>
+                <option className="bg-zinc-900 text-zinc-300" value="">— None (top-level) —</option>
                 {initialCategories
                   .filter((c) => c.id !== editTarget?.id)
                   .map((c) => (
-                    <option key={c.id} value={c.id}>
+                    <option className="bg-zinc-900 text-zinc-300" key={c.id} value={c.id}>
                       {c.name}
                     </option>
                   ))}
