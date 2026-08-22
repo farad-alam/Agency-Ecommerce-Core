@@ -32,7 +32,7 @@ export function Navbar() {
 
   const navBg = isHome && !scrolled
     ? "bg-transparent"
-    : "bg-[#0B0B0B]/95 backdrop-blur-md border-b border-[#2A2A2A]";
+    : "bg-[#0B0B0B] transition-colors duration-300";
 
   return (
     <>
