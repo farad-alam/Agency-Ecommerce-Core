@@ -236,10 +236,10 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           style={{ position: "absolute", right: "8vw", top: "56px", zIndex: 5, display: "flex", gap: "24px", alignItems: "flex-start", maxWidth: "400px" }}
         >
           {/* FLOATING STATS */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "12px" }}>
-            <FloatingStat value="500+" label="Happy Customers" floatDelay="0s" style={{ alignSelf: "flex-end", transform: "translateX(-20px)" }} />
-            <FloatingStat value="4.9★" label="Customer Rating" floatDelay="1.5s" style={{ alignSelf: "flex-end" }} />
-            <FloatingStat value="All BD" label="Nationwide Delivery" floatDelay="0.75s" style={{ alignSelf: "flex-end", transform: "translateX(-10px)" }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px", marginTop: "12px" }}>
+            <FloatingStat value="500+" label="Happy Customers" floatDelay="0s" style={{ alignSelf: "flex-end", transform: "translateX(-70px)" }} />
+            <FloatingStat value="4.9★" label="Customer Rating" floatDelay="1.5s" style={{ alignSelf: "flex-end", transform: "translateX(-10px)" }} />
+            <FloatingStat value="All BD" label="Nationwide Delivery" floatDelay="0.75s" style={{ alignSelf: "flex-end", transform: "translateX(-45px)" }} />
           </div>
 
           <div className="sx-fade-in">
