@@ -119,32 +119,51 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
       {/* ── MAIN AREA ─────────────────────────────────────── */}
       <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
 
-        {/* ── CINEMATIC SMOKY RED BACKGROUND ──────────────── */}
+        {/* ── INTENSE SMOKY RED BACKGROUND (Matches Reference) ──────────────── */}
+        {/* Base intense red flood */}
         <div
           aria-hidden="true"
           style={{
             position: "absolute",
             inset: 0,
-            background: `
-              radial-gradient(ellipse at 50% 50%, rgba(139, 13, 26, 0.15) 0%, transparent 65%),
-              radial-gradient(circle at 0% 0%, rgba(139, 13, 26, 0.08) 0%, transparent 40%),
-              radial-gradient(circle at 100% 100%, rgba(139, 13, 26, 0.12) 0%, transparent 50%)
-            `,
+            background: "radial-gradient(ellipse at 40% 30%, #cc0a1c 0%, #7a0410 45%, #120102 85%, #000000 100%)",
             pointerEvents: "none",
             zIndex: 0,
           }}
         />
-        {/* Core spotlight directly behind model to simulate backlight/smoke */}
+        
+        {/* SVG Procedural Smoke Texture */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: 0.35,
+            mixBlendMode: "color-dodge",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        >
+          <svg width="100%" height="100%" preserveAspectRatio="none">
+            <filter id="smoke-texture">
+              <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="4" stitchTiles="stitch" />
+              <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 2 -0.2" />
+            </filter>
+            <rect width="100%" height="100%" filter="url(#smoke-texture)" />
+          </svg>
+        </div>
+
+        {/* Core volumetric spotlight directly behind model */}
         <div
           aria-hidden="true"
           style={{
             position: "absolute",
             left: "50%",
-            top: "40%",
-            transform: "translate(-50%,-40%)",
-            width: "50vw",
-            height: "80%",
-            background: "radial-gradient(ellipse at center, rgba(139, 13, 26, 0.45) 0%, rgba(139, 13, 26, 0.1) 40%, transparent 70%)",
+            top: "30%",
+            transform: "translate(-50%,-30%)",
+            width: "60vw",
+            height: "90%",
+            background: "radial-gradient(ellipse at center, rgba(255, 30, 50, 0.4) 0%, rgba(200, 10, 25, 0.15) 50%, transparent 70%)",
             filter: "blur(60px)",
             pointerEvents: "none",
             zIndex: 0,
