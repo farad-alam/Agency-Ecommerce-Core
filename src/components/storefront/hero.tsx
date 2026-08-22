@@ -237,29 +237,11 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
       >
         <SmokeBackground />
 
-        {/* ── FULL-BLEED MODEL IMAGE (top ~60%) ──────────── */}
-        <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
-          <Image
-            src={slide.imageUrl}
-            alt="SalarX — Men's fashion model"
-            fill
-            priority
-            sizes="100vw"
-            className="object-contain object-top"
-            style={{ objectPosition: "center top" }}
-          />
-          {/* gradient fade so lower content is readable */}
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(to bottom, transparent 30%, rgba(11,11,11,0.6) 55%, #0B0B0B 75%)",
-          }} />
-        </div>
+        {/* ── NAVBAR SPACER ────────────────────────────────── */}
+        <div style={{ height: "64px", flexShrink: 0, position: "relative", zIndex: 5 }} />
 
-        {/* ── NAVBAR SPACER ─────────────────────────────── */}
-        <div style={{ height: "64px", flexShrink: 0 }} />
-
-        {/* ── TOP-LEFT HEADLINE ─────────────────────────── */}
-        <div aria-hidden="true" style={{ position: "relative", zIndex: 5, padding: "12px 16px 0", pointerEvents: "none" }}>
+        {/* ── TOP HEADLINE: YOUR / LOOK ─────────────────────── */}
+        <div aria-hidden="true" style={{ position: "relative", zIndex: 5, padding: "10px 16px 0", pointerEvents: "none", flexShrink: 0 }}>
           <div style={{ overflow: "hidden" }}>
             <span className="sx-clip-reveal sx-clip-delay-1" style={{ ...mobileText, color: "#F5F2ED" }}>YOUR</span>
           </div>
@@ -268,61 +250,66 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           </div>
         </div>
 
-        {/* ── SPACER pushes content to bottom ────────────── */}
-        <div style={{ flex: 1 }} />
-
-        {/* ── BOTTOM CONTENT ZONE (sits over gradient) ──── */}
-        <div style={{ position: "relative", zIndex: 5, padding: "0 16px", boxSizing: "border-box", width: "100%" }}>
-
-          {/* Eyebrow + description + CTA */}
+        {/* ── MIDDLE: eyebrow + description + CTA + stats ──── */}
+        <div style={{ position: "relative", zIndex: 5, padding: "12px 16px 0", boxSizing: "border-box", flexShrink: 0 }}>
           <div className="sx-fade-in sx-fade-delay-1">
-            <p className="sx-label" style={{ marginBottom: "6px", color: "#8B0D1A", fontSize: "9px", whiteSpace: "nowrap" }}>
+            <p className="sx-label" style={{ marginBottom: "6px", fontSize: "9px", whiteSpace: "nowrap" }}>
               {slide.eyebrow ?? "Men's Fashion. GEN-Z Edition"}
             </p>
-            <p style={{ fontFamily: "'Inter',system-ui", fontSize: "12px", color: "rgba(245,242,237,0.85)", lineHeight: 1.6, marginBottom: "12px" }}>
+            <p style={{ fontFamily: "'Inter',system-ui", fontSize: "11px", color: "rgba(245,242,237,0.85)", lineHeight: 1.6, marginBottom: "10px" }}>
               {slide.description ?? "Future-ready streetwear crafted for creators, trendsetters, and everyday explorers."}
             </p>
-            <Link href={slide.ctaHref} className="sx-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "10px", padding: "10px 20px", marginBottom: "14px" }}>
+            <Link href={slide.ctaHref} className="sx-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "10px", padding: "10px 20px", marginBottom: "12px" }}>
               {slide.ctaLabel ?? "Discover The Collection"}
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
-          {/* Stats row — flex with equal width, no overflow */}
-          <div className="sx-fade-in sx-fade-delay-2" style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+          {/* Stats row */}
+          <div className="sx-fade-in sx-fade-delay-2" style={{ display: "flex", gap: "6px", marginBottom: "0" }}>
             {[
               { value: "500+", label: "Happy\nCustomers" },
               { value: "4.9★", label: "Customer\nRating" },
               { value: "All BD", label: "Nationwide\nDelivery" },
             ].map(({ value, label }) => (
-              <div key={value} style={{ flex: 1, background: "rgba(11,11,11,0.5)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", padding: "8px 4px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div key={value} style={{ flex: 1, background: "rgba(11,11,11,0.5)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", padding: "7px 4px", display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <span style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontSize: "13px", fontWeight: 900, color: "#F5F2ED", lineHeight: 1 }}>{value}</span>
                 <span style={{ fontFamily: "'Inter',system-ui", fontSize: "8px", color: "#9A9A8E", marginTop: "3px", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center", whiteSpace: "pre-line" }}>{label}</span>
               </div>
             ))}
           </div>
+        </div>
 
-          {/* New Drop Card — full width */}
-          <div className="sx-fade-in sx-fade-delay-2" style={{ marginBottom: "10px" }}>
-            <NewDropCard />
-          </div>
+        {/* ── BOTTOM: model image fills remaining space ─────── */}
+        <div style={{ flex: 1, position: "relative", zIndex: 2, minHeight: 0 }}>
+          <Image
+            src={slide.imageUrl}
+            alt="SalarX — Men's fashion model"
+            fill
+            priority
+            sizes="100vw"
+            className="object-contain object-bottom"
+          />
+          {/* subtle top fade so image blends into content above */}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(11,11,11,0.4) 0%, transparent 25%)", pointerEvents: "none" }} />
 
-          {/* YOUR / RULES — bottom right */}
-          <div aria-hidden="true" style={{ textAlign: "right", pointerEvents: "none" }}>
-            <div style={{ overflow: "hidden", paddingRight: "4vw" }}>
-              <span className="sx-clip-reveal sx-clip-delay-1" style={{ ...mobileTextSm, color: "transparent", WebkitTextStroke: "1px rgba(245,242,237,0.6)" } as React.CSSProperties}>YOUR</span>
+          {/* YOUR RULES overlay bottom-right of image */}
+          <div aria-hidden="true" style={{ position: "absolute", bottom: "6px", right: "12px", textAlign: "right", pointerEvents: "none", zIndex: 3 }}>
+            <div style={{ overflow: "hidden", paddingRight: "3vw" }}>
+              <span className="sx-clip-reveal sx-clip-delay-1" style={{ ...mobileTextSm, color: "transparent", WebkitTextStroke: "1px rgba(245,242,237,0.55)" } as React.CSSProperties}>YOUR</span>
             </div>
             <div style={{ overflow: "hidden" }}>
-              <span className="sx-clip-reveal sx-clip-delay-2" style={{ ...mobileTextSm, color: "rgba(245,242,237,0.8)" }}>RULES.</span>
+              <span className="sx-clip-reveal sx-clip-delay-2" style={{ ...mobileTextSm, color: "rgba(245,242,237,0.75)" }}>RULES.</span>
             </div>
           </div>
         </div>
 
-        {/* ── TICKER ─────────────────────────────────────── */}
+        {/* ── TICKER ───────────────────────────────────────── */}
         <Ticker />
       </section>
     );
   }
+
 
 
   /* ── DESKTOP LAYOUT ────────────────────────────────────── */
