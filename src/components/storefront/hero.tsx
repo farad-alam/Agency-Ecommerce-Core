@@ -253,6 +253,10 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
               priority
               sizes="(max-width: 768px) 100vw, 40vw"
               className="object-contain object-bottom"
+              style={{
+                transform: "scale(1.2)",
+                transformOrigin: "bottom center",
+              }}
             />
           </div>
         </div>
