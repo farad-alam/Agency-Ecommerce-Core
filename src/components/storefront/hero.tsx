@@ -131,7 +131,7 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
         {/* LEFT TOP: YOUR (flush) / LOOK (indented → K goes behind model) */}
         <div
           aria-hidden="true"
-          style={{ position: "absolute", left: "40px", top: "56px", zIndex: 1, pointerEvents: "none" }}
+          style={{ position: "absolute", left: "8vw", top: "56px", zIndex: 1, pointerEvents: "none" }}
         >
           {/* YOUR — flush left */}
           <div style={{ overflow: "hidden" }}>
@@ -155,7 +155,7 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
 
         {/* RIGHT TOP: Badge + italic text + NEW DROP card */}
         <div
-          style={{ position: "absolute", right: "40px", top: "56px", zIndex: 5, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "12px", maxWidth: "300px" }}
+          style={{ position: "absolute", right: "8vw", top: "56px", zIndex: 5, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "12px", maxWidth: "300px" }}
         >
           <div className="sx-fade-in">
             <CircularBadge />
@@ -200,7 +200,7 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           style={{
             position: "absolute",
             bottom: "28px",
-            left: "40px",
+            left: "8vw",
             zIndex: 5,
           }}
         >
@@ -218,7 +218,7 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
         {/* Right Bottom: YOUR (indented) / RULES (flush right) */}
         <div
           aria-hidden="true"
-          style={{ position: "absolute", right: "40px", bottom: "16px", zIndex: 1, pointerEvents: "none", textAlign: "right" }}
+          style={{ position: "absolute", right: "8vw", bottom: "16px", zIndex: 1, pointerEvents: "none", textAlign: "right" }}
         >
           {/* YOUR — indented ~14vw from right so Y crosses into model */}
           <div style={{ overflow: "hidden", paddingRight: "14vw" }}>
