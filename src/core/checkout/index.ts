@@ -81,7 +81,6 @@ export async function processCheckout(
       price: price,
       quantity: item.quantity,
     });
-    });
   }
 
   // Get live store settings for shipping and tax calculations
