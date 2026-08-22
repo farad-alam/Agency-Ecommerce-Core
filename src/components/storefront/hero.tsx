@@ -116,61 +116,60 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
         overflow: "hidden",
       }}
     >
+      {/* ── INTENSE SMOKY RED BACKGROUND (Matches Reference) ──────────────── */}
+      {/* Base intense red flood */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "radial-gradient(ellipse at 40% 30%, #cc0a1c 0%, #7a0410 45%, #120102 85%, #000000 100%)",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
+      
+      {/* SVG Procedural Smoke Texture */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: 0.65, /* High opacity for distinct physical smoke */
+          mixBlendMode: "overlay", /* Overlay creates dark shadows and bright highlights (volumetric feel) */
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      >
+        <svg width="100%" height="100%" preserveAspectRatio="none">
+          <filter id="smoke-texture">
+            {/* Lower frequency = bigger clouds, higher octaves = more wispy detail */}
+            <feTurbulence type="fractalNoise" baseFrequency="0.009" numOctaves="5" stitchTiles="stitch" />
+            {/* High contrast alpha channel to create distinct clumps of smoke instead of a uniform haze */}
+            <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 4 -1.5" />
+          </filter>
+          <rect width="100%" height="100%" filter="url(#smoke-texture)" />
+        </svg>
+      </div>
+
+      {/* Core volumetric spotlight directly behind model */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: "40%", /* adjust to center */
+          transform: "translate(-50%,-40%)",
+          width: "60vw",
+          height: "90%",
+          background: "radial-gradient(ellipse at center, rgba(255, 30, 50, 0.4) 0%, rgba(200, 10, 25, 0.15) 50%, transparent 70%)",
+          filter: "blur(60px)",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
       {/* ── MAIN AREA ─────────────────────────────────────── */}
       <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
-
-        {/* ── INTENSE SMOKY RED BACKGROUND (Matches Reference) ──────────────── */}
-        {/* Base intense red flood */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "radial-gradient(ellipse at 40% 30%, #cc0a1c 0%, #7a0410 45%, #120102 85%, #000000 100%)",
-            pointerEvents: "none",
-            zIndex: 0,
-          }}
-        />
-        
-        {/* SVG Procedural Smoke Texture */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            inset: 0,
-            opacity: 0.65, /* High opacity for distinct physical smoke */
-            mixBlendMode: "overlay", /* Overlay creates dark shadows and bright highlights (volumetric feel) */
-            pointerEvents: "none",
-            zIndex: 0,
-          }}
-        >
-          <svg width="100%" height="100%" preserveAspectRatio="none">
-            <filter id="smoke-texture">
-              {/* Lower frequency = bigger clouds, higher octaves = more wispy detail */}
-              <feTurbulence type="fractalNoise" baseFrequency="0.009" numOctaves="5" stitchTiles="stitch" />
-              {/* High contrast alpha channel to create distinct clumps of smoke instead of a uniform haze */}
-              <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 4 -1.5" />
-            </filter>
-            <rect width="100%" height="100%" filter="url(#smoke-texture)" />
-          </svg>
-        </div>
-
-        {/* Core volumetric spotlight directly behind model */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            left: "50%",
-            top: "30%",
-            transform: "translate(-50%,-30%)",
-            width: "60vw",
-            height: "90%",
-            background: "radial-gradient(ellipse at center, rgba(255, 30, 50, 0.4) 0%, rgba(200, 10, 25, 0.15) 50%, transparent 70%)",
-            filter: "blur(60px)",
-            pointerEvents: "none",
-            zIndex: 0,
-          }}
-        />
 
         {/* ═══════════════════════════════════════════════════
             BIG TEXT — z-index 1, behind model (z-index 20)
