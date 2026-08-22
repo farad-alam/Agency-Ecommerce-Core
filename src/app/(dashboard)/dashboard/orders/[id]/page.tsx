@@ -36,12 +36,13 @@ export default async function OrderDetailsPage(props: {
           </p>
         </div>
         <div className="flex gap-2">
-          <Link
-            href={`/dashboard/orders/${order.id}/edit`}
-            className="px-4 py-2 bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 font-medium text-sm rounded-md hover:bg-indigo-600/20 transition-colors"
+          <button
+            disabled
+            title="This feature is under development."
+            className="px-4 py-2 bg-indigo-600/10 text-indigo-400/50 border border-indigo-500/20 font-medium text-sm rounded-md cursor-not-allowed"
           >
             Edit Order
-          </Link>
+          </button>
           {/* Real app uses client component for interactive refund flow */}
           {order.paymentStatus === "PAID" && !["REFUNDED", "CANCELLED"].includes(order.status) && (
             <button className="px-4 py-2 bg-zinc-800 border border-zinc-700 text-white font-medium text-sm rounded-md hover:bg-zinc-700 transition-colors">

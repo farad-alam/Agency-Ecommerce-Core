@@ -31,11 +31,11 @@ export function OrderDeleteButton({ orderId, orderNumber }: { orderId: string, o
 
   return (
     <button
-      onClick={handleDelete}
-      disabled={isDeleting}
-      className="px-4 py-2 bg-red-500/10 text-red-500 border border-red-500/20 font-medium text-sm rounded-md hover:bg-red-500/20 transition-colors flex items-center gap-2 disabled:opacity-50"
+      disabled
+      title="This feature is under development. Because of this, an admin cannot delete an order, but you can use the 'REJECTED' or 'CANCELLED' status."
+      className="px-4 py-2 bg-red-500/5 text-red-500/50 border border-red-500/10 font-medium text-sm rounded-md cursor-not-allowed flex items-center gap-2"
     >
-      {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+      <Trash2 className="w-4 h-4" />
       Delete Order
     </button>
   );

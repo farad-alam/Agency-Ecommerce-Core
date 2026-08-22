@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { format } from "date-fns";
+import { OrderStatusUpdater } from "@/components/dashboard/order-status-updater";
 
 export const metadata: Metadata = {
   title: "Orders",
@@ -28,9 +29,13 @@ export default async function OrdersPage(props: {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight text-white">Orders</h1>
-        <Link href="/dashboard/orders/new" className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-500 transition-colors">
+        <button 
+          disabled 
+          title="This feature is under development."
+          className="px-4 py-2 bg-indigo-600/50 text-white/50 text-sm font-medium rounded-md cursor-not-allowed"
+        >
           Create Order
-        </Link>
+        </button>
       </div>
 
       <Card className="border-white/[0.08] bg-black/40 backdrop-blur-xl">
@@ -71,12 +76,9 @@ export default async function OrdersPage(props: {
                       {Number(order.total).toLocaleString()} {order.currency}
                     </td>
                     <td className="px-4 py-3">
-                      <Badge variant={
-                        order.status === "PENDING" ? "outline" : 
-                        order.status === "FULFILLED" ? "default" : "secondary"
-                      } className={order.status === "PENDING" ? "bg-amber-500/10 text-amber-500 border-amber-500/20" : ""}>
-                        {order.status}
-                      </Badge>
+                      <div className="w-48">
+                        <OrderStatusUpdater orderId={order.id} currentStatus={order.status} />
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant={order.paymentStatus === "PAID" ? "default" : "outline"} className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
