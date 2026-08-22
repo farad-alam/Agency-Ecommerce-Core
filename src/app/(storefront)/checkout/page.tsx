@@ -124,6 +124,12 @@ export default function CheckoutPage() {
       }
 
       const order = await submitCheckout(payload);
+      
+      if ('error' in order) {
+        toast.error(order.error);
+        setIsSubmitting(false);
+        return;
+      }
 
       await refreshCart();
       router.push(`/checkout/success?orderNumber=${order.orderNumber}&method=${paymentMethod.toLowerCase()}`);
