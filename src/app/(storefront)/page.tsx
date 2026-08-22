@@ -717,7 +717,7 @@ export default async function StorefrontHomepage() {
             Join 500+ shoppers who get early access to sales, new drops, and
             special discount codes. No spam — ever.
           </p>
-          <form className="flex gap-0" onSubmit={(e) => e.preventDefault()}>
+          <form className="flex gap-0">
             <input
               type="email"
               placeholder="Your email address..."
