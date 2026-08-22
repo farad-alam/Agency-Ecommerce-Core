@@ -90,3 +90,13 @@ export async function removeStorefrontCoupon() {
   await db.cart.update({ where: { id: cart.id }, data: { couponCode: null } });
   return true;
 }
+
+export async function getStorefrontSettings() {
+  const { getStoreSettings } = await import("@/core/settings");
+  const settings = await getStoreSettings();
+  return {
+    shippingFlatRate: settings.shippingFlatRate,
+    taxMode: settings.taxMode,
+    taxRate: settings.taxRate,
+  };
+}

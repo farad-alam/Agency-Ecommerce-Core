@@ -8,12 +8,13 @@ import {
   removeProductFromCart,
   applyStorefrontCoupon,
   removeStorefrontCoupon,
+  getStorefrontSettings,
 } from "@/storefront-sdk/cart";
 import { CartItemInput } from "@/core/cart/types";
 import { toast } from "sonner";
 import { CartFull } from "@/core/cart";
 
-const SHIPPING_COST = 150; // flat rate in BDT
+// Dynamic shipping rate fetched from DB
 
 interface CartContextType {
   cart: CartFull | null;
@@ -44,11 +45,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isPending, startTransition] = useTransition();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [shippingFlatRate, setShippingFlatRate] = useState(150);
 
   const refreshCart = async () => {
     try {
-      const activeCart = await getActiveCart();
+      const [activeCart, settings] = await Promise.all([
+        getActiveCart(),
+        getStorefrontSettings()
+      ]);
       setCart(activeCart);
+      setShippingFlatRate(settings.shippingFlatRate);
     } catch (error) {
       console.error("Failed to load cart", error);
     } finally {
@@ -131,7 +137,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     (acc: number, item: any) => acc + (Number(item.variant?.price ?? 0) * item.quantity),
     0
   ) || 0;
-  const shippingCost = itemCount > 0 ? SHIPPING_COST : 0;
+  const shippingCost = itemCount > 0 ? shippingFlatRate : 0;
   const couponCode = cart?.couponCode ?? null;
   const total = Math.max(0, subtotal + shippingCost - discountAmount);
 
