@@ -239,8 +239,8 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
         {/* ── HEADLINE TOP: "YOUR LOOK" (Behind Image) ── */}
         <div aria-hidden="true" style={{ position: "relative", zIndex: 2, padding: "8px 16px 0", pointerEvents: "none", flexShrink: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", overflow: "hidden", width: "100%" }}>
-            <span className="sx-clip-reveal sx-clip-delay-1" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "16vw", letterSpacing: "0.05em", lineHeight: 1, color: "#F5F2ED", whiteSpace: "nowrap" }}>YOUR</span>
-            <span className="sx-clip-reveal sx-clip-delay-2" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "16vw", letterSpacing: "0.05em", lineHeight: 1, color: "#8B0D1A", whiteSpace: "nowrap" }}>LOOK</span>
+            <span className="sx-clip-reveal sx-clip-delay-1" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "14.5vw", letterSpacing: "0.01em", lineHeight: 1, color: "#F5F2ED", whiteSpace: "nowrap" }}>YOUR</span>
+            <span className="sx-clip-reveal sx-clip-delay-2" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "14.5vw", letterSpacing: "0.01em", lineHeight: 1, color: "#8B0D1A", whiteSpace: "nowrap" }}>LOOK</span>
           </div>
         </div>
 
@@ -257,10 +257,10 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
         </div>
 
         {/* ── HEADLINE BOTTOM: "YOUR RULES." (Behind Image, Aligned Right) ── */}
-        <div aria-hidden="true" style={{ position: "relative", zIndex: 2, padding: "0 16px", pointerEvents: "none", flexShrink: 0, marginTop: "-46px" }}>
+        <div aria-hidden="true" style={{ position: "relative", zIndex: 2, padding: "0 16px", pointerEvents: "none", flexShrink: 0, marginTop: "-50px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", overflow: "hidden", width: "100%" }}>
-            <span className="sx-clip-reveal sx-clip-delay-3" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "16vw", letterSpacing: "0.05em", lineHeight: 1, color: "transparent", WebkitTextStroke: "1.5px #F5F2ED", whiteSpace: "nowrap" } as React.CSSProperties}>YOUR</span>
-            <span className="sx-clip-reveal sx-clip-delay-4" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "16vw", letterSpacing: "0.05em", lineHeight: 1, color: "#F5F2ED", whiteSpace: "nowrap" }}>RULES.</span>
+            <span className="sx-clip-reveal sx-clip-delay-3" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "14.5vw", letterSpacing: "0.01em", lineHeight: 1, color: "transparent", WebkitTextStroke: "1.5px #F5F2ED", whiteSpace: "nowrap" } as React.CSSProperties}>YOUR</span>
+            <span className="sx-clip-reveal sx-clip-delay-4" style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "14.5vw", letterSpacing: "0.01em", lineHeight: 1, color: "#F5F2ED", whiteSpace: "nowrap" }}>RULES.</span>
           </div>
         </div>
 
