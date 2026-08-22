@@ -120,7 +120,8 @@ async function main() {
         data: {
           orderNumber: "ORD-20260726-9999",
           userId: testCustomer.id,
-          status: "FULFILLED",
+          status: "DELIVERED",
+          paymentStatus: "PAID",
           total: 300,
           subtotal: 280,
           shippingTotal: 20,

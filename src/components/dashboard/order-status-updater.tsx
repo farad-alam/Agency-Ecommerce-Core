@@ -3,17 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { Loader2, AlertTriangle, X } from "lucide-react";
+import { createPortal } from "react-dom";
 
 export function OrderStatusUpdater({ orderId, currentStatus }: { orderId: string, currentStatus: string }) {
   const router = useRouter();
@@ -65,7 +56,6 @@ export function OrderStatusUpdater({ orderId, currentStatus }: { orderId: string
           <option value="SHIPPED">SHIPPED</option>
           <option value="DELIVERED">DELIVERED</option>
           <option value="PAID">PAID</option>
-          <option value="FULFILLED">FULFILLED</option>
           <option value="CANCELLED">CANCELLED</option>
           <option value="REJECTED">REJECTED</option>
           <option value="REFUNDED">REFUNDED</option>
@@ -82,22 +72,52 @@ export function OrderStatusUpdater({ orderId, currentStatus }: { orderId: string
         )}
       </div>
 
-      <AlertDialog open={!!pendingStatus} onOpenChange={(open) => !open && setPendingStatus(null)}>
-        <AlertDialogContent className="bg-zinc-950 border-zinc-800">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">Change Order Status</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
-              Are you sure you want to change the order status from <strong className="text-white">{currentStatus}</strong> to <strong className="text-indigo-400">{pendingStatus}</strong>?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-zinc-800 text-white border-zinc-700 hover:bg-zinc-700 hover:text-white">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmStatusChange} className="bg-indigo-600 text-white hover:bg-indigo-500">
-              Confirm Change
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {pendingStatus && typeof window !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop blur overlay */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => setPendingStatus(null)}
+          />
+          
+          {/* Modal Content */}
+          <div className="relative z-10 w-full max-w-md p-6 bg-[#0a0a0a] border border-white/[0.08] rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <button 
+              onClick={() => setPendingStatus(null)}
+              className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
+                <AlertTriangle className="w-5 h-5 text-indigo-400" />
+              </div>
+              <h2 className="text-xl font-semibold text-white tracking-tight">Update Status</h2>
+            </div>
+            
+            <p className="text-zinc-400 leading-relaxed mb-8">
+              Are you sure you want to change the order status from <strong className="text-zinc-200 font-medium px-1.5 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.08]">{currentStatus}</strong> to <strong className="text-indigo-400 font-medium px-1.5 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20">{pendingStatus}</strong>?
+            </p>
+
+            <div className="flex items-center justify-end gap-3">
+              <button 
+                onClick={() => setPendingStatus(null)}
+                className="px-4 py-2.5 rounded-lg text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/[0.05] transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmStatusChange}
+                className="px-4 py-2.5 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-500/20"
+              >
+                Confirm Change
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </>
   );
 }
