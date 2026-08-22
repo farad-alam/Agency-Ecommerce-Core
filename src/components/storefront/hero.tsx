@@ -231,9 +231,9 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           </div>
         </div>
 
-        {/* RIGHT TOP: Floating Stats */}
+        {/* RIGHT TOP: Floating Stats + New Drop Card */}
         <div
-          style={{ position: "absolute", right: "8vw", top: "120px", zIndex: 5, display: "flex", alignItems: "flex-start" }}
+          style={{ position: "absolute", right: "8vw", top: "120px", zIndex: 5, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "40px" }}
         >
           {/* FLOATING STATS */}
           <div style={{ display: "flex", flexDirection: "row", gap: "20px" }}>
@@ -242,9 +242,9 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
             <FloatingStat value="All BD" label="Nationwide Delivery" floatDelay="0.75s" style={{ transform: "translateY(40px)" }} />
           </div>
 
-          {/* <div className="sx-fade-in">
-            <CircularBadge />
-          </div> */}
+          <div style={{ width: "100%", maxWidth: "300px" }}>
+            <NewDropCard />
+          </div>
         </div>
         {/* ═══════════════════════════════════════════════════
             MODEL — z-index 20, on top of text
