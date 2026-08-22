@@ -234,3 +234,63 @@
 .sx-reveal-delay-2 { animation-delay: 0.2s; }
 .sx-reveal-delay-3 { animation-delay: 0.3s; }
 .sx-reveal-delay-4 { animation-delay: 0.4s; }
+
+/* ============================================================
+   SALARX HERO — Keyframe Animations
+   ============================================================ */
+
+/* Marquee ticker scroll */
+@keyframes sx-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.sx-marquee {
+  display: flex;
+  width: max-content;
+  animation: sx-marquee 22s linear infinite;
+}
+.sx-marquee-track {
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Rotating circular badge */
+@keyframes sx-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.sx-spin { animation: sx-spin 12s linear infinite; }
+
+/* Clip-path headline reveal */
+@keyframes sx-clip-up {
+  from {
+    clip-path: inset(100% 0 0 0);
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    clip-path: inset(0% 0 0 0);
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.sx-clip-reveal {
+  animation: sx-clip-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.sx-clip-delay-1 { animation-delay: 0.05s; }
+.sx-clip-delay-2 { animation-delay: 0.22s; }
+.sx-clip-delay-3 { animation-delay: 0.38s; }
+.sx-clip-delay-4 { animation-delay: 0.52s; }
+.sx-clip-delay-5 { animation-delay: 0.68s; }
+
+/* Fade-in utility */
+@keyframes sx-fade-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.sx-fade-in {
+  animation: sx-fade-in 0.7s ease both;
+}
+.sx-fade-delay-1 { animation-delay: 0.6s; }
+.sx-fade-delay-2 { animation-delay: 0.75s; }
+.sx-fade-delay-3 { animation-delay: 0.9s; }

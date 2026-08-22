@@ -1,4 +1,4 @@
-import { getStorefrontCollections, getStorefrontProducts } from "@/storefront-sdk";
+import { getStorefrontProducts } from "@/storefront-sdk";
 import Link from "next/link";
 import Image from "next/image";
 import { ProductCard } from "@/components/storefront/product-card";
@@ -8,16 +8,15 @@ import { Truck, CreditCard, RefreshCw, ShieldCheck, Star, ArrowRight } from "luc
 
 /* ─── HERO DATA ─────────────────────────────────────────── */
 const heroSlide: HeroSlide = {
-  eyebrow: "SalarX · Chapainawabganj",
-  title: "Style That",
-  titleAccent: "Speaks for You.",
+  eyebrow: "Men's Fashion · Gen Z Edition",
+  title: "YOUR",
+  titleAccent: "RULES.",
   description:
-    "Premium clothing for men and women — crafted for everyday comfort, made to turn heads. Delivered anywhere in Bangladesh.",
-  imageUrl:
-    "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1200&auto=format&fit=crop",
+    "Premium menswear for the ones who set the trends — not follow them. Delivered anywhere in Bangladesh.",
+  imageUrl: "/models/hero-model.png",
   ctaLabel: "Shop New Arrivals",
   ctaHref: "/products?collection=new-arrivals",
-  secondaryCtaLabel: "Browse Collections",
+  secondaryCtaLabel: "Browse All",
   secondaryCtaHref: "/products",
 };
 
