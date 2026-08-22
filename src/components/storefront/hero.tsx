@@ -29,6 +29,17 @@ function useIsMobile() {
   return isMobile;
 }
 
+function useIsTablet() {
+  const [isTablet, setIsTablet] = useState(false);
+  useEffect(() => {
+    const check = () => setIsTablet(window.innerWidth >= 640 && window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check, { passive: true });
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isTablet;
+}
+
 /* ── Rotating circular badge ─────────────────────────────── */
 function CircularBadge() {
   return (
@@ -205,6 +216,7 @@ function SmokeBackground() {
 export function Hero({ slides }: { slides: HeroSlide[] }) {
   const slide = slides[0];
   const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
 
   /* ── MOBILE LAYOUT ─────────────────────────────────────── */
   if (isMobile) {
@@ -358,15 +370,17 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           style={{ position: "absolute", right: "8vw", top: "120px", zIndex: 5, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "40px" }}
         >
           {/* FLOATING STATS */}
-          <div style={{ display: "flex", flexDirection: "row", gap: "20px" }}>
-            <FloatingStat value="500+" label="Happy Customers" floatDelay="0s" style={{ transform: "translateY(25px)" }} />
-            <FloatingStat value="4.9★" label="Customer Rating" floatDelay="1.5s" style={{ transform: "translateY(-5px)" }} />
-            <FloatingStat value="All BD" label="Nationwide Delivery" floatDelay="0.75s" style={{ transform: "translateY(40px)" }} />
+          <div style={{ display: "flex", flexDirection: isTablet ? "column" : "row", gap: "20px" }}>
+            <FloatingStat value="500+" label="Happy Customers" floatDelay="0s" style={isTablet ? {} : { transform: "translateY(25px)" }} />
+            <FloatingStat value="4.9★" label="Customer Rating" floatDelay="1.5s" style={isTablet ? {} : { transform: "translateY(-5px)" }} />
+            <FloatingStat value="All BD" label="Nationwide Delivery" floatDelay="0.75s" style={isTablet ? {} : { transform: "translateY(40px)" }} />
           </div>
 
-          <div style={{ width: "100%", maxWidth: "300px" }}>
-            <NewDropCard />
-          </div>
+          {!isTablet && (
+            <div style={{ width: "100%", maxWidth: "300px" }}>
+              <NewDropCard />
+            </div>
+          )}
         </div>
 
         {/* ═══════════════════════════════════════════════════
@@ -379,7 +393,7 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
             transform: "translateX(-50%)",
             top: "40px",
             bottom: 0,
-            width: "36%",
+            width: isTablet ? "48%" : "36%",
             zIndex: 20,
           }}
         >
