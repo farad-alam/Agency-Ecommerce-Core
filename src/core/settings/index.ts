@@ -9,7 +9,15 @@ export async function getStoreSettings() {
   });
 }
 
-export async function updateStoreSettings(data: Prisma.StoreSettingsUpdateInput) {
+export async function updateStoreSettings(data: Partial<{
+  storeName: string;
+  contactEmail: string;
+  currency: string;
+  timezone: string;
+  taxMode: string;
+  taxRate: number;
+  shippingFlatRate: number;
+}>) {
   return db.storeSettings.upsert({
     where: { id: "global" },
     update: data,
