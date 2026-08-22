@@ -39,18 +39,12 @@ export function ProductCard({ product, badge }: ProductCardProps) {
     >
       {/* Image container */}
       <div
-        className="relative overflow-hidden"
+        className="relative overflow-hidden group-hover:border-[#8B0D1A]"
         style={{
           aspectRatio: "3/4",
           background: "#141414",
           border: "1px solid #2A2A2A",
           transition: "border-color 0.3s ease",
-        }}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLDivElement).style.borderColor = "#8B0D1A";
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLDivElement).style.borderColor = "#2A2A2A";
         }}
       >
         {/* Badge */}

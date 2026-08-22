@@ -86,19 +86,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="group flex items-center justify-center w-8 h-8 transition-all duration-200"
-                  style={{
-                    border: "1px solid #2A2A2A",
-                    color: "#9A9A8E",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLAnchorElement).style.borderColor = "#8B0D1A";
-                    (e.currentTarget as HTMLAnchorElement).style.color = "#8B0D1A";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLAnchorElement).style.borderColor = "#2A2A2A";
-                    (e.currentTarget as HTMLAnchorElement).style.color = "#9A9A8E";
-                  }}
+                  className="group flex items-center justify-center w-8 h-8 transition-all duration-200 border border-[#2A2A2A] text-[#9A9A8E] hover:border-[#8B0D1A] hover:text-[#8B0D1A]"
                 >
                   {icon}
                 </a>
@@ -126,15 +114,11 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
+                    className="text-[#9A9A8E] hover:text-[#F5F2ED] transition-colors duration-200 no-underline"
                     style={{
                       fontFamily: "'Inter', system-ui, sans-serif",
                       fontSize: "13px",
-                      color: "#9A9A8E",
-                      transition: "color 0.2s",
-                      textDecoration: "none",
                     }}
-                    onMouseEnter={(e) => ((e.target as HTMLAnchorElement).style.color = "#F5F2ED")}
-                    onMouseLeave={(e) => ((e.target as HTMLAnchorElement).style.color = "#9A9A8E")}
                   >
                     {link.label}
                   </Link>
@@ -163,15 +147,11 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
+                    className="text-[#9A9A8E] hover:text-[#F5F2ED] transition-colors duration-200 no-underline"
                     style={{
                       fontFamily: "'Inter', system-ui, sans-serif",
                       fontSize: "13px",
-                      color: "#9A9A8E",
-                      transition: "color 0.2s",
-                      textDecoration: "none",
                     }}
-                    onMouseEnter={(e) => ((e.target as HTMLAnchorElement).style.color = "#F5F2ED")}
-                    onMouseLeave={(e) => ((e.target as HTMLAnchorElement).style.color = "#9A9A8E")}
                   >
                     {link.label}
                   </Link>
@@ -205,9 +185,8 @@ export function Footer() {
                 <li key={text} className="flex items-start gap-2">
                   <span style={{ fontSize: "13px", lineHeight: "1.5", flexShrink: 0, marginTop: "1px" }}>{icon}</span>
                   {href ? (
-                    <a href={href} style={{ fontFamily: "'Inter', system-ui", fontSize: "13px", color: "#9A9A8E", lineHeight: 1.6, textDecoration: "none" }}
-                      onMouseEnter={(e) => ((e.target as HTMLAnchorElement).style.color = "#8B0D1A")}
-                      onMouseLeave={(e) => ((e.target as HTMLAnchorElement).style.color = "#9A9A8E")}
+                    <a href={href} className="text-[#9A9A8E] hover:text-[#8B0D1A] transition-colors duration-200 no-underline" 
+                      style={{ fontFamily: "'Inter', system-ui", fontSize: "13px", lineHeight: 1.6 }}
                     >{text}</a>
                   ) : (
                     <span style={{ fontFamily: "'Inter', system-ui", fontSize: "13px", color: "#9A9A8E", lineHeight: 1.6, whiteSpace: "pre-line" }}>{text}</span>
@@ -244,9 +223,8 @@ export function Footer() {
               { label: "Terms of Service", href: "/terms" },
             ].map((l) => (
               <Link key={l.href} href={l.href}
-                style={{ fontFamily: "'Inter', system-ui", fontSize: "11px", color: "#9A9A8E", letterSpacing: "0.05em" }}
-                onMouseEnter={(e) => ((e.target as HTMLAnchorElement).style.color = "#F5F2ED")}
-                onMouseLeave={(e) => ((e.target as HTMLAnchorElement).style.color = "#9A9A8E")}
+                className="text-[#9A9A8E] hover:text-[#F5F2ED] transition-colors duration-200"
+                style={{ fontFamily: "'Inter', system-ui", fontSize: "11px", letterSpacing: "0.05em" }}
               >{l.label}</Link>
             ))}
           </div>
