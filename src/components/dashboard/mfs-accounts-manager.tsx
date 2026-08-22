@@ -164,10 +164,10 @@ export function MfsAccountsManager({ initialAccounts }: Props) {
           <Plus className="h-4 w-4" />
           Add MFS Account
         </AlertDialogTrigger>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-[#18181b] border-white/[0.08]">
           <AlertDialogHeader>
-            <AlertDialogTitle>Add MFS Account</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-white">Add MFS Account</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400">
               Add the mobile banking number where customers should send payments.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -213,8 +213,8 @@ export function MfsAccountsManager({ initialAccounts }: Props) {
             </div>
           </div>
 
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={saving}>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="border-t border-white/[0.08] mt-2 pt-4">
+            <AlertDialogCancel disabled={saving} className="border-white/[0.1] bg-transparent text-white hover:bg-white/[0.05] hover:text-white">Cancel</AlertDialogCancel>
             <Button onClick={handleAdd} disabled={saving || !form.accountNumber.trim()} className="bg-indigo-600 hover:bg-indigo-700 text-white">
               {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Add Account
