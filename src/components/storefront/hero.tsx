@@ -233,13 +233,13 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
 
         {/* RIGHT TOP: Floating Stats + Badge */}
         <div
-          style={{ position: "absolute", right: "8vw", top: "56px", zIndex: 5, display: "flex", gap: "24px", alignItems: "flex-start", maxWidth: "400px" }}
+          style={{ position: "absolute", right: "8vw", top: "56px", zIndex: 5, display: "flex", gap: "32px", alignItems: "flex-start" }}
         >
           {/* FLOATING STATS */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px", marginTop: "12px" }}>
-            <FloatingStat value="500+" label="Happy Customers" floatDelay="0s" style={{ alignSelf: "flex-end", transform: "translateX(-70px)" }} />
-            <FloatingStat value="4.9★" label="Customer Rating" floatDelay="1.5s" style={{ alignSelf: "flex-end", transform: "translateX(-10px)" }} />
-            <FloatingStat value="All BD" label="Nationwide Delivery" floatDelay="0.75s" style={{ alignSelf: "flex-end", transform: "translateX(-45px)" }} />
+          <div style={{ display: "flex", flexDirection: "row", gap: "20px", marginTop: "12px" }}>
+            <FloatingStat value="500+" label="Happy Customers" floatDelay="0s" style={{ transform: "translateY(25px)" }} />
+            <FloatingStat value="4.9★" label="Customer Rating" floatDelay="1.5s" style={{ transform: "translateY(-5px)" }} />
+            <FloatingStat value="All BD" label="Nationwide Delivery" floatDelay="0.75s" style={{ transform: "translateY(40px)" }} />
           </div>
 
           <div className="sx-fade-in">
