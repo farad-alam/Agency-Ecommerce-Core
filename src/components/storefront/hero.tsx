@@ -278,7 +278,7 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
         <div
           style={{
             position: "absolute",
-            bottom: "28px",
+            bottom: "100px",
             left: "8vw",
             zIndex: 5,
           }}
