@@ -216,72 +216,107 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           minHeight: "100svh",
           display: "flex",
           flexDirection: "column",
-          paddingTop: "64px", // navbar height
+          paddingTop: "64px",
           position: "relative",
-          overflow: "hidden",
+          overflowX: "hidden",
+          overflowY: "auto",
+          width: "100%",
+          maxWidth: "100vw",
         }}
       >
         <SmokeBackground />
 
-        {/* Content stacked column */}
-        <div style={{ position: "relative", zIndex: 5, flex: 1, display: "flex", flexDirection: "column" }}>
+        {/* Content column — all within 100vw */}
+        <div style={{ position: "relative", zIndex: 5, flex: 1, display: "flex", flexDirection: "column", width: "100%", boxSizing: "border-box" }}>
 
-          {/* BIG HEADLINE — YOUR / LOOK */}
-          <div aria-hidden="true" style={{ padding: "20px 20px 0", pointerEvents: "none" }}>
-            <div style={{ overflow: "hidden" }}>
-              <span className="sx-clip-reveal sx-clip-delay-1" style={{ ...WORD_BASE_MOBILE, color: "#F5F2ED" }}>
-                YOUR
-              </span>
+          {/* ── TOP ROW: Headlines + Model side by side ── */}
+          <div style={{ display: "flex", alignItems: "flex-start", width: "100%", padding: "16px 0 0" }}>
+
+            {/* Left: YOUR / LOOK */}
+            <div aria-hidden="true" style={{ flex: "0 0 auto", paddingLeft: "16px", paddingTop: "8px", pointerEvents: "none", zIndex: 2 }}>
+              <div style={{ overflow: "hidden" }}>
+                <span
+                  className="sx-clip-reveal sx-clip-delay-1"
+                  style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "clamp(34px, 10vw, 54px)", letterSpacing: "-0.04em", lineHeight: 0.9, whiteSpace: "nowrap", display: "block", color: "#F5F2ED" }}
+                >
+                  YOUR
+                </span>
+              </div>
+              <div style={{ overflow: "hidden", paddingLeft: "8px" }}>
+                <span
+                  className="sx-clip-reveal sx-clip-delay-2"
+                  style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "clamp(34px, 10vw, 54px)", letterSpacing: "-0.04em", lineHeight: 0.9, whiteSpace: "nowrap", display: "block", color: "#8B0D1A" }}
+                >
+                  LOOK
+                </span>
+              </div>
             </div>
-            <div style={{ overflow: "hidden", paddingLeft: "8vw" }}>
-              <span className="sx-clip-reveal sx-clip-delay-2" style={{ ...WORD_BASE_MOBILE, color: "#8B0D1A" }}>
-                LOOK
-              </span>
+
+            {/* Right: Model Image — takes remaining width */}
+            <div style={{ flex: 1, position: "relative", height: "46svh", overflow: "hidden" }}>
+              <Image
+                src={slide.imageUrl}
+                alt="SalarX — Men's fashion model"
+                fill
+                priority
+                sizes="60vw"
+                className="object-contain object-top"
+              />
             </div>
           </div>
 
-          {/* MODEL IMAGE */}
-          <div style={{ position: "relative", width: "100%", height: "52svh", flexShrink: 0 }}>
-            <Image
-              src={slide.imageUrl}
-              alt="SalarX — Men's fashion model"
-              fill
-              priority
-              sizes="100vw"
-              className="object-contain object-top"
-              style={{ transform: "scale(1.05)", transformOrigin: "top center" }}
-            />
-          </div>
-
-          {/* EYEBROW + DESCRIPTION + CTA */}
-          <div className="sx-fade-in sx-fade-delay-1" style={{ padding: "16px 20px 0" }}>
-            <p className="sx-label" style={{ marginBottom: "10px", color: "#000000", fontWeight: 900, whiteSpace: "nowrap", fontSize: "10px" }}>
+          {/* ── EYEBROW + DESCRIPTION + CTA ── */}
+          <div className="sx-fade-in sx-fade-delay-1" style={{ padding: "14px 16px 0", boxSizing: "border-box" }}>
+            <p className="sx-label" style={{ marginBottom: "8px", color: "#000000", fontWeight: 900, fontSize: "9px", whiteSpace: "nowrap" }}>
               {slide.eyebrow ?? "Men's Fashion. GEN-Z Edition"}
             </p>
-            <p style={{ fontFamily: "'Inter',system-ui", fontSize: "13px", color: "rgba(245, 242, 237, 0.85)", lineHeight: 1.7, marginBottom: "18px" }}>
+            <p style={{ fontFamily: "'Inter',system-ui", fontSize: "12px", color: "rgba(245, 242, 237, 0.85)", lineHeight: 1.65, marginBottom: "14px" }}>
               {slide.description ?? "Future-ready streetwear crafted for creators, trendsetters, and everyday explorers."}
             </p>
-            <Link href={slide.ctaHref} className="sx-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "11px", padding: "12px 24px" }}>
+            <Link href={slide.ctaHref} className="sx-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "10px", padding: "11px 20px" }}>
               {slide.ctaLabel ?? "Discover The Collection"}
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
-          {/* FLOATING STATS ROW */}
-          <div className="sx-fade-in sx-fade-delay-2" style={{ display: "flex", gap: "10px", justifyContent: "center", padding: "20px 16px 0" }}>
+          {/* ── FLOATING STATS ROW ── */}
+          <div className="sx-fade-in sx-fade-delay-2" style={{ display: "flex", gap: "8px", justifyContent: "center", padding: "16px 16px 0", boxSizing: "border-box" }}>
             <FloatingStat value="500+" label="Happy Customers" floatDelay="0s" mobile />
             <FloatingStat value="4.9★" label="Customer Rating" floatDelay="0s" mobile />
             <FloatingStat value="All BD" label="Nationwide Delivery" floatDelay="0s" mobile />
           </div>
 
-          {/* NEW DROP CARD */}
-          <div style={{ padding: "16px 20px 20px" }}>
+          {/* ── NEW DROP CARD ── */}
+          <div style={{ padding: "14px 16px 0", boxSizing: "border-box" }}>
             <NewDropCard />
+          </div>
+
+          {/* ── YOUR / RULES — bottom, smaller mobile size ── */}
+          <div
+            aria-hidden="true"
+            style={{ padding: "10px 16px 12px", pointerEvents: "none", textAlign: "right", boxSizing: "border-box" }}
+          >
+            <div style={{ overflow: "hidden", paddingRight: "6vw" }}>
+              <span
+                className="sx-clip-reveal sx-clip-delay-1"
+                style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "clamp(28px, 8.5vw, 48px)", letterSpacing: "-0.04em", lineHeight: 0.9, whiteSpace: "nowrap", display: "block", color: "transparent", WebkitTextStroke: "1px #F5F2ED" } as React.CSSProperties}
+              >
+                YOUR
+              </span>
+            </div>
+            <div style={{ overflow: "hidden" }}>
+              <span
+                className="sx-clip-reveal sx-clip-delay-2"
+                style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontWeight: 900, fontSize: "clamp(28px, 8.5vw, 48px)", letterSpacing: "-0.04em", lineHeight: 0.9, whiteSpace: "nowrap", display: "block", color: "#F5F2ED" }}
+              >
+                RULES.
+              </span>
+            </div>
           </div>
 
         </div>
 
-        {/* TICKER */}
+        {/* ── TICKER ── */}
         <Ticker />
       </section>
     );
