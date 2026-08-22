@@ -208,18 +208,14 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
 
   /* ── MOBILE LAYOUT ─────────────────────────────────────── */
   if (isMobile) {
-    const mobileText: React.CSSProperties = {
+    const H: React.CSSProperties = {
       fontFamily: "'Montserrat',Arial,sans-serif",
       fontWeight: 900,
-      fontSize: "15vw",
+      fontSize: "13vw",
       letterSpacing: "-0.04em",
       lineHeight: 0.88,
       whiteSpace: "nowrap",
       display: "block",
-    };
-    const mobileTextSm: React.CSSProperties = {
-      ...mobileText,
-      fontSize: "11vw",
     };
 
     return (
@@ -237,36 +233,53 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
       >
         <SmokeBackground />
 
-        {/* ── NAVBAR SPACER ────────────────────────────────── */}
-        <div style={{ height: "64px", flexShrink: 0, position: "relative", zIndex: 5 }} />
+        {/* ── NAVBAR SPACER ── */}
+        <div style={{ height: "64px", flexShrink: 0 }} />
 
-        {/* ── TOP HEADLINE: YOUR / LOOK ─────────────────────── */}
-        <div aria-hidden="true" style={{ position: "relative", zIndex: 5, padding: "10px 16px 0", pointerEvents: "none", flexShrink: 0 }}>
+        {/* ── ALL HEADLINES: YOUR LOOK / YOUR RULES. ── */}
+        <div aria-hidden="true" style={{ position: "relative", zIndex: 5, padding: "8px 16px 0", pointerEvents: "none", flexShrink: 0 }}>
+          {/* YOUR LOOK */}
           <div style={{ overflow: "hidden" }}>
-            <span className="sx-clip-reveal sx-clip-delay-1" style={{ ...mobileText, color: "#F5F2ED" }}>YOUR</span>
+            <span className="sx-clip-reveal sx-clip-delay-1" style={{ ...H, color: "#F5F2ED" }}>YOUR</span>
           </div>
-          <div style={{ overflow: "hidden", paddingLeft: "8vw" }}>
-            <span className="sx-clip-reveal sx-clip-delay-2" style={{ ...mobileText, color: "#8B0D1A" }}>LOOK</span>
+          <div style={{ overflow: "hidden", paddingLeft: "8vw", marginBottom: "4px" }}>
+            <span className="sx-clip-reveal sx-clip-delay-2" style={{ ...H, color: "#8B0D1A" }}>LOOK</span>
+          </div>
+          {/* YOUR RULES */}
+          <div style={{ overflow: "hidden", paddingRight: "8vw", textAlign: "right" }}>
+            <span className="sx-clip-reveal sx-clip-delay-3" style={{ ...H, color: "transparent", WebkitTextStroke: "1.5px #F5F2ED" } as React.CSSProperties}>YOUR</span>
+          </div>
+          <div style={{ overflow: "hidden", textAlign: "right" }}>
+            <span className="sx-clip-reveal sx-clip-delay-4" style={{ ...H, color: "#F5F2ED" }}>RULES.</span>
           </div>
         </div>
 
-        {/* ── MIDDLE: eyebrow + description + CTA + stats ──── */}
-        <div style={{ position: "relative", zIndex: 5, padding: "12px 16px 0", boxSizing: "border-box", flexShrink: 0 }}>
+        {/* ── MODEL IMAGE — fixed small height, no overflow ── */}
+        <div style={{ position: "relative", height: "36svh", flexShrink: 0, zIndex: 3, marginTop: "4px" }}>
+          <Image
+            src={slide.imageUrl}
+            alt="SalarX — Men's fashion model"
+            fill
+            priority
+            sizes="100vw"
+            className="object-contain object-bottom"
+          />
+        </div>
+
+        {/* ── CONTENT: eyebrow + CTA + stats ── */}
+        <div style={{ position: "relative", zIndex: 5, padding: "10px 16px 0", boxSizing: "border-box", flexShrink: 0 }}>
           <div className="sx-fade-in sx-fade-delay-1">
             <p className="sx-label" style={{ marginBottom: "6px", fontSize: "9px", whiteSpace: "nowrap" }}>
               {slide.eyebrow ?? "Men's Fashion. GEN-Z Edition"}
             </p>
-            <p style={{ fontFamily: "'Inter',system-ui", fontSize: "11px", color: "rgba(245,242,237,0.85)", lineHeight: 1.6, marginBottom: "10px" }}>
-              {slide.description ?? "Future-ready streetwear crafted for creators, trendsetters, and everyday explorers."}
-            </p>
-            <Link href={slide.ctaHref} className="sx-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "10px", padding: "10px 20px", marginBottom: "12px" }}>
+            <Link href={slide.ctaHref} className="sx-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "10px", padding: "10px 20px", marginBottom: "10px" }}>
               {slide.ctaLabel ?? "Discover The Collection"}
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
           {/* Stats row */}
-          <div className="sx-fade-in sx-fade-delay-2" style={{ display: "flex", gap: "6px", marginBottom: "0" }}>
+          <div className="sx-fade-in sx-fade-delay-2" style={{ display: "flex", gap: "6px" }}>
             {[
               { value: "500+", label: "Happy\nCustomers" },
               { value: "4.9★", label: "Customer\nRating" },
@@ -280,35 +293,16 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           </div>
         </div>
 
-        {/* ── BOTTOM: model image fills remaining space ─────── */}
-        <div style={{ flex: 1, position: "relative", zIndex: 2, minHeight: 0 }}>
-          <Image
-            src={slide.imageUrl}
-            alt="SalarX — Men's fashion model"
-            fill
-            priority
-            sizes="100vw"
-            className="object-contain object-bottom"
-          />
-          {/* subtle top fade so image blends into content above */}
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(11,11,11,0.4) 0%, transparent 25%)", pointerEvents: "none" }} />
+        {/* ── SPACER ── */}
+        <div style={{ flex: 1 }} />
 
-          {/* YOUR RULES overlay bottom-right of image */}
-          <div aria-hidden="true" style={{ position: "absolute", bottom: "6px", right: "12px", textAlign: "right", pointerEvents: "none", zIndex: 3 }}>
-            <div style={{ overflow: "hidden", paddingRight: "3vw" }}>
-              <span className="sx-clip-reveal sx-clip-delay-1" style={{ ...mobileTextSm, color: "transparent", WebkitTextStroke: "1px rgba(245,242,237,0.55)" } as React.CSSProperties}>YOUR</span>
-            </div>
-            <div style={{ overflow: "hidden" }}>
-              <span className="sx-clip-reveal sx-clip-delay-2" style={{ ...mobileTextSm, color: "rgba(245,242,237,0.75)" }}>RULES.</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── TICKER ───────────────────────────────────────── */}
+        {/* ── TICKER ── */}
         <Ticker />
       </section>
     );
   }
+
+
 
 
 
