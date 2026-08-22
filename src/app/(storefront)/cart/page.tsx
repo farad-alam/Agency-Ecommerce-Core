@@ -18,6 +18,7 @@ export default function CartPage() {
     subtotal,
     discountAmount,
     shippingCost,
+    taxAmount,
     total,
     couponCode,
   } = useCart();
@@ -205,6 +206,12 @@ export default function CartPage() {
                 <span>Shipping (Bangladesh)</span>
                 <span>BDT {shippingCost.toLocaleString()}</span>
               </div>
+              {taxAmount > 0 && (
+                <div className="flex justify-between text-gray-600">
+                  <span>Tax</span>
+                  <span>BDT {taxAmount.toLocaleString()}</span>
+                </div>
+              )}
               {discountAmount > 0 && (
                 <div className="flex justify-between text-green-600 font-medium">
                   <span>Discount</span>

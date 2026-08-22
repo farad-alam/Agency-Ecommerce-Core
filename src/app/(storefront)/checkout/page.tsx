@@ -37,7 +37,7 @@ const MFS_META: Record<MfsProvider, { label: string; color: string; bg: string; 
 };
 
 export default function CheckoutPage() {
-  const { cart, isLoading, refreshCart, subtotal, discountAmount, shippingCost, total, couponCode } = useCart();
+  const { cart, isLoading, refreshCart, subtotal, discountAmount, shippingCost, taxAmount, total, couponCode } = useCart();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -457,6 +457,12 @@ export default function CheckoutPage() {
                   <span>Shipping</span>
                   <span>BDT {shippingCost.toLocaleString()}</span>
                 </div>
+                {taxAmount > 0 && (
+                  <div className="flex justify-between text-gray-600">
+                    <span>Tax</span>
+                    <span>BDT {taxAmount.toLocaleString()}</span>
+                  </div>
+                )}
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-green-600 font-medium">
                     <span>Coupon {couponCode && `(${couponCode})`}</span>

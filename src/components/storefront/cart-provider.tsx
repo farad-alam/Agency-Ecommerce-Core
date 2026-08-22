@@ -33,6 +33,7 @@ interface CartContextType {
   subtotal: number;
   discountAmount: number;
   shippingCost: number;
+  taxAmount: number;
   total: number;
   couponCode: string | null;
 }
@@ -46,6 +47,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [shippingFlatRate, setShippingFlatRate] = useState(150);
+  const [taxMode, setTaxMode] = useState("NONE");
+  const [taxRate, setTaxRate] = useState(0);
 
   const refreshCart = async () => {
     try {
@@ -55,6 +58,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       ]);
       setCart(activeCart);
       setShippingFlatRate(settings.shippingFlatRate);
+      setTaxMode(settings.taxMode);
+      setTaxRate(settings.taxRate);
     } catch (error) {
       console.error("Failed to load cart", error);
     } finally {
@@ -138,8 +143,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     0
   ) || 0;
   const shippingCost = itemCount > 0 ? shippingFlatRate : 0;
+  const taxAmount = (itemCount > 0 && taxMode === "FLAT_RATE") ? (subtotal * taxRate) / 100 : 0;
   const couponCode = cart?.couponCode ?? null;
-  const total = Math.max(0, subtotal + shippingCost - discountAmount);
+  const total = Math.max(0, subtotal + shippingCost + taxAmount - discountAmount);
 
   return (
     <CartContext.Provider
@@ -160,6 +166,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         subtotal,
         discountAmount,
         shippingCost,
+        taxAmount,
         total,
         couponCode,
       }}
