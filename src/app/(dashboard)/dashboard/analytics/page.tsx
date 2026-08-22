@@ -8,6 +8,11 @@ export const metadata: Metadata = {
 export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
+      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-amber-400 flex items-center gap-2 mb-6">
+        <Construction className="w-4 h-4 flex-shrink-0" />
+        This module is currently under development. Some features may not be fully functional.
+      </div>
+
       <div>
         <h1 className="text-2xl font-bold text-white tracking-tight">Analytics</h1>
         <p className="text-sm text-zinc-400 mt-1">Track your store's performance and sales metrics.</p>

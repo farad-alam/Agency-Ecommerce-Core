@@ -4,6 +4,7 @@ import { getReviews } from "@/core/reviews";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { Construction } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Reviews Moderation",
@@ -27,6 +28,11 @@ export default async function ReviewsPage({
 
   return (
     <div className="space-y-6">
+      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-amber-400 flex items-center gap-2 mb-6">
+        <Construction className="w-4 h-4 flex-shrink-0" />
+        This module is currently under development. Some features may not be fully functional.
+      </div>
+
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight text-white">Reviews Moderation</h1>
       </div>
