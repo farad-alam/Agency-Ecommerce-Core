@@ -180,6 +180,7 @@ model Product {
   reviews     Review[]
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
+  rating      Float             @default(5.0)
 
   @@index([slug])
   @@index([status])
