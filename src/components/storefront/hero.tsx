@@ -284,7 +284,10 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           }}
         >
           <div className="sx-fade-in sx-fade-delay-1" style={{ maxWidth: "320px" }}>
-            <p style={{ fontFamily: "'Inter',system-ui", fontSize: "14px", color: "#9A9A8E", lineHeight: 1.75, marginBottom: "20px" }}>
+            <p className="sx-label" style={{ marginBottom: "16px", color: "#000000", fontWeight: 900, whiteSpace: "nowrap" }}>
+              {slide.eyebrow ?? "Men's Fashion. GEN-Z Edition"}
+            </p>
+            <p style={{ fontFamily: "'Inter',system-ui", fontSize: "14px", color: "rgba(245, 242, 237, 0.85)", lineHeight: 1.75, marginBottom: "20px" }}>
               {slide.description ?? "Future-ready streetwear crafted for creators, trendsetters, and everyday explorers."}
             </p>
             <Link href={slide.ctaHref} className="sx-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
