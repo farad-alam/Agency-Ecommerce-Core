@@ -220,8 +220,8 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
               YOUR
             </span>
           </div>
-          {/* LOOK — indented ~9vw so K crosses into model zone but isn't fully hidden */}
-          <div style={{ overflow: "hidden", paddingLeft: "9vw" }}>
+          {/* LOOK — indented ~11vw so K crosses into model zone but isn't fully hidden */}
+          <div style={{ overflow: "hidden", paddingLeft: "11vw" }}>
             <span
               className="sx-clip-reveal sx-clip-delay-2"
               style={{ ...WORD_BASE, color: "#8B0D1A" }}
