@@ -123,12 +123,11 @@ function NewDropCard() {
       {/* Thumbnail */}
       <div style={{ width: 72, height: 88, flexShrink: 0, position: "relative", background: "#1C1C1C", overflow: "hidden" }}>
         <Image
-          src="/models/hero-model-center.png"
+          src="/models/hero-model-transparent.png"
           alt="New drop preview"
           fill
           className="object-cover object-top"
           sizes="72px"
-          style={{ mixBlendMode: "screen" }}
         />
       </div>
     </div>
@@ -248,16 +247,12 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
             }}
           >
             <Image
-              src="/models/hero-model-center.png"
+              src="/models/hero-model-transparent.png"
               alt="SalarX — Men's fashion model"
               fill
               priority
               sizes="(max-width: 768px) 100vw, 40vw"
               className="object-contain object-bottom"
-              style={{
-                /* black bg blends with page via screen blend mode */
-                mixBlendMode: "screen",
-              }}
             />
           </div>
         </div>

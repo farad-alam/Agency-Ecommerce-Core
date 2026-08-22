@@ -13,7 +13,7 @@ const heroSlide: HeroSlide = {
   titleAccent: "RULES.",
   description:
     "Premium menswear for the ones who set the trends — not follow them. Delivered anywhere in Bangladesh.",
-  imageUrl: "/models/hero-model-center.png",
+  imageUrl: "/models/hero-model-transparent.png",
   ctaLabel: "Shop New Arrivals",
   ctaHref: "/products?collection=new-arrivals",
   secondaryCtaLabel: "Browse All",
