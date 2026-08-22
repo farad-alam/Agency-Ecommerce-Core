@@ -57,13 +57,13 @@ function Ticker() {
 /* ── NEW DROP card ───────────────────────────────────────── */
 function NewDropCard() {
   return (
-    <div className="sx-fade-in sx-fade-delay-2" style={{ background: "#141414", border: "1px solid #2A2A2A", padding: "14px 16px", display: "flex", gap: "12px", alignItems: "center" }}>
+    <div className="sx-fade-in sx-fade-delay-2" style={{ background: "rgba(11, 11, 11, 0.4)", backdropFilter: "blur(12px)", border: "1px solid rgba(255, 255, 255, 0.08)", borderRadius: "12px", padding: "14px 16px", display: "flex", gap: "12px", alignItems: "center" }}>
       <div style={{ flex: 1 }}>
         <span style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontSize: "8px", fontWeight: 700, letterSpacing: "0.25em", textTransform: "uppercase", color: "#8B0D1A", display: "block", marginBottom: "6px" }}>
           NEW DROP 2026 +
         </span>
         <p style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontSize: "14px", fontWeight: 800, color: "#F5F2ED", lineHeight: 1.2, marginBottom: "3px" }}>
-          Oversized<br />Street Hoodie
+          Drop Shoulder<br />T-Shirt
         </p>
         <p style={{ fontFamily: "'Inter',system-ui", fontSize: "11px", color: "#9A9A8E", marginBottom: "10px" }}>
           Limited Edition Release
@@ -73,8 +73,8 @@ function NewDropCard() {
           View Collection
         </button>
       </div>
-      <div style={{ width: 64, height: 80, flexShrink: 0, position: "relative", background: "#1C1C1C", overflow: "hidden" }}>
-        <Image src="/models/hero-model-transparent.png" alt="Preview" fill className="object-cover object-top" sizes="64px" />
+      <div style={{ width: 64, height: 80, flexShrink: 0, position: "relative", background: "rgba(255,255,255,0.03)", borderRadius: "8px", overflow: "hidden" }}>
+        <Image src="/models/drop_shoulder_tshirt.png" alt="Drop Shoulder T-Shirt" fill className="object-cover object-center" sizes="64px" />
       </div>
     </div>
   );
