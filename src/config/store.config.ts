@@ -34,7 +34,7 @@ export interface StoreConfig {
 }
 
 export const storeConfig: StoreConfig = {
-  name: "My Store",
+  name: "SalarX",
   currency: "BDT",
   locale: "en",
   timezone: "Asia/Dhaka",

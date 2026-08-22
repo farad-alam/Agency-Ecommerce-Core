@@ -1,12 +1,11 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown, ShoppingBag, Star } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export type HeroSlide = {
   eyebrow?: string;
   title: string;
+  titleAccent?: string;
   description?: string;
   imageUrl: string;
   ctaLabel?: string;
@@ -20,94 +19,133 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
 
   return (
     <section
-      aria-label="Featured slide"
-      className="relative overflow-visible bg-[#D3113D]"
+      aria-label="Hero"
+      className="relative overflow-hidden"
+      style={{
+        background: "#0B0B0B",
+        minHeight: "100svh",
+        display: "flex",
+        alignItems: "center",
+        paddingTop: "80px", /* account for fixed navbar + announcement bar */
+      }}
     >
-      <div className="mx-auto max-w-7xl px-4 lg:px-8 py-16 lg:py-24">
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8 items-center">
-          {/* Left — copy */}
-          <div className="lg:col-span-7 flex flex-col items-start text-left space-y-7">
-            {slide.eyebrow && (
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-white">
-                {slide.eyebrow}
-              </span>
-            )}
-            <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-white">
-              {slide.title}
-            </h1>
-            {slide.description && (
-              <p className="max-w-xl text-lg md:text-xl text-white/85">
-                {slide.description}
-              </p>
-            )}
-            {(slide.ctaLabel || slide.secondaryCtaLabel) && (
-              <div className="flex flex-wrap items-center gap-4 pt-2">
-                {slide.ctaLabel && (
-                  <Link
-                    href={slide.ctaHref}
-                    className="inline-flex items-center gap-2.5 rounded-full bg-[#F56C73] px-8 py-3.5 text-base font-medium text-white shadow-[0_10px_30px_rgba(245,108,115,0.45)] hover:bg-[#ED2746] transition-colors"
-                  >
-                    {slide.ctaLabel}
-                    <ShoppingBag className="h-4 w-4" />
-                  </Link>
-                )}
-                {slide.secondaryCtaLabel && (
-                  <Link
-                    href={slide.secondaryCtaHref ?? slide.ctaHref}
-                    className="inline-flex items-center gap-2.5 rounded-full border-2 border-white/70 bg-transparent px-8 py-3.5 text-base font-medium text-white hover:bg-white/10 transition-colors"
-                  >
-                    {slide.secondaryCtaLabel}
-                    <ChevronDown className="h-4 w-4" />
-                  </Link>
-                )}
-              </div>
-            )}
-          </div>
+      {/* Background image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src={slide.imageUrl}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+          style={{ opacity: 0.45 }}
+        />
+        {/* gradient overlay — darkens bottom and left for text readability */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to right, rgba(11,11,11,0.92) 0%, rgba(11,11,11,0.6) 55%, rgba(11,11,11,0.1) 100%), linear-gradient(to top, rgba(11,11,11,0.8) 0%, transparent 50%)",
+          }}
+        />
+      </div>
 
-          {/* Right — circular image + floating review card */}
-          <div className="lg:col-span-5 lg:-mt-10 relative">
-            <div className="relative mx-auto aspect-square w-full max-w-[420px] lg:max-w-none overflow-hidden rounded-full bg-[#FDE9EC]">
-              <Image
-                src={slide.imageUrl}
-                alt=""
-                fill
-                priority
-                sizes="(max-width: 1024px) 420px, 460px"
-                className="object-cover"
-              />
+      {/* Content */}
+      <div className="relative z-10 mx-auto max-w-7xl w-full px-4 lg:px-8 py-20 lg:py-32">
+        <div className="max-w-2xl">
+          {/* Eyebrow label */}
+          {slide.eyebrow && (
+            <div
+              className="sx-label mb-8"
+              style={{ animationFillMode: "both" }}
+            >
+              {slide.eyebrow}
             </div>
+          )}
 
-            <div className="absolute -left-4 sm:-left-8 -bottom-8 flex items-center gap-3 rounded-full bg-[#FDE9EC] py-3 pl-4 pr-6 shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
-              <div className="flex -space-x-2">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#FDE9EC] bg-[#F56C73] text-[10px] font-bold text-white">
-                  SM
-                </span>
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#FDE9EC] bg-[#ED2746] text-[10px] font-bold text-white">
-                  AR
-                </span>
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#FDE9EC] bg-[#1A1A1A] text-[10px] font-bold text-white">
-                  J
-                </span>
-              </div>
-              <div className="space-y-0.5">
-                <p className="text-xs font-bold text-[#1A1A1A]">Our Happy Customer</p>
-                <div className="flex items-center gap-1 text-[#1A1A1A]">
-                  <span className="flex text-[#ED2746]">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-3 w-3 ${i < 4 ? "fill-[#ED2746]" : "fill-[#ED2746]/30 text-[#ED2746]/30"}`}
-                      />
-                    ))}
-                  </span>
-                  <span className="text-[11px] font-bold">4.5</span>
-                  <span className="text-[11px] text-[#1A1A1A]/60">(453k Reviews)</span>
-                </div>
-              </div>
-            </div>
+          {/* Main headline */}
+          <h1
+            className="mb-6"
+            style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: "clamp(44px, 7vw, 96px)",
+              fontWeight: 900,
+              lineHeight: 1.05,
+              color: "#F5F2ED",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            {slide.title}
+            {slide.titleAccent && (
+              <>
+                <br />
+                <em
+                  style={{
+                    fontStyle: "italic",
+                    color: "#8B0D1A",
+                  }}
+                >
+                  {slide.titleAccent}
+                </em>
+              </>
+            )}
+          </h1>
+
+          {/* Red decorative line */}
+          <div
+            style={{
+              width: "64px",
+              height: "2px",
+              background: "#8B0D1A",
+              marginBottom: "24px",
+            }}
+          />
+
+          {/* Description */}
+          {slide.description && (
+            <p
+              className="mb-10"
+              style={{
+                fontFamily: "'Inter', system-ui, sans-serif",
+                fontSize: "16px",
+                fontWeight: 400,
+                lineHeight: 1.75,
+                color: "#9A9A8E",
+                maxWidth: "480px",
+              }}
+            >
+              {slide.description}
+            </p>
+          )}
+
+          {/* CTAs */}
+          <div className="flex flex-wrap items-center gap-4">
+            {slide.ctaLabel && (
+              <Link href={slide.ctaHref} className="sx-btn-primary">
+                {slide.ctaLabel}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
+            {slide.secondaryCtaLabel && (
+              <Link
+                href={slide.secondaryCtaHref ?? slide.ctaHref}
+                className="sx-btn-ghost"
+              >
+                {slide.secondaryCtaLabel}
+              </Link>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Bottom gradient fade into next section */}
+      <div
+        className="absolute inset-x-0 bottom-0 h-24 z-10"
+        style={{
+          background:
+            "linear-gradient(to bottom, transparent, #0B0B0B)",
+        }}
+      />
     </section>
   );
 }

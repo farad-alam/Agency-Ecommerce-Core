@@ -2,6 +2,11 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* ============================================================
+   GOOGLE FONTS — SalarX Design System
+   ============================================================ */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Montserrat:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap");
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -46,6 +51,16 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* ── SalarX Brand Tokens ── */
+  --color-sx-black:       #0B0B0B;
+  --color-sx-surface:     #141414;
+  --color-sx-surface-2:   #1C1C1C;
+  --color-sx-border:      #2A2A2A;
+  --color-sx-red:         #8B0D1A;
+  --color-sx-red-hover:   #A01020;
+  --color-sx-offwhite:    #F5F2ED;
+  --color-sx-muted:       #9A9A8E;
 }
 
 :root {
@@ -128,3 +143,94 @@
     @apply font-sans;
   }
 }
+
+/* ============================================================
+   SALARX STOREFRONT — Global Utility Classes
+   ============================================================ */
+
+/* Font utilities */
+.font-display  { font-family: 'Playfair Display', Georgia, serif; }
+.font-heading  { font-family: 'Montserrat', Arial, sans-serif; }
+.font-body     { font-family: 'Inter', system-ui, sans-serif; }
+
+/* Section label (small red overline) */
+.sx-label {
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #8B0D1A;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sx-label::before {
+  content: '';
+  display: block;
+  width: 36px;
+  height: 1px;
+  background: #8B0D1A;
+  flex-shrink: 0;
+}
+
+/* Primary Button */
+.sx-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #8B0D1A;
+  color: #F5F2ED;
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 14px 32px;
+  border-radius: 0;
+  border: none;
+  cursor: pointer;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+  text-decoration: none;
+}
+.sx-btn-primary:hover {
+  background: #A01020;
+  box-shadow: 0 0 24px rgba(139, 13, 26, 0.4);
+}
+
+/* Secondary Button (ghost) */
+.sx-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: #F5F2ED;
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 12px 30px;
+  border-radius: 0;
+  border: 1.5px solid #F5F2ED;
+  cursor: pointer;
+  transition: border-color 0.25s ease, color 0.25s ease;
+  text-decoration: none;
+}
+.sx-btn-ghost:hover {
+  border-color: #8B0D1A;
+  color: #8B0D1A;
+}
+
+/* Scroll-reveal animation */
+@keyframes sx-fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.sx-reveal {
+  animation: sx-fadeUp 0.6s ease forwards;
+}
+.sx-reveal-delay-1 { animation-delay: 0.1s; }
+.sx-reveal-delay-2 { animation-delay: 0.2s; }
+.sx-reveal-delay-3 { animation-delay: 0.3s; }
+.sx-reveal-delay-4 { animation-delay: 0.4s; }
