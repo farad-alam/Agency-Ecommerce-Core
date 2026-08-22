@@ -26,11 +26,7 @@ export default async function TeamSettingsPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white">Team & Permissions</h1>
-          <p className="text-sm text-zinc-400 mt-1">Manage staff access to the dashboard.</p>
-        </div>
+      <div className="flex justify-end">
         {/* In a real app, this button opens a modal to POST /api/auth/invite */}
         <button className="px-4 py-2 bg-white text-black font-medium text-sm rounded-md hover:bg-zinc-200 transition-colors">
           Invite Member

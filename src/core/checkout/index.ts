@@ -81,12 +81,19 @@ export async function processCheckout(
       price: price,
       quantity: item.quantity,
     });
+    });
   }
 
-  // In a real app, calculate shipping and taxes based on address.
-  // Flat shipping rate applies across all of Bangladesh.
-  const shippingTotal = storeConfig.shipping.flatRateBDT;
-  const taxTotal = 0;
+  // Get live store settings for shipping and tax calculations
+  const { getStoreSettings } = await import("@/core/settings");
+  const settings = await getStoreSettings();
+
+  const shippingTotal = settings.shippingFlatRate;
+  let taxTotal = 0;
+  
+  if (settings.taxMode === "FLAT_RATE" && settings.taxRate > 0) {
+    taxTotal = (subtotal * settings.taxRate) / 100;
+  }
 
   // Apply coupon if one was set on the cart
   let discountTotal = 0;

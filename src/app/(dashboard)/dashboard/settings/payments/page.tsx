@@ -15,13 +15,6 @@ export default async function PaymentsSettingsPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between border-b border-white/[0.08] pb-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white">Payment Settings</h1>
-          <p className="text-sm text-zinc-400 mt-1">Configure how customers can pay for their orders.</p>
-        </div>
-      </div>
-
       <div className="grid gap-6">
         {/* MFS Manual Payment */}
         <Card className="border-white/[0.08] bg-black/40 backdrop-blur-xl p-6">
