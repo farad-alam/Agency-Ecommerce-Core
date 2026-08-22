@@ -160,12 +160,12 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           <div className="sx-fade-in">
             <CircularBadge />
           </div>
-          <p className="sx-fade-in sx-fade-delay-1" style={{ fontFamily: "'Inter',system-ui", fontSize: "13px", fontStyle: "italic", color: "#9A9A8E", lineHeight: 1.65, textAlign: "right" }}>
+          {/* <p className="sx-fade-in sx-fade-delay-1" style={{ fontFamily: "'Inter',system-ui", fontSize: "13px", fontStyle: "italic", color: "#9A9A8E", lineHeight: 1.65, textAlign: "right" }}>
             Modern Silhouettes. Premium Fabrics.<br />Limitless Expression.
           </p>
           <div style={{ width: "100%" }}>
             <NewDropCard />
-          </div>
+          </div> */}
         </div>
         {/* ═══════════════════════════════════════════════════
             MODEL — z-index 20, on top of text
