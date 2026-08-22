@@ -97,6 +97,35 @@ const STATS = [
   { value: "All BD", label: "Nationwide Delivery" },
 ];
 
+/* ── Floating Stat Card ──────────────────────────────────── */
+function FloatingStat({ value, label, floatDelay, style }: { value: string, label: string, floatDelay: string, style?: React.CSSProperties }) {
+  return (
+    <div className="sx-fade-in sx-fade-delay-2" style={style}>
+      <div
+        className="sx-float"
+        style={{
+          animationDelay: floatDelay,
+          background: "rgba(11, 11, 11, 0.4)",
+          backdropFilter: "blur(12px)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          padding: "12px 18px",
+          borderRadius: "12px",
+          display: "inline-flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        <span style={{ fontFamily: "'Montserrat',Arial,sans-serif", fontSize: "16px", fontWeight: 900, color: "#F5F2ED", lineHeight: 1 }}>
+          {value}
+        </span>
+        <span style={{ fontFamily: "'Inter',system-ui", fontSize: "9px", color: "#9A9A8E", marginTop: "4px", textTransform: "uppercase", letterSpacing: "0.1em", whiteSpace: "nowrap" }}>
+          {label}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 /* ════════════════════════════════════════════════════════════
    HERO
 ════════════════════════════════════════════════════════════ */
@@ -202,19 +231,20 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           </div>
         </div>
 
-        {/* RIGHT TOP: Badge + italic text + NEW DROP card */}
+        {/* RIGHT TOP: Floating Stats + Badge */}
         <div
-          style={{ position: "absolute", right: "8vw", top: "56px", zIndex: 5, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "12px", maxWidth: "300px" }}
+          style={{ position: "absolute", right: "8vw", top: "56px", zIndex: 5, display: "flex", gap: "24px", alignItems: "flex-start", maxWidth: "400px" }}
         >
+          {/* FLOATING STATS */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "12px" }}>
+            <FloatingStat value="500+" label="Happy Customers" floatDelay="0s" style={{ alignSelf: "flex-end", transform: "translateX(-20px)" }} />
+            <FloatingStat value="4.9★" label="Customer Rating" floatDelay="1.5s" style={{ alignSelf: "flex-end" }} />
+            <FloatingStat value="All BD" label="Nationwide Delivery" floatDelay="0.75s" style={{ alignSelf: "flex-end", transform: "translateX(-10px)" }} />
+          </div>
+
           <div className="sx-fade-in">
             <CircularBadge />
           </div>
-          {/* <p className="sx-fade-in sx-fade-delay-1" style={{ fontFamily: "'Inter',system-ui", fontSize: "13px", fontStyle: "italic", color: "#9A9A8E", lineHeight: 1.65, textAlign: "right" }}>
-            Modern Silhouettes. Premium Fabrics.<br />Limitless Expression.
-          </p>
-          <div style={{ width: "100%" }}>
-            <NewDropCard />
-          </div> */}
         </div>
         {/* ═══════════════════════════════════════════════════
             MODEL — z-index 20, on top of text
