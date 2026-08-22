@@ -138,7 +138,7 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
           style={{
             position: "absolute",
             inset: 0,
-            opacity: 0.35,
+            opacity: 0.18, /* Reduced from 0.35 for less density */
             mixBlendMode: "color-dodge",
             pointerEvents: "none",
             zIndex: 0,
@@ -146,8 +146,8 @@ export function Hero({ slides }: { slides: HeroSlide[] }) {
         >
           <svg width="100%" height="100%" preserveAspectRatio="none">
             <filter id="smoke-texture">
-              <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="4" stitchTiles="stitch" />
-              <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 2 -0.2" />
+              <feTurbulence type="fractalNoise" baseFrequency="0.008" numOctaves="3" stitchTiles="stitch" />
+              <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1.5 -0.1" />
             </filter>
             <rect width="100%" height="100%" filter="url(#smoke-texture)" />
           </svg>
