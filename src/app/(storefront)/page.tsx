@@ -328,109 +328,26 @@ export default async function StorefrontHomepage() {
 
       {/* ── SECTION 7: BEST SELLERS (EDITORIAL BANNER) ────────── */}
       <section 
-        className="relative w-full overflow-hidden flex items-center justify-center"
+        className="relative w-full overflow-hidden flex items-center justify-center px-4"
         style={{ 
           minHeight: "85vh",
-          backgroundColor: "#74070E", /* Deep cherry red matching reference */
+          backgroundColor: "#74070E", /* Plain dark cherry red */
         }}
       >
-        {/* Massive Rotated Background Typography */}
-        <div 
-          className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-70 mix-blend-overlay"
+        <h2
+          className="text-center"
           style={{
-            transform: "rotate(-90deg)",
-            width: "150vh", /* ensure it spans the rotated height */
-            height: "100vw",
-            left: "50%",
-            top: "50%",
-            marginLeft: "-75vh",
-            marginTop: "-50vw",
+            fontFamily: "'Montserrat', Arial, sans-serif",
+            fontSize: "clamp(60px, 12vw, 200px)",
+            fontWeight: 900,
+            color: "#FFFFFF",
+            lineHeight: 0.9,
+            letterSpacing: "-0.04em",
+            textTransform: "uppercase"
           }}
         >
-          <h2
-            style={{
-              fontFamily: "'Montserrat', Arial, sans-serif",
-              fontSize: "clamp(120px, 20vw, 300px)",
-              fontWeight: 900,
-              color: "#FFFFFF",
-              whiteSpace: "nowrap",
-              lineHeight: 0.8,
-              letterSpacing: "-0.05em",
-            }}
-          >
-            BEST SELLERS
-          </h2>
-        </div>
-
-        {/* Scattered Editorial Images */}
-        <div className="relative z-10 w-full max-w-7xl px-4 lg:px-8 h-full flex items-center justify-center py-20">
-          <div className="relative w-full max-w-[1000px] min-h-[500px] md:h-[600px]">
-            
-            {/* Image 1: Main Center/Right */}
-            <div className="absolute top-1/2 left-1/2 md:left-2/3 -translate-y-1/2 -translate-x-1/2 w-[65vw] md:w-[380px] aspect-[4/5] z-20 shadow-[0_30px_60px_rgba(0,0,0,0.6)] rounded-[32px] overflow-hidden transform hover:scale-105 transition-transform duration-700">
-              <Image 
-                src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop"
-                alt="Editorial fashion"
-                fill
-                className="object-cover"
-              />
-            </div>
-
-            {/* Image 2: Top Left, smaller */}
-            <div className="absolute top-[5%] left-[5%] md:top-[10%] md:left-[15%] w-[45vw] md:w-[280px] aspect-square z-10 shadow-[0_20px_40px_rgba(0,0,0,0.5)] rounded-[28px] overflow-hidden transform -rotate-6 hover:rotate-0 transition-transform duration-700">
-              <Image 
-                src="https://images.unsplash.com/photo-1523381294911-8d3cead13475?q=80&w=600&auto=format&fit=crop"
-                alt="Detail shot"
-                fill
-                className="object-cover"
-              />
-            </div>
-
-            {/* Image 3: Bottom Left, aesthetic object */}
-            <div className="absolute bottom-[5%] left-[15%] md:bottom-[5%] md:left-[25%] w-[50vw] md:w-[320px] aspect-[3/2] z-30 shadow-[0_25px_50px_rgba(0,0,0,0.5)] rounded-[24px] overflow-hidden transform rotate-3 hover:rotate-0 transition-transform duration-700 border-4 border-[#74070E]">
-              <Image 
-                src="https://images.unsplash.com/photo-1591561954557-26941169b49e?q=80&w=600&auto=format&fit=crop"
-                alt="Accessory"
-                fill
-                className="object-cover"
-              />
-            </div>
-
-            {/* Micro Tags (Aesthetic Data Blocks) */}
-            <div className="absolute top-[15%] right-[5%] md:top-[20%] md:right-[10%] z-40 flex flex-col gap-2">
-              {[
-                { label: "trending vibe", value: "+325%" },
-                { label: "street aesthetic", value: "+80%" },
-                { label: "cherry palette", value: "+150%" }
-              ].map((tag, idx) => (
-                <div 
-                  key={idx}
-                  className="flex items-center justify-between gap-4 px-4 py-2 rounded-full backdrop-blur-md shadow-lg"
-                  style={{
-                    backgroundColor: "rgba(255,255,255,0.15)",
-                    border: "1px solid rgba(255,255,255,0.3)",
-                    color: "#FFFFFF",
-                  }}
-                >
-                  <span className="font-mono text-[10px] uppercase tracking-wider">{tag.label}</span>
-                  <span className="font-mono text-[10px] font-bold">{tag.value}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Tech Spec Tag */}
-            <div className="absolute bottom-[10%] right-[0%] md:bottom-[20%] md:right-[5%] z-40 hidden sm:block">
-              <div 
-                className="flex flex-col gap-1 text-white"
-                style={{ fontFamily: "monospace", fontSize: "11px", transform: "rotate(-90deg)", transformOrigin: "right bottom" }}
-              >
-                <div className="flex gap-4 tracking-widest"><span className="opacity-60">HEX</span> <span>#74070E</span></div>
-                <div className="flex gap-4 tracking-widest"><span className="opacity-60">RGB</span> <span>116, 7, 14</span></div>
-              </div>
-            </div>
-
-          </div>
-        </div>
+          What Everyone&apos;s<br />Buying
+        </h2>
       </section>
 
       <section 
