@@ -119,37 +119,43 @@ function SectionHeading({
 }) {
   return (
     <div className={align === "center" ? "text-center" : ""}>
-      <div
-        className={`sx-label mb-4 ${align === "center" ? "justify-center" : ""}`}
-        style={align === "center" ? { justifyContent: "center" } : {}}
-      >
-        {label}
-      </div>
-      <h2
-        style={{
-          fontFamily: "'Montserrat', Arial, sans-serif",
-          fontSize: "clamp(28px, 4vw, 48px)",
-          fontWeight: 800,
-          letterSpacing: "-0.01em",
-          textTransform: "uppercase",
-          color: "#F5F2ED",
-          lineHeight: 1.1,
-          marginBottom: subtitle ? "12px" : "0",
-        }}
-      >
-        {title}
-      </h2>
-      {subtitle && (
-        <p
+      <FadeIn delay={0} direction="up">
+        <div
+          className={`sx-label mb-4 ${align === "center" ? "justify-center" : ""}`}
+          style={align === "center" ? { justifyContent: "center" } : {}}
+        >
+          {label}
+        </div>
+      </FadeIn>
+      <FadeIn delay={0.1} direction="up">
+        <h2
           style={{
-            fontFamily: "'Inter', system-ui, sans-serif",
-            fontSize: "15px",
-            color: "#9A9A8E",
-            lineHeight: 1.6,
+            fontFamily: "'Montserrat', Arial, sans-serif",
+            fontSize: "clamp(28px, 4vw, 48px)",
+            fontWeight: 800,
+            letterSpacing: "-0.01em",
+            textTransform: "uppercase",
+            color: "#F5F2ED",
+            lineHeight: 1.1,
+            marginBottom: subtitle ? "12px" : "0",
           }}
         >
-          {subtitle}
-        </p>
+          {title}
+        </h2>
+      </FadeIn>
+      {subtitle && (
+        <FadeIn delay={0.2} direction="up">
+          <p
+            style={{
+              fontFamily: "'Inter', system-ui, sans-serif",
+              fontSize: "15px",
+              color: "#9A9A8E",
+              lineHeight: 1.6,
+            }}
+          >
+            {subtitle}
+          </p>
+        </FadeIn>
       )}
     </div>
   );
@@ -376,12 +382,16 @@ export default async function StorefrontHomepage() {
             textTransform: "uppercase"
           }}
         >
-          <span className="whitespace-nowrap" style={{ fontSize: "clamp(30px, 6vw, 100px)" }}>
-            What Everyone&apos;s
-          </span>
-          <span className="whitespace-nowrap" style={{ fontSize: "clamp(70px, 16vw, 320px)", marginTop: "-0.05em" }}>
-            Buying
-          </span>
+          <FadeIn delay={0} direction="up" className="whitespace-nowrap flex justify-center">
+            <span style={{ fontSize: "clamp(30px, 6vw, 100px)" }}>
+              What Everyone&apos;s
+            </span>
+          </FadeIn>
+          <FadeIn delay={0.15} direction="up" className="whitespace-nowrap flex justify-center">
+            <span style={{ fontSize: "clamp(70px, 16vw, 320px)", marginTop: "-0.05em" }}>
+              Buying
+            </span>
+          </FadeIn>
         </h2>
       </section>
 
@@ -622,110 +632,115 @@ export default async function StorefrontHomepage() {
         }}
       >
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="text-center mb-12">
-            <div className="sx-label justify-center mb-4" style={{ justifyContent: "center" }}>
-              What They Say
-            </div>
-            <h2
-              style={{
-                fontFamily: "'Montserrat', Arial, sans-serif",
-                fontSize: "clamp(28px, 4vw, 48px)",
-                fontWeight: 800,
-                letterSpacing: "-0.01em",
-                textTransform: "uppercase",
-                color: "#F5F2ED",
-              }}
-            >
-              Loved by Our Customers ❤️
-            </h2>
+          <div className="text-center mb-12 flex flex-col items-center">
+            <FadeIn delay={0} direction="up">
+              <div className="sx-label justify-center mb-4" style={{ justifyContent: "center" }}>
+                What They Say
+              </div>
+            </FadeIn>
+            <FadeIn delay={0.1} direction="up">
+              <h2
+                style={{
+                  fontFamily: "'Montserrat', Arial, sans-serif",
+                  fontSize: "clamp(28px, 4vw, 48px)",
+                  fontWeight: 800,
+                  letterSpacing: "-0.01em",
+                  textTransform: "uppercase",
+                  color: "#F5F2ED",
+                }}
+              >
+                Loved by Our Customers ❤️
+              </h2>
+            </FadeIn>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {REVIEWS.map((review) => (
-              <div
-                key={review.name}
-                style={{
-                  background: "#0B0B0B",
-                  border: "1px solid #2A2A2A",
-                  padding: "28px",
-                }}
-              >
-                {/* Opening quote */}
-                <span
+            {REVIEWS.map((review, i) => (
+              <FadeIn key={review.name} delay={i * 0.1} direction="up">
+                <div
                   style={{
-                    fontFamily: "'Playfair Display', Georgia, serif",
-                    fontSize: "56px",
-                    lineHeight: 1,
-                    color: "#8B0D1A",
-                    display: "block",
-                    marginBottom: "8px",
+                    background: "#0B0B0B",
+                    border: "1px solid #2A2A2A",
+                    padding: "28px",
                   }}
                 >
-                  "
-                </span>
-
-                {/* Stars */}
-                <div className="flex gap-0.5 mb-4">
-                  {Array.from({ length: review.rating }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className="h-3.5 w-3.5"
-                      style={{ color: "#8B0D1A", fill: "#8B0D1A" }}
-                    />
-                  ))}
-                </div>
-
-                {/* Review text */}
-                <p
-                  style={{
-                    fontFamily: "'Inter', system-ui, sans-serif",
-                    fontSize: "14px",
-                    color: "#F5F2ED",
-                    lineHeight: 1.75,
-                    marginBottom: "20px",
-                  }}
-                >
-                  {review.text}
-                </p>
-
-                {/* Customer info */}
-                <div className="flex items-center gap-3">
-                  <div
-                    className="flex items-center justify-center w-9 h-9 flex-shrink-0"
+                  {/* Opening quote */}
+                  <span
                     style={{
-                      background: "#8B0D1A",
-                      fontFamily: "'Montserrat', Arial, sans-serif",
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      color: "#F5F2ED",
+                      fontFamily: "'Playfair Display', Georgia, serif",
+                      fontSize: "56px",
+                      lineHeight: 1,
+                      color: "#8B0D1A",
+                      display: "block",
+                      marginBottom: "8px",
                     }}
                   >
-                    {review.initials}
+                    "
+                  </span>
+
+                  {/* Stars */}
+                  <div className="flex gap-0.5 mb-4">
+                    {Array.from({ length: review.rating }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className="h-3.5 w-3.5"
+                        style={{ color: "#8B0D1A", fill: "#8B0D1A" }}
+                      />
+                    ))}
                   </div>
-                  <div>
-                    <span
+
+                  {/* Review text */}
+                  <p
+                    style={{
+                      fontFamily: "'Inter', system-ui, sans-serif",
+                      fontSize: "14px",
+                      color: "#F5F2ED",
+                      lineHeight: 1.75,
+                      marginBottom: "20px",
+                    }}
+                  >
+                    {review.text}
+                  </p>
+
+                  {/* Customer info */}
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="flex items-center justify-center w-9 h-9 flex-shrink-0"
                       style={{
+                        background: "#8B0D1A",
                         fontFamily: "'Montserrat', Arial, sans-serif",
-                        fontSize: "12px",
+                        fontSize: "11px",
                         fontWeight: 700,
                         color: "#F5F2ED",
-                        display: "block",
                       }}
                     >
-                      {review.name}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: "'Inter', system-ui, sans-serif",
-                        fontSize: "11px",
-                        color: "#9A9A8E",
-                      }}
-                    >
-                      {review.location}
-                    </span>
+                      {review.initials}
+                    </div>
+                    <div>
+                      <span
+                        style={{
+                          fontFamily: "'Montserrat', Arial, sans-serif",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          color: "#F5F2ED",
+                          display: "block",
+                        }}
+                      >
+                        {review.name}
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: "'Inter', system-ui, sans-serif",
+                          fontSize: "11px",
+                          color: "#9A9A8E",
+                        }}
+                      >
+                        {review.location}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -837,13 +852,14 @@ export default async function StorefrontHomepage() {
         style={{ borderTop: "1px solid #2A2A2A" }}
       >
         {/* Left — Newsletter */}
-        <div
-          style={{
-            background: "#141414",
-            padding: "72px 48px",
-          }}
-        >
-          <div className="sx-label mb-5">Stay in the Loop</div>
+        <FadeIn delay={0} direction="right">
+          <div
+            style={{
+              background: "#141414",
+              padding: "72px 48px",
+            }}
+          >
+            <div className="sx-label mb-5">Stay in the Loop</div>
           <h2
             style={{
               fontFamily: "'Montserrat', Arial, sans-serif",
@@ -902,21 +918,24 @@ export default async function StorefrontHomepage() {
             🔒 We respect your privacy. Unsubscribe anytime.
           </p>
         </div>
+        </FadeIn>
 
         {/* Right — WhatsApp */}
-        <div
-          style={{
-            background: "#8B0D1A",
-            padding: "72px 48px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
+        <FadeIn delay={0.2} direction="left" className="h-full">
           <div
-            className="sx-label mb-5"
-            style={{ color: "rgba(245,242,237,0.6)" }}
+            style={{
+              background: "#8B0D1A",
+              padding: "72px 48px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              height: "100%",
+            }}
           >
+            <div
+              className="sx-label mb-5"
+              style={{ color: "rgba(245,242,237,0.6)" }}
+            >
             <span
               style={{
                 display: "inline-block",

@@ -1,5 +1,8 @@
-import Link from "next/link";
+"use client";
 
+import Link from "next/link";
+import { FadeIn } from "@/components/animations/fade-in";
+import { motion } from "framer-motion";
 const QUICK_LINKS = [
   { label: "Home", href: "/" },
   { label: "About Us", href: "/about" },
@@ -45,62 +48,74 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-4 lg:px-8 relative z-10">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-12 lg:gap-8 mb-16">
            {/* Col 1 */}
-           <div>
-              <h4 className="text-[#F5F2ED]/60 font-body text-[15px] mb-6">Quick Links</h4>
-              <ul className="space-y-4">
-                 {QUICK_LINKS.map(l => (
-                   <li key={l.label}>
-                     <Link href={l.href} className="text-[#F5F2ED] hover:text-white text-[15px] font-body transition-colors">{l.label}</Link>
-                   </li>
-                 ))}
-              </ul>
-           </div>
+           <FadeIn delay={0} direction="up">
+             <div>
+                <h4 className="text-[#F5F2ED]/60 font-body text-[15px] mb-6">Quick Links</h4>
+                <ul className="space-y-4">
+                   {QUICK_LINKS.map(l => (
+                     <li key={l.label}>
+                       <Link href={l.href} className="text-[#F5F2ED] hover:text-white text-[15px] font-body transition-colors">{l.label}</Link>
+                     </li>
+                   ))}
+                </ul>
+             </div>
+           </FadeIn>
            
            {/* Col 2 */}
-           <div>
-              <h4 className="text-[#F5F2ED]/60 font-body text-[15px] mb-6">Legal Links</h4>
-              <ul className="space-y-4">
-                 {LEGAL_LINKS.map(l => (
-                   <li key={l.label}>
-                     <Link href={l.href} className="text-[#F5F2ED] hover:text-white text-[15px] font-body transition-colors">{l.label}</Link>
-                   </li>
-                 ))}
-              </ul>
-           </div>
+           <FadeIn delay={0.1} direction="up">
+             <div>
+                <h4 className="text-[#F5F2ED]/60 font-body text-[15px] mb-6">Legal Links</h4>
+                <ul className="space-y-4">
+                   {LEGAL_LINKS.map(l => (
+                     <li key={l.label}>
+                       <Link href={l.href} className="text-[#F5F2ED] hover:text-white text-[15px] font-body transition-colors">{l.label}</Link>
+                     </li>
+                   ))}
+                </ul>
+             </div>
+           </FadeIn>
 
            {/* Col 3 */}
-           <div>
-              <h4 className="text-[#F5F2ED]/60 font-body text-[15px] mb-6">Stay Connect</h4>
-              <div className="flex items-center gap-6">
-                 <a href="#" className="text-[#F5F2ED] hover:text-white transition-colors"><XIcon /></a>
-                 <a href="#" className="text-[#F5F2ED] hover:text-white transition-colors"><InstagramIcon /></a>
-                 <a href="#" className="text-[#F5F2ED] hover:text-white transition-colors"><MediumIcon /></a>
-              </div>
-           </div>
+           <FadeIn delay={0.2} direction="up">
+             <div>
+                <h4 className="text-[#F5F2ED]/60 font-body text-[15px] mb-6">Stay Connect</h4>
+                <div className="flex items-center gap-6">
+                   <a href="#" className="text-[#F5F2ED] hover:text-white transition-colors"><XIcon /></a>
+                   <a href="#" className="text-[#F5F2ED] hover:text-white transition-colors"><InstagramIcon /></a>
+                   <a href="#" className="text-[#F5F2ED] hover:text-white transition-colors"><MediumIcon /></a>
+                </div>
+             </div>
+           </FadeIn>
 
            {/* Col 4 */}
-           <div className="col-span-2 md:col-span-1">
-              <h4 className="text-[#F5F2ED]/60 font-body text-[15px] mb-6">Newsletter</h4>
-              <h3 className="text-[#F5F2ED] text-xl md:text-[22px] font-semibold font-body mb-6 leading-snug">
-                You Read This Far, Might As Well Sign Up.
-              </h3>
-              <form className="flex gap-2">
-                 <input 
-                   type="email" 
-                   placeholder="sample@gmail.com" 
-                   className="bg-[#000000]/20 border border-transparent text-[#F5F2ED] placeholder:text-[#F5F2ED]/40 px-4 py-3 rounded-lg outline-none focus:border-[#F5F2ED]/30 flex-1 font-body text-[14px] transition-colors"
-                 />
-                 <button type="submit" className="bg-[#ffffff]/15 hover:bg-[#ffffff]/25 text-[#F5F2ED] px-6 py-3 rounded-lg font-body text-[14px] font-medium transition-colors border border-transparent">
-                   Submit
-                 </button>
-              </form>
-           </div>
+           <FadeIn delay={0.3} direction="up" className="col-span-2 md:col-span-1">
+             <div>
+                <h4 className="text-[#F5F2ED]/60 font-body text-[15px] mb-6">Newsletter</h4>
+                <h3 className="text-[#F5F2ED] text-xl md:text-[22px] font-semibold font-body mb-6 leading-snug">
+                  You Read This Far, Might As Well Sign Up.
+                </h3>
+                <form className="flex gap-2">
+                   <input 
+                     type="email" 
+                     placeholder="sample@gmail.com" 
+                     className="bg-[#000000]/20 border border-transparent text-[#F5F2ED] placeholder:text-[#F5F2ED]/40 px-4 py-3 rounded-lg outline-none focus:border-[#F5F2ED]/30 flex-1 font-body text-[14px] transition-colors"
+                   />
+                   <button type="submit" className="bg-[#ffffff]/15 hover:bg-[#ffffff]/25 text-[#F5F2ED] px-6 py-3 rounded-lg font-body text-[14px] font-medium transition-colors border border-transparent">
+                     Submit
+                   </button>
+                </form>
+             </div>
+           </FadeIn>
         </div>
       </div>
 
       {/* Giant Typography at the bottom */}
       <div className="w-full flex justify-center items-end mt-16 relative z-0 leading-none overflow-hidden select-none pointer-events-none">
-        <h1 
+        <motion.h1 
+          initial={{ y: "100%" }}
+          whileInView={{ y: 0 }}
+          viewport={{ once: true, margin: "-10%" }}
+          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
           style={{ 
             fontFamily: "'Montserrat', Arial, sans-serif",
             fontSize: "25vw",
@@ -112,7 +127,7 @@ export function Footer() {
           }}
         >
           SalarX
-        </h1>
+        </motion.h1>
       </div>
     </footer>
   );
