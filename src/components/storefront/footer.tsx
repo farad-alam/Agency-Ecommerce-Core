@@ -110,11 +110,17 @@ export function Footer() {
       </div>
 
       {/* Giant Typography at the bottom */}
-      <div className="w-full flex justify-center items-end mt-16 relative z-0 leading-none overflow-hidden select-none pointer-events-none">
+      <motion.div 
+        className="w-full flex justify-center items-end mt-16 relative z-0 leading-none overflow-hidden select-none pointer-events-none"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0 }}
+      >
         <motion.h1 
-          initial={{ y: "100%" }}
-          whileInView={{ y: 0 }}
-          viewport={{ once: true, margin: "-10%" }}
+          variants={{
+            hidden: { y: "100%" },
+            visible: { y: 0 }
+          }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
           style={{ 
             fontFamily: "'Montserrat', Arial, sans-serif",
@@ -128,7 +134,7 @@ export function Footer() {
         >
           SalarX
         </motion.h1>
-      </div>
+      </motion.div>
     </footer>
   );
 }
