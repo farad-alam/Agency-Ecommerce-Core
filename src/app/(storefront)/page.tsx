@@ -731,7 +731,7 @@ export default async function StorefrontHomepage() {
           </div>
 
           {/* Desktop Flowchart (hidden on mobile) */}
-          <div className="hidden md:block relative h-[600px] w-full max-w-[900px] mx-auto">
+          <div className="hidden md:block relative h-[600px] w-full max-w-[1200px] mx-auto">
             {/* Animated SVG lines */}
             <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
               <defs>
@@ -741,19 +741,17 @@ export default async function StorefrontHomepage() {
                 </filter>
               </defs>
               <g stroke="#ff1e32" strokeWidth="3" fill="none" filter="url(#glow)" className="flow-line">
-                {/* Node 1 to Node 2 */}
-                <path d="M 340 300 C 420 300, 420 100, 500 100" />
-                {/* Node 1 to Node 3 */}
-                <path d="M 340 300 C 420 300, 420 300, 500 300" />
-                {/* Node 2 loop to Node 3 */}
-                <path d="M 840 100 C 950 100, 950 300, 840 300" />
-                {/* Node 3 to Node 4 */}
-                <path d="M 670 390 L 670 450" />
+                {/* Node 1 to Node 2 (Down and right) */}
+                <path d="M 170 180 C 170 350, 100 450, 200 450" />
+                {/* Node 2 to Node 3 (Arc up in middle) */}
+                <path d="M 540 450 Q 600 400, 660 450" />
+                {/* Node 3 to Node 4 (Sweep right and up) */}
+                <path d="M 1000 450 C 1150 450, 1030 300, 1030 180" />
               </g>
             </svg>
 
             {/* Node 1: Fast Delivery */}
-            <div className="absolute left-0 top-[250px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
+            <div className="absolute left-0 top-[40px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
                   <Truck className="w-5 h-5" />
@@ -764,7 +762,7 @@ export default async function StorefrontHomepage() {
             </div>
 
             {/* Node 2: Flexible Payment */}
-            <div className="absolute left-[500px] top-[50px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
+            <div className="absolute left-[200px] top-[380px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
                   <CreditCard className="w-5 h-5" />
@@ -775,7 +773,7 @@ export default async function StorefrontHomepage() {
             </div>
 
             {/* Node 3: Quality Guaranteed */}
-            <div className="absolute left-[500px] top-[250px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
+            <div className="absolute left-[660px] top-[380px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
                   <ShieldCheck className="w-5 h-5" />
@@ -786,7 +784,7 @@ export default async function StorefrontHomepage() {
             </div>
 
             {/* Node 4: 7-Day Easy Exchange */}
-            <div className="absolute left-[500px] top-[450px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
+            <div className="absolute left-[860px] top-[40px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
                   <RefreshCw className="w-5 h-5" />
