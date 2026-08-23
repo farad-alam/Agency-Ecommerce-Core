@@ -461,8 +461,9 @@ export default async function StorefrontHomepage() {
         }}
       >
         {/* Giant 3D Glowing 'X' Background */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
           <div 
+            className="absolute top-1/2 right-0"
             style={{
               fontFamily: "'Montserrat', Arial, sans-serif",
               fontSize: "clamp(400px, 80vw, 1200px)",
@@ -471,7 +472,7 @@ export default async function StorefrontHomepage() {
               color: "rgba(40, 2, 5, 0.9)", /* Dark red glossy interior */
               WebkitTextStroke: "3px rgba(255, 20, 40, 0.6)", /* Glowing neon red rim */
               textShadow: "0 0 80px rgba(200, 10, 20, 0.2), 0 30px 60px rgba(0,0,0,0.9)", /* Outer glow and deep 3D drop shadow */
-              transform: "translateY(5%)",
+              transform: "translate(20%, -50%)", /* Move to right edge and center vertically */
               opacity: 0.8,
             }}
           >
