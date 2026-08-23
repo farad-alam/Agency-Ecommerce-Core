@@ -335,18 +335,19 @@ export default async function StorefrontHomepage() {
         }}
       >
         <h2
-          className="text-center"
+          className="text-center flex flex-col items-center justify-center"
           style={{
             fontFamily: "'Montserrat', Arial, sans-serif",
-            fontSize: "clamp(60px, 12vw, 200px)",
+            fontSize: "clamp(40px, 9vw, 180px)",
             fontWeight: 900,
             color: "#FFFFFF",
-            lineHeight: 0.9,
+            lineHeight: 0.95,
             letterSpacing: "-0.04em",
             textTransform: "uppercase"
           }}
         >
-          What Everyone&apos;s<br />Buying
+          <span className="whitespace-nowrap">What Everyone&apos;s</span>
+          <span className="whitespace-nowrap">Buying</span>
         </h2>
       </section>
 
