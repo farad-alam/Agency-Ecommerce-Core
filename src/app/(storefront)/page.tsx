@@ -327,37 +327,45 @@ export default async function StorefrontHomepage() {
       </section>
 
       {/* ── SECTION 7: BEST SELLERS ──────────────────────────── */}
-      {/* Banner */}
-      <div
-        style={{
-          background: "#141414",
-          padding: "64px 0",
-          borderTop: "1px solid #2A2A2A",
-          borderBottom: "1px solid #2A2A2A",
+      <section 
+        className="relative overflow-hidden"
+        style={{ 
+          padding: "100px 0 120px",
+          background: `
+            radial-gradient(circle at 80% 50%, rgba(185, 45, 95, 0.45) 0%, transparent 60%),
+            radial-gradient(circle at 20% 80%, rgba(85, 20, 50, 0.5) 0%, transparent 50%),
+            radial-gradient(circle at 0% 10%, rgba(35, 10, 45, 0.7) 0%, transparent 60%),
+            #0a0512
+          `
         }}
       >
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+        {/* CSS SVG Noise overlay for that grainy, premium aura texture */}
+        <div 
+          className="absolute inset-0 opacity-[0.04] pointer-events-none mix-blend-screen"
+          style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')" }}
+        />
+        
+        {/* Banner Heading */}
+        <div className="relative z-10 mx-auto max-w-7xl px-4 lg:px-8 mb-20">
           <p
             style={{
               fontFamily: "'Montserrat', Arial, sans-serif",
-              fontSize: "clamp(36px, 6vw, 80px)",
+              fontSize: "clamp(48px, 8vw, 100px)",
               fontWeight: 900,
               textTransform: "uppercase",
-              letterSpacing: "-0.02em",
+              letterSpacing: "-0.03em",
               color: "#F5F2ED",
-              lineHeight: 1,
+              lineHeight: 0.9,
             }}
           >
             What Everyone&apos;s{" "}
-            <span style={{ color: "#8B0D1A", borderBottom: "3px solid #8B0D1A" }}>
+            <span style={{ color: "#fff", textShadow: "0 0 30px rgba(255,255,255,0.4)" }}>
               Buying
             </span>
           </p>
         </div>
-      </div>
 
-      <section style={{ background: "#0B0B0B", padding: "64px 0 96px" }}>
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+        <div className="relative z-10 mx-auto max-w-7xl px-4 lg:px-8">
           <div className="flex items-end justify-between mb-10 gap-4">
             <SectionHeading
               label="Customer Favourites"
@@ -366,7 +374,7 @@ export default async function StorefrontHomepage() {
             />
             <Link
               href="/products"
-              className="flex items-center gap-2 flex-shrink-0 transition-colors duration-200 hover:text-[#8B0D1A]"
+              className="flex items-center gap-2 flex-shrink-0 transition-colors duration-200 hover:text-white"
               style={{
                 fontFamily: "'Montserrat', Arial, sans-serif",
                 fontSize: "11px",
@@ -383,19 +391,22 @@ export default async function StorefrontHomepage() {
           {bestSellers.data.length > 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
               {bestSellers.data.slice(0, 4).map((product: any) => (
-                <ProductCard
-                  key={product.id}
-                  product={product as any}
-                  badge="bestseller"
-                />
+                <div key={product.id} className="relative group">
+                  <div className="absolute -inset-2 rounded-xl bg-white/5 blur-xl opacity-0 group-hover:opacity-100 transition duration-500 pointer-events-none" />
+                  <ProductCard
+                    product={product as any}
+                    badge="bestseller"
+                  />
+                </div>
               ))}
             </div>
           ) : (
             <div
-              className="py-16 text-center"
+              className="py-16 text-center rounded-xl"
               style={{
-                background: "#141414",
-                border: "1px solid #2A2A2A",
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                backdropFilter: "blur(10px)",
                 fontFamily: "'Inter', system-ui",
                 fontSize: "14px",
                 color: "#9A9A8E",
