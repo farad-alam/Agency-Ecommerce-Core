@@ -724,14 +724,14 @@ export default async function StorefrontHomepage() {
 
       {/* ── SECTION 11: FLOWCHART PROCESS ───────────────────── */}
       <section className="bg-[#030000] py-24 overflow-hidden" style={{ borderTop: "1px solid #2A2A2A" }}>
-        <div className="mx-auto max-w-5xl px-4 relative">
+        <div className="mx-auto max-w-[1400px] px-4 relative">
           <div className="text-center mb-20 relative z-20">
             <h2 className="font-heading text-3xl md:text-5xl font-extrabold text-white mb-4 uppercase tracking-tight">How We Work</h2>
             <p className="text-[#9A9A8E] text-sm md:text-base max-w-xl mx-auto">The process that guarantees a premium experience from checkout to delivery.</p>
           </div>
 
           {/* Desktop Flowchart (hidden on mobile) */}
-          <div className="hidden md:block relative h-[600px] w-full max-w-[1140px] mr-auto">
+          <div className="hidden md:block relative h-[600px] w-full max-w-[1340px] mx-auto">
             {/* Animated SVG lines */}
             <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
               <defs>
@@ -743,10 +743,10 @@ export default async function StorefrontHomepage() {
               <g stroke="#ff1e32" strokeWidth="3" fill="none" filter="url(#glow)" className="flow-line">
                 {/* Node 1 to Node 2 (Straight down, then right) */}
                 <path d="M 170 180 L 170 440 Q 170 450, 180 450 L 220 450" />
-                {/* Node 2 to Node 3 (Straight right) */}
-                <path d="M 560 450 L 580 450" />
+                {/* Node 2 to Node 3 (Straight right across wide gap) */}
+                <path d="M 560 450 L 760 450" />
                 {/* Node 3 to Node 4 (Straight right, then up) */}
-                <path d="M 920 450 L 940 450 Q 950 450, 950 440 L 950 180" />
+                <path d="M 1100 450 L 1160 450 Q 1170 450, 1170 440 L 1170 180" />
               </g>
             </svg>
 
@@ -773,7 +773,7 @@ export default async function StorefrontHomepage() {
             </div>
 
             {/* Node 3: Quality Guaranteed */}
-            <div className="absolute left-[580px] top-[380px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
+            <div className="absolute left-[760px] top-[380px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
                   <ShieldCheck className="w-5 h-5" />
@@ -784,7 +784,7 @@ export default async function StorefrontHomepage() {
             </div>
 
             {/* Node 4: 7-Day Easy Exchange */}
-            <div className="absolute left-[780px] top-[40px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
+            <div className="absolute left-[1000px] top-[40px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
                   <RefreshCw className="w-5 h-5" />
