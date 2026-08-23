@@ -998,6 +998,7 @@ export default async function StorefrontHomepage() {
             Chat on WhatsApp
           </a>
         </div>
+        </FadeIn>
       </section>
     </div>
   );
