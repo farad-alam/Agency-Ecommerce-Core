@@ -46,7 +46,7 @@ export function ProductCard({ product, badge }: ProductCardProps) {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        justify: "space-between",
+        justifyContent: "space-between",
       }}
     >
       <div>
