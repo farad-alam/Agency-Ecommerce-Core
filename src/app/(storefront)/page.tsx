@@ -245,7 +245,7 @@ export default async function StorefrontHomepage() {
       </section>
 
       {/* ── SECTION 6: NEW ARRIVALS ──────────────────────────── */}
-      <section style={{ background: "#0B0B0B", padding: "0 0 96px" }}>
+      <section style={{ background: "radial-gradient(circle at bottom center, rgba(139, 13, 26, 0.08) 0%, #0B0B0B 60%)", padding: "0 0 96px" }}>
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
           <div className="flex items-end justify-between mb-10 gap-4">
             <SectionHeading
@@ -270,13 +270,20 @@ export default async function StorefrontHomepage() {
           </div>
 
           {newArrivals.data.length > 0 ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            <div 
+              className="flex overflow-x-auto snap-x snap-mandatory gap-4 lg:gap-6 pb-8 -mx-4 px-4 lg:-mx-8 lg:px-8"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              <style dangerouslySetInnerHTML={{ __html: `
+                .flex::-webkit-scrollbar { display: none; }
+              `}} />
               {newArrivals.data.map((product: any) => (
-                <ProductCard
-                  key={product.id}
-                  product={product as any}
-                  badge="new"
-                />
+                <div key={product.id} className="snap-start flex-none w-[70vw] sm:w-[45vw] md:w-[300px]">
+                  <ProductCard
+                    product={product as any}
+                    badge="new"
+                  />
+                </div>
               ))}
             </div>
           ) : (
@@ -351,13 +358,21 @@ export default async function StorefrontHomepage() {
           </div>
 
           {bestSellers.data.length > 0 ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            <div 
+              className="flex overflow-x-auto snap-x snap-mandatory gap-4 lg:gap-6 pb-8 -mx-4 px-4 lg:-mx-8 lg:px-8"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              <style dangerouslySetInnerHTML={{ __html: `
+                .flex::-webkit-scrollbar { display: none; }
+              `}} />
               {bestSellers.data.map((product: any) => (
-                <ProductCard
-                  key={product.id}
-                  product={product as any}
-                  badge="bestseller"
-                />
+                <div key={product.id} className="snap-start flex-none w-[70vw] sm:w-[45vw] md:w-[300px]">
+                  <ProductCard
+                    key={product.id}
+                    product={product as any}
+                    badge="bestseller"
+                  />
+                </div>
               ))}
             </div>
           ) : (
