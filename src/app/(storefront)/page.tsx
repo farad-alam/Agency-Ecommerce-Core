@@ -463,7 +463,7 @@ export default async function StorefrontHomepage() {
         {/* Giant 3D Glowing 'X' Background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
           <div 
-            className="absolute top-[30%] left-[70%]"
+            className="absolute top-[45%] left-[70%]"
             style={{
               fontFamily: "'Montserrat', Arial, sans-serif",
               fontSize: "clamp(250px, 50vw, 800px)",
