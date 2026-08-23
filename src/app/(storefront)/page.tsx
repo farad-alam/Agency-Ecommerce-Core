@@ -171,7 +171,8 @@ export default async function StorefrontHomepage() {
       <TrustBar />
 
       {/* ── SECTION 5: CATEGORIES ────────────────────────────── */}
-      <section style={{ background: "radial-gradient(ellipse at top center, rgba(139,13,26,0.1) 0%, #0B0B0B 60%)", padding: "96px 0" }}>
+      {/* ── SECTION 5: CATEGORIES ────────────────────────────── */}
+      <section style={{ background: "radial-gradient(ellipse at top center, rgba(139,13,26,0.12) 0%, #080808 70%)", padding: "96px 0 140px" }}>
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
           <div className="flex flex-col items-center justify-center mb-16 gap-4 text-center">
             <SectionHeading
@@ -244,9 +245,25 @@ export default async function StorefrontHomepage() {
         </div>
       </section>
 
-      {/* ── SECTION 6: NEW ARRIVALS ──────────────────────────── */}
-      <section style={{ background: "radial-gradient(circle at bottom center, rgba(139, 13, 26, 0.08) 0%, #0B0B0B 60%)", padding: "0 0 96px" }}>
+      {/* ── SECTION 6: NEW ARRIVALS (ROUNDED REVEAL CONTAINER) ──────────────── */}
+      <section 
+        className="relative z-10 -mt-16 rounded-t-[36px] md:rounded-t-[60px] border-t border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.9)] overflow-hidden"
+        style={{ 
+          background: "radial-gradient(ellipse at top center, rgba(139, 13, 26, 0.16) 0%, #0B0B0B 75%)", 
+          padding: "64px 0 96px" 
+        }}
+      >
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
+          
+          {/* Centered Pill Badge (Reference Design Inspired) */}
+          <div className="flex justify-center mb-5">
+            <span 
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#8B0D1A]/40 bg-[#8B0D1A]/10 backdrop-blur-md text-[#FF4D5E] text-[10px] sm:text-[11px] font-bold tracking-[0.2em] uppercase shadow-[0_0_15px_rgba(139,13,26,0.25)]"
+            >
+              🔥 Fresh Selection
+            </span>
+          </div>
+
           <div className="flex items-end justify-between mb-10 gap-4">
             <SectionHeading
               label="Fresh Off the Rack"
