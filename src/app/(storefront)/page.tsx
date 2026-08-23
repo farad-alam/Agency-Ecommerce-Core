@@ -334,8 +334,34 @@ export default async function StorefrontHomepage() {
           backgroundColor: "#74070E", /* Plain dark cherry red */
         }}
       >
+        {/* 3D Cream White Curvy Shape (SVG) */}
+        <svg 
+          viewBox="0 0 1440 800" 
+          preserveAspectRatio="xMidYMid slice" 
+          className="absolute inset-0 w-full h-full pointer-events-none z-0"
+        >
+          <defs>
+            <linearGradient id="creamTube" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FFFFFF" />
+              <stop offset="50%" stopColor="#F5F2ED" />
+              <stop offset="100%" stopColor="#D9D4C7" />
+            </linearGradient>
+            <filter id="tubeShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="15" dy="35" stdDeviation="15" floodColor="#2A0205" floodOpacity="0.7"/>
+            </filter>
+          </defs>
+          <path 
+            d="M -100 800 C 300 900, 200 200, 550 250 C 900 300, 750 850, 1050 750 C 1350 650, 1250 -50, 1600 50" 
+            fill="none" 
+            stroke="url(#creamTube)" 
+            strokeWidth="160" 
+            strokeLinecap="round"
+            filter="url(#tubeShadow)"
+          />
+        </svg>
+
         <h2
-          className="text-center flex flex-col items-center justify-center"
+          className="text-center flex flex-col items-center justify-center relative z-10"
           style={{
             fontFamily: "'Montserrat', Arial, sans-serif",
             fontSize: "clamp(40px, 9vw, 180px)",
