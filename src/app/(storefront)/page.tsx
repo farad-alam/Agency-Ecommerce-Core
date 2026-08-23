@@ -327,6 +327,35 @@ export default async function StorefrontHomepage() {
       </section>
 
       {/* ── SECTION 7: BEST SELLERS ──────────────────────────── */}
+      {/* Banner */}
+      <div
+        style={{
+          background: "#141414",
+          padding: "64px 0",
+          borderTop: "1px solid #2A2A2A",
+          borderBottom: "1px solid #2A2A2A",
+        }}
+      >
+        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+          <p
+            style={{
+              fontFamily: "'Montserrat', Arial, sans-serif",
+              fontSize: "clamp(36px, 6vw, 80px)",
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: "-0.02em",
+              color: "#F5F2ED",
+              lineHeight: 1,
+            }}
+          >
+            What Everyone&apos;s{" "}
+            <span style={{ color: "#8B0D1A", borderBottom: "3px solid #8B0D1A" }}>
+              Buying
+            </span>
+          </p>
+        </div>
+      </div>
+
       <section 
         className="relative overflow-hidden"
         style={{ 
@@ -344,26 +373,6 @@ export default async function StorefrontHomepage() {
           className="absolute inset-0 opacity-[0.04] pointer-events-none mix-blend-screen"
           style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')" }}
         />
-        
-        {/* Banner Heading */}
-        <div className="relative z-10 mx-auto max-w-7xl px-4 lg:px-8 mb-20">
-          <p
-            style={{
-              fontFamily: "'Montserrat', Arial, sans-serif",
-              fontSize: "clamp(48px, 8vw, 100px)",
-              fontWeight: 900,
-              textTransform: "uppercase",
-              letterSpacing: "-0.03em",
-              color: "#F5F2ED",
-              lineHeight: 0.9,
-            }}
-          >
-            What Everyone&apos;s{" "}
-            <span style={{ color: "#fff", textShadow: "0 0 30px rgba(255,255,255,0.4)" }}>
-              Buying
-            </span>
-          </p>
-        </div>
 
         <div className="relative z-10 mx-auto max-w-7xl px-4 lg:px-8">
           <div className="flex items-end justify-between mb-10 gap-4">
