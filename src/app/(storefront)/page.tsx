@@ -381,7 +381,7 @@ export default async function StorefrontHomepage() {
       </section>
 
       <section 
-        className="relative overflow-hidden"
+        className="relative z-10 -mt-16 rounded-t-[36px] md:rounded-t-[60px] border-t border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.9)] overflow-hidden"
         style={{ 
           padding: "100px 0 120px",
           background: `
