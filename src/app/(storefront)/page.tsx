@@ -453,13 +453,33 @@ export default async function StorefrontHomepage() {
 
       {/* ── SECTION 8: BRAND STORY ───────────────────────────── */}
       <section
+        className="relative overflow-hidden"
         style={{
-          background: "#0B0B0B",
+          background: "#050000", /* Slightly darkened to make the red glow pop */
           borderTop: "1px solid #2A2A2A",
-          padding: "96px 0",
+          padding: "120px 0",
         }}
       >
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
+        {/* Giant 3D Glowing 'X' Background */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+          <div 
+            style={{
+              fontFamily: "'Montserrat', Arial, sans-serif",
+              fontSize: "clamp(400px, 80vw, 1200px)",
+              fontWeight: 900,
+              lineHeight: 1,
+              color: "rgba(40, 2, 5, 0.9)", /* Dark red glossy interior */
+              WebkitTextStroke: "3px rgba(255, 20, 40, 0.6)", /* Glowing neon red rim */
+              textShadow: "0 0 80px rgba(200, 10, 20, 0.2), 0 30px 60px rgba(0,0,0,0.9)", /* Outer glow and deep 3D drop shadow */
+              transform: "translateY(5%)",
+              opacity: 0.8,
+            }}
+          >
+            X
+          </div>
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-7xl px-4 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             {/* Image */}
             <div
