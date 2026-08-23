@@ -354,7 +354,7 @@ export default async function StorefrontHomepage() {
             d="M -100 800 C 300 900, 200 200, 550 250 C 900 300, 750 850, 1050 750 C 1350 650, 1250 -50, 1600 50" 
             fill="none" 
             stroke="url(#blackTube)" 
-            strokeWidth="40" 
+            strokeWidth="100" 
             strokeLinecap="round"
             filter="url(#tubeShadow)"
           />
