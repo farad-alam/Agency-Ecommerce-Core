@@ -361,19 +361,22 @@ export default async function StorefrontHomepage() {
         </svg>
 
         <h2
-          className="text-center flex flex-col items-center justify-center relative z-10"
+          className="text-center flex flex-col items-center justify-center relative z-10 w-full"
           style={{
             fontFamily: "'Montserrat', Arial, sans-serif",
-            fontSize: "clamp(40px, 9vw, 180px)",
             fontWeight: 900,
             color: "#FFFFFF",
-            lineHeight: 0.95,
+            lineHeight: 0.85,
             letterSpacing: "-0.04em",
             textTransform: "uppercase"
           }}
         >
-          <span className="whitespace-nowrap">What Everyone&apos;s</span>
-          <span className="whitespace-nowrap">Buying</span>
+          <span className="whitespace-nowrap" style={{ fontSize: "clamp(30px, 6vw, 100px)" }}>
+            What Everyone&apos;s
+          </span>
+          <span className="whitespace-nowrap" style={{ fontSize: "clamp(70px, 16vw, 320px)", marginTop: "-0.05em" }}>
+            Buying
+          </span>
         </h2>
       </section>
 
