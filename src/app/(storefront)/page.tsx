@@ -270,20 +270,13 @@ export default async function StorefrontHomepage() {
           </div>
 
           {newArrivals.data.length > 0 ? (
-            <div 
-              className="flex overflow-x-auto snap-x snap-mandatory gap-4 lg:gap-6 pb-8 -mx-4 px-4 lg:-mx-8 lg:px-8"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-            >
-              <style dangerouslySetInnerHTML={{ __html: `
-                .flex::-webkit-scrollbar { display: none; }
-              `}} />
-              {newArrivals.data.map((product: any) => (
-                <div key={product.id} className="snap-start flex-none w-[50vw] sm:w-[35vw] md:w-[240px]">
-                  <ProductCard
-                    product={product as any}
-                    badge="new"
-                  />
-                </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+              {newArrivals.data.slice(0, 4).map((product: any) => (
+                <ProductCard
+                  key={product.id}
+                  product={product as any}
+                  badge="new"
+                />
               ))}
             </div>
           ) : (
@@ -358,21 +351,13 @@ export default async function StorefrontHomepage() {
           </div>
 
           {bestSellers.data.length > 0 ? (
-            <div 
-              className="flex overflow-x-auto snap-x snap-mandatory gap-4 lg:gap-6 pb-8 -mx-4 px-4 lg:-mx-8 lg:px-8"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-            >
-              <style dangerouslySetInnerHTML={{ __html: `
-                .flex::-webkit-scrollbar { display: none; }
-              `}} />
-              {bestSellers.data.map((product: any) => (
-                <div key={product.id} className="snap-start flex-none w-[50vw] sm:w-[35vw] md:w-[240px]">
-                  <ProductCard
-                    key={product.id}
-                    product={product as any}
-                    badge="bestseller"
-                  />
-                </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+              {bestSellers.data.slice(0, 4).map((product: any) => (
+                <ProductCard
+                  key={product.id}
+                  product={product as any}
+                  badge="bestseller"
+                />
               ))}
             </div>
           ) : (
