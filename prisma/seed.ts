@@ -61,42 +61,99 @@ async function main() {
   const summerCollection = await prisma.collection.upsert({ where: { slug: "summer-sale" }, update: {}, create: { title: "Summer Sale", slug: "summer-sale", description: "Hot deals for summer" } });
   const newArrivals = await prisma.collection.upsert({ where: { slug: "new-arrivals" }, update: {}, create: { title: "New Arrivals", slug: "new-arrivals" } });
 
-  // 6. Create Products and Variants
-  for (let i = 1; i <= 10; i++) {
-    const isTech = i % 2 === 0;
-    const cat = isTech ? categories[0] : categories[1];
-    const brand = isTech ? brands[0] : brands[1];
+  // 6. Create Premium Streetwear Products
+  const premiumProducts = [
+    {
+      title: "Oversized Heavyweight Tee - Onyx Black",
+      slug: "oversized-heavyweight-tee-onyx",
+      price: 1250,
+      compareAtPrice: 1500,
+      imageUrl: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=800&auto=format&fit=crop",
+      hoverUrl: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=800&auto=format&fit=crop" 
+    },
+    {
+      title: "Parachute Cargo Pants - Desert Sand",
+      slug: "parachute-cargo-pants-desert",
+      price: 2100,
+      compareAtPrice: 2499,
+      imageUrl: "https://images.unsplash.com/photo-1628751586616-e41c471b05dc?q=80&w=800&auto=format&fit=crop",
+      hoverUrl: "https://images.unsplash.com/photo-1617260551061-6d735071192e?q=80&w=800&auto=format&fit=crop"
+    },
+    {
+      title: "Boxy Fit Hoodie - Ash Grey",
+      slug: "boxy-fit-hoodie-ash",
+      price: 1850,
+      compareAtPrice: 2200,
+      imageUrl: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=800&auto=format&fit=crop",
+      hoverUrl: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=800&auto=format&fit=crop"
+    },
+    {
+      title: "Utility Vest - Tactical Black",
+      slug: "utility-vest-tactical",
+      price: 1450,
+      compareAtPrice: null,
+      imageUrl: "https://images.unsplash.com/photo-1611312449408-fcece27cdbb7?q=80&w=800&auto=format&fit=crop",
+      hoverUrl: "https://images.unsplash.com/photo-1611312449408-fcece27cdbb7?q=80&w=800&auto=format&fit=crop"
+    },
+    {
+      title: "Vintage Wash Denim Jacket",
+      slug: "vintage-wash-denim-jacket",
+      price: 3200,
+      compareAtPrice: 3800,
+      imageUrl: "https://images.unsplash.com/photo-1576871337622-98d48d1cf531?q=80&w=800&auto=format&fit=crop",
+      hoverUrl: "https://images.unsplash.com/photo-1495105787522-5334e3ffa0efa?q=80&w=800&auto=format&fit=crop"
+    },
+    {
+      title: "Essential Drop-Shoulder Tee - Bone",
+      slug: "essential-drop-shoulder-tee-bone",
+      price: 950,
+      compareAtPrice: 1200,
+      imageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop",
+      hoverUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop"
+    },
+    {
+      title: "Relaxed Fit Corduroy Trousers",
+      slug: "relaxed-fit-corduroy-trousers",
+      price: 1950,
+      compareAtPrice: 2150,
+      imageUrl: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=800&auto=format&fit=crop",
+      hoverUrl: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=800&auto=format&fit=crop"
+    },
+    {
+      title: "Minimalist Windbreaker - Midnight",
+      slug: "minimalist-windbreaker-midnight",
+      price: 2600,
+      compareAtPrice: 2999,
+      imageUrl: "https://images.unsplash.com/photo-1559551409-dadc959f76b8?q=80&w=800&auto=format&fit=crop",
+      hoverUrl: "https://images.unsplash.com/photo-1559551409-dadc959f76b8?q=80&w=800&auto=format&fit=crop"
+    }
+  ];
 
+  for (let i = 0; i < premiumProducts.length; i++) {
+    const p = premiumProducts[i];
+    
+    // Create Product
     const product = await prisma.product.upsert({
-      where: { slug: `demo-product-${i}` },
+      where: { slug: p.slug },
       update: {},
       create: {
-        title: `Demo Product ${i}`,
-        slug: `demo-product-${i}`,
-        description: `This is a highly detailed description for Demo Product ${i}. It features amazing quality and great value.`,
+        title: p.title,
+        slug: p.slug,
+        description: "Premium streetwear essential crafted from heavyweight cotton for the perfect drape.",
         status: "ACTIVE",
-        brandId: brand.id,
-        seo: {
-          create: {
-            metaTitle: `Buy Demo Product ${i}`,
-            metaDescription: `Shop Demo Product ${i} at the best price.`,
-          }
-        },
-        categories: {
-          create: {
-            categoryId: cat.id
-          }
-        }
+        brandId: brands[1].id, // StyleCo
+        categories: { create: { categoryId: categories[1].id } }, // Apparel
+        seo: { create: { metaTitle: p.title, metaDescription: "Buy the latest streetwear drops." } }
       }
     });
 
-    // Add Variants
+    // Create Variants
     const hasVariants = await prisma.productVariant.findFirst({ where: { productId: product.id } });
     if (!hasVariants) {
       await prisma.productVariant.createMany({
         data: [
-          { productId: product.id, sku: `SKU-${i}-DEF`, price: 100 + (i * 10), compareAtPrice: 150 + (i * 10), inventoryQty: i === 3 ? 5 : 50, options: { variant: "Default" } },
-          { productId: product.id, sku: `SKU-${i}-PRO`, price: 150 + (i * 10), inventoryQty: i === 5 ? 0 : 20, options: { variant: "Pro" } }
+          { productId: product.id, sku: `SKU-${i}-M`, price: p.price, compareAtPrice: p.compareAtPrice, inventoryQty: 50, options: { size: "M" } },
+          { productId: product.id, sku: `SKU-${i}-L`, price: p.price, compareAtPrice: p.compareAtPrice, inventoryQty: 30, options: { size: "L" } }
         ]
       });
     }
@@ -107,6 +164,17 @@ async function main() {
       update: {},
       create: { collectionId: newArrivals.id, productId: product.id }
     });
+
+    // Create Media (Thumbnail and Hover Image)
+    const existingMedia = await prisma.media.findFirst({ where: { productId: product.id } });
+    if (!existingMedia) {
+      await prisma.media.createMany({
+        data: [
+          { productId: product.id, url: p.imageUrl, cloudinaryId: `img-${i}-1`, position: 1 },
+          { productId: product.id, url: p.hoverUrl, cloudinaryId: `img-${i}-2`, position: 2 }
+        ]
+      });
+    }
   }
 
   // 7. Create Demo Orders

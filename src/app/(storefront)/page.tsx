@@ -278,7 +278,7 @@ export default async function StorefrontHomepage() {
                 .flex::-webkit-scrollbar { display: none; }
               `}} />
               {newArrivals.data.map((product: any) => (
-                <div key={product.id} className="snap-start flex-none w-[70vw] sm:w-[45vw] md:w-[300px]">
+                <div key={product.id} className="snap-start flex-none w-[50vw] sm:w-[35vw] md:w-[240px]">
                   <ProductCard
                     product={product as any}
                     badge="new"
@@ -366,7 +366,7 @@ export default async function StorefrontHomepage() {
                 .flex::-webkit-scrollbar { display: none; }
               `}} />
               {bestSellers.data.map((product: any) => (
-                <div key={product.id} className="snap-start flex-none w-[70vw] sm:w-[45vw] md:w-[300px]">
+                <div key={product.id} className="snap-start flex-none w-[50vw] sm:w-[35vw] md:w-[240px]">
                   <ProductCard
                     key={product.id}
                     product={product as any}

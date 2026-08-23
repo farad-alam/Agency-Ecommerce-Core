@@ -99,7 +99,7 @@ export function ProductCard({ product, badge }: ProductCardProps) {
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
 
         {/* View Details — Minimalist Center Fade */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 scale-95 group-hover:scale-100 z-20 pointer-events-none">
+        <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 scale-95 group-hover:scale-100 z-20 pointer-events-none">
           <span
             style={{
               fontFamily: "'Montserrat', Arial, sans-serif",
@@ -110,55 +110,105 @@ export function ProductCard({ product, badge }: ProductCardProps) {
               color: "#F5F2ED",
               borderBottom: "1px solid #8B0D1A",
               paddingBottom: "4px",
+              marginBottom: "12px"
             }}
           >
             Discover
           </span>
         </div>
+        
+        {/* Quick Add Button (Floating Bottom Right on Hover) */}
+        <button 
+          className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 hover:bg-[#8B0D1A] hover:text-white border border-white/20 z-30 translate-y-2 group-hover:translate-y-0"
+          aria-label="Quick Add"
+          onClick={(e) => e.preventDefault()}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
       </div>
 
-      {/* Card body — Editorial Layout */}
-      <div className="pt-4 pb-2 flex items-start justify-between gap-4">
+      {/* Card body — Rich Dense Layout */}
+      <div className="pt-3 pb-1 flex flex-col gap-1.5">
+        {/* Top Row: Stars and Status Marker */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <div className="flex" style={{ color: "#8B0D1A" }}>
+              {/* Fake 5 stars */}
+              {[...Array(5)].map((_, i) => (
+                <svg key={i} width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              ))}
+            </div>
+            <span style={{ fontSize: "10px", color: "#5A5A52", fontFamily: "'Inter', sans-serif" }}>(42)</span>
+          </div>
+          
+          <span
+            style={{
+              fontFamily: "'Inter', system-ui, sans-serif",
+              fontSize: "9px",
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              color: "#E5B05C", // gold hint
+            }}
+          >
+            ⚡ EXPRESS
+          </span>
+        </div>
+
+        {/* Title */}
         <h3
-          className="line-clamp-2"
+          className="line-clamp-1"
           style={{
             fontFamily: "'Montserrat', Arial, sans-serif",
             fontSize: "12px",
             fontWeight: 700,
-            letterSpacing: "0.05em",
+            letterSpacing: "0.02em",
             textTransform: "uppercase",
             color: "#F5F2ED",
-            lineHeight: 1.4,
-            flex: 1,
+            lineHeight: 1.2,
           }}
         >
           {product.title}
         </h3>
         
-        <div className="flex flex-col items-end flex-shrink-0 text-right">
-          <span
-            style={{
-              fontFamily: "'Inter', system-ui, sans-serif",
-              fontSize: "13px",
-              fontWeight: 500,
-              color: "#9A9A8E",
-            }}
-          >
-            ৳{lowestPrice.toLocaleString()}
-          </span>
-          {hasDiscount && (
+        {/* Bottom Row: Swatches and Price */}
+        <div className="flex items-end justify-between mt-0.5">
+          {/* Mock Swatches */}
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full border border-[#2A2A2A]" style={{ backgroundColor: "#1A1A1A" }}></span>
+            <span className="w-2.5 h-2.5 rounded-full border border-[#2A2A2A]" style={{ backgroundColor: "#8C8C8C" }}></span>
+            <span className="w-2.5 h-2.5 rounded-full border border-[#2A2A2A]" style={{ backgroundColor: "#D4D4CE" }}></span>
+          </div>
+
+          <div className="flex flex-col items-end text-right">
             <span
               style={{
                 fontFamily: "'Inter', system-ui, sans-serif",
-                fontSize: "11px",
-                color: "#5A5A52",
-                textDecoration: "line-through",
-                marginTop: "2px",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "#9A9A8E",
               }}
             >
-              ৳{compareAtPrice!.toLocaleString()}
+              ৳{lowestPrice.toLocaleString()}
             </span>
-          )}
+            {hasDiscount && (
+              <span
+                style={{
+                  fontFamily: "'Inter', system-ui, sans-serif",
+                  fontSize: "10px",
+                  color: "#5A5A52",
+                  textDecoration: "line-through",
+                  marginTop: "1px",
+                }}
+              >
+                ৳{compareAtPrice!.toLocaleString()}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </Link>
