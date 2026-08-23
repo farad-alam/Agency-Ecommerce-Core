@@ -491,7 +491,7 @@ export default async function StorefrontHomepage() {
               }}
             >
               <Image
-                src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=800&auto=format&fit=crop"
+                src="/our-story.jpg"
                 alt="SalarX store"
                 fill
                 className="object-cover"
