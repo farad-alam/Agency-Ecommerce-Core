@@ -175,8 +175,12 @@ export default async function StorefrontHomepage() {
         className="relative"
         style={{ 
           padding: "140px 0 180px",
-          /* Recreated the exact attached red ribbed image using pure CSS for zero-latency load times */
-          background: "radial-gradient(ellipse at 50% 100%, rgba(200,10,28,0.7) 0%, transparent 60%), repeating-linear-gradient(to right, #050000 0px, #050000 30px, #1a0002 30px, #1a0002 60px)",
+          /* Recreated 3D columns with gaps, a bottom red spotlight, and blending to black at the top */
+          background: `
+            linear-gradient(to bottom, #000 0%, rgba(0,0,0,0.8) 20%, transparent 60%),
+            radial-gradient(ellipse at 50% 100%, rgba(220,10,28,0.85) 0%, transparent 70%),
+            repeating-linear-gradient(to right, transparent 0px, transparent 10px, rgba(15,0,2,0.9) 10px, rgba(75,5,15,1) 25px, rgba(15,0,2,0.9) 40px, transparent 40px)
+          `,
           backgroundColor: "#000",
           overflow: "hidden"
         }}
