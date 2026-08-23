@@ -175,19 +175,12 @@ export default async function StorefrontHomepage() {
         className="relative"
         style={{ 
           padding: "140px 0 180px",
-          /* Deep dark base with top red hint */
-          background: "radial-gradient(ellipse at top center, rgba(139,13,26,0.12) 0%, #080808 55%)",
+          /* Recreated the exact attached red ribbed image using pure CSS for zero-latency load times */
+          background: "radial-gradient(ellipse at 50% 100%, rgba(200,10,28,0.7) 0%, transparent 60%), repeating-linear-gradient(to right, #050000 0px, #050000 30px, #1a0002 30px, #1a0002 60px)",
+          backgroundColor: "#000",
           overflow: "hidden"
         }}
       >
-        {/* Bottom spotlight glow — bleeds up into the Just Dropped reveal arch */}
-        <div 
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-72"
-          style={{
-            background: "radial-gradient(ellipse at 50% 100%, rgba(180,10,28,0.55) 0%, rgba(139,13,26,0.30) 30%, rgba(80,5,15,0.12) 60%, transparent 80%)",
-            filter: "blur(2px)",
-          }}
-        />
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
           <div className="flex flex-col items-center justify-center mb-16 gap-4 text-center">
             <SectionHeading
@@ -262,9 +255,8 @@ export default async function StorefrontHomepage() {
 
       {/* ── SECTION 6: NEW ARRIVALS (ROUNDED REVEAL CONTAINER) ──────────────── */}
       <section 
-        className="relative z-10 -mt-16 rounded-t-[36px] md:rounded-t-[60px] border-t border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.9)] overflow-hidden"
+        className="relative z-10 -mt-16 bg-[#080808] rounded-t-[36px] md:rounded-t-[60px] border-t border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.9)] overflow-hidden"
         style={{ 
-          background: "radial-gradient(ellipse at top center, rgba(139, 13, 26, 0.16) 0%, #0B0B0B 75%)", 
           padding: "100px 0 140px" 
         }}
       >
