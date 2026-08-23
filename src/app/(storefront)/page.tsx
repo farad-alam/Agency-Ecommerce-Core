@@ -259,9 +259,11 @@ export default async function StorefrontHomepage() {
 
       {/* ── SECTION 6: NEW ARRIVALS (ROUNDED REVEAL CONTAINER) ──────────────── */}
       <section 
-        className="relative z-10 -mt-16 bg-[#080808] rounded-t-[36px] md:rounded-t-[60px] border-t border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.9)] overflow-hidden"
+        className="relative z-10 -mt-16 rounded-t-[36px] md:rounded-t-[60px] border-t border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.9)] overflow-hidden"
         style={{ 
-          padding: "100px 0 140px" 
+          padding: "100px 0 140px",
+          /* Soft light red wave gradients sweeping in from the top left and right corners */
+          background: "radial-gradient(120% 150% at 0% 0%, rgba(220,20,40,0.12) 0%, rgba(220,20,40,0.04) 30%, transparent 60%), radial-gradient(120% 150% at 100% 0%, rgba(220,20,40,0.12) 0%, rgba(220,20,40,0.04) 30%, transparent 60%), #080808"
         }}
       >
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
