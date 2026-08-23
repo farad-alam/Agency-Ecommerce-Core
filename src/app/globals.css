@@ -381,5 +381,21 @@
 .flow-line {
   stroke-dasharray: 2000;
   stroke-dashoffset: 2000;
-  animation: drawLine 3s ease-in-out forwards, pulseGlow 2s infinite ease-in-out alternate;
+  animation: drawLine 3s ease-in-out forwards;
+}
+
+@keyframes travelLight {
+  0% { stroke-dashoffset: 2000; }
+  100% { stroke-dashoffset: -2000; }
+}
+
+.flow-light {
+  stroke-dasharray: 80 2000;
+  stroke-dashoffset: 2000;
+  animation: travelLight 5s linear infinite;
+  animation-delay: 2s; /* wait for base line to draw */
+  stroke: #ffffff;
+  stroke-width: 4;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 10px #ff1e32) drop-shadow(0 0 20px #ff1e32) drop-shadow(0 0 30px #ffffff);
 }

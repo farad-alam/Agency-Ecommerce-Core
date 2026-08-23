@@ -740,14 +740,10 @@ export default async function StorefrontHomepage() {
                   <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
               </defs>
-              <g stroke="#ff1e32" strokeWidth="3" fill="none" filter="url(#glow)" className="flow-line">
-                {/* Node 1 to Node 2 (Straight down, then right) */}
-                <path d="M 170 180 L 170 440 Q 170 450, 180 450 L 220 450" />
-                {/* Node 2 to Node 3 (Straight right across wide gap) */}
-                <path d="M 560 450 L 760 450" />
-                {/* Node 3 to Node 4 (Straight right, then up) */}
-                <path d="M 1100 450 L 1160 450 Q 1170 450, 1170 440 L 1170 180" />
-              </g>
+                {/* Base Line */}
+                <path className="flow-line" d="M 170 180 L 170 440 Q 170 450, 180 450 L 1160 450 Q 1170 450, 1170 440 L 1170 180" stroke="#8b0d1a" strokeWidth="2" />
+                {/* Traveling Light */}
+                <path className="flow-light" d="M 170 180 L 170 440 Q 170 450, 180 450 L 1160 450 Q 1170 450, 1170 440 L 1170 180" fill="none" />
             </svg>
 
             {/* Node 1: Fast Delivery */}
