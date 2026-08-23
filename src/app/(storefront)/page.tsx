@@ -5,6 +5,7 @@ import { ProductCard } from "@/components/storefront/product-card";
 import { Hero, type HeroSlide } from "@/components/storefront/hero";
 import { TrustBar } from "@/components/storefront/trust-bar";
 import { Truck, CreditCard, RefreshCw, ShieldCheck, Star, ArrowRight } from "lucide-react";
+import { FadeIn } from "@/components/animations/fade-in";
 
 /* ─── HERO DATA ─────────────────────────────────────────── */
 const heroSlide: HeroSlide = {
@@ -168,7 +169,9 @@ export default async function StorefrontHomepage() {
       <Hero slides={[heroSlide]} />
 
       {/* ── SECTION 4: TRUST BAR ─────────────────────────────── */}
-      <TrustBar />
+      <FadeIn delay={0.2} direction="up">
+        <TrustBar />
+      </FadeIn>
 
       {/* ── SECTION 5: CATEGORIES ────────────────────────────── */}
       <section 
@@ -196,62 +199,63 @@ export default async function StorefrontHomepage() {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {CATEGORIES.map((cat, i) => (
-              <Link
-                key={cat.href}
-                href={cat.href}
-                className="sx-crypto-card group block"
-                style={{ 
-                  aspectRatio: "3/4", 
-                  /* Stagger the cards slightly to mimic floating crypto UI */
-                  marginTop: i % 2 === 1 ? "24px" : "0" 
-                }}
-              >
-                {/* Background Image Image */}
-                <div className="sx-crypto-img-wrapper">
-                  <Image
-                    src={cat.imageUrl}
-                    alt={cat.label}
-                    fill
-                    className="object-cover object-center transition-transform duration-700 group-hover:scale-110"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  />
-                  {/* Heavy dark gradient overlay to make text pop and feel deep */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
-                </div>
-                
-                {/* Text Content */}
-                <div className="absolute inset-0 p-6 flex flex-col justify-end z-20">
-                  <div className="flex items-center justify-between mb-2">
-                    <span
-                      style={{
-                        fontFamily: "'Inter', system-ui, sans-serif",
-                        fontSize: "11px",
-                        fontWeight: 700,
-                        letterSpacing: "0.15em",
-                        color: "#9A9A8E",
-                      }}
-                    >
-                      {cat.tag}
-                    </span>
-                    {/* Small glowing red dot indicator */}
-                    <span className="w-2 h-2 rounded-full bg-[#8B0D1A] shadow-[0_0_8px_#8B0D1A] animate-pulse" />
+              <FadeIn key={cat.href} delay={i * 0.1} direction="up">
+                <Link
+                  href={cat.href}
+                  className="sx-crypto-card group block"
+                  style={{ 
+                    aspectRatio: "3/4", 
+                    /* Stagger the cards slightly to mimic floating crypto UI */
+                    marginTop: i % 2 === 1 ? "24px" : "0" 
+                  }}
+                >
+                  {/* Background Image Image */}
+                  <div className="sx-crypto-img-wrapper">
+                    <Image
+                      src={cat.imageUrl}
+                      alt={cat.label}
+                      fill
+                      className="object-cover object-center transition-transform duration-700 group-hover:scale-110"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    />
+                    {/* Heavy dark gradient overlay to make text pop and feel deep */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
                   </div>
                   
-                  <h3
-                    style={{
-                      fontFamily: "'Montserrat', Arial, sans-serif",
-                      fontSize: "clamp(24px, 3vw, 28px)",
-                      fontWeight: 900,
-                      letterSpacing: "-0.02em",
-                      textTransform: "uppercase",
-                      color: "#F5F2ED",
-                      lineHeight: 1.1,
-                    }}
-                  >
-                    {cat.label}
-                  </h3>
-                </div>
-              </Link>
+                  {/* Text Content */}
+                  <div className="absolute inset-0 p-6 flex flex-col justify-end z-20">
+                    <div className="flex items-center justify-between mb-2">
+                      <span
+                        style={{
+                          fontFamily: "'Inter', system-ui, sans-serif",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          letterSpacing: "0.15em",
+                          color: "#9A9A8E",
+                        }}
+                      >
+                        {cat.tag}
+                      </span>
+                      {/* Small glowing red dot indicator */}
+                      <span className="w-2 h-2 rounded-full bg-[#8B0D1A] shadow-[0_0_8px_#8B0D1A] animate-pulse" />
+                    </div>
+                    
+                    <h3
+                      style={{
+                        fontFamily: "'Montserrat', Arial, sans-serif",
+                        fontSize: "clamp(24px, 3vw, 28px)",
+                        fontWeight: 900,
+                        letterSpacing: "-0.02em",
+                        textTransform: "uppercase",
+                        color: "#F5F2ED",
+                        lineHeight: 1.1,
+                      }}
+                    >
+                      {cat.label}
+                    </h3>
+                  </div>
+                </Link>
+              </FadeIn>
             ))}
           </div>
         </div>
@@ -301,12 +305,13 @@ export default async function StorefrontHomepage() {
 
           {newArrivals.data.length > 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-              {newArrivals.data.slice(0, 4).map((product: any) => (
-                <ProductCard
-                  key={product.id}
-                  product={product as any}
-                  badge="new"
-                />
+              {newArrivals.data.slice(0, 4).map((product: any, i: number) => (
+                <FadeIn key={product.id} delay={i * 0.1} direction="up">
+                  <ProductCard
+                    product={product as any}
+                    badge="new"
+                  />
+                </FadeIn>
               ))}
             </div>
           ) : (
@@ -423,14 +428,16 @@ export default async function StorefrontHomepage() {
 
           {bestSellers.data.length > 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-              {bestSellers.data.slice(0, 4).map((product: any) => (
-                <div key={product.id} className="relative group">
-                  <div className="absolute -inset-2 rounded-xl bg-white/5 blur-xl opacity-0 group-hover:opacity-100 transition duration-500 pointer-events-none" />
-                  <ProductCard
-                    product={product as any}
-                    badge="bestseller"
-                  />
-                </div>
+              {bestSellers.data.slice(0, 4).map((product: any, i: number) => (
+                <FadeIn key={product.id} delay={i * 0.1} direction="up">
+                  <div className="relative group">
+                    <div className="absolute -inset-2 rounded-xl bg-white/5 blur-xl opacity-0 group-hover:opacity-100 transition duration-500 pointer-events-none" />
+                    <ProductCard
+                      product={product as any}
+                      badge="bestseller"
+                    />
+                  </div>
+                </FadeIn>
               ))}
             </div>
           ) : (
@@ -483,29 +490,31 @@ export default async function StorefrontHomepage() {
         <div className="relative z-10 mx-auto max-w-7xl px-4 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             {/* Image */}
-            <div
-              className="relative"
-              style={{
-                aspectRatio: "4/5",
-                border: "1px solid #2A2A2A",
-              }}
-            >
-              <Image
-                src="/our-story.jpg"
-                alt="SalarX store"
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
-              {/* Red right border accent */}
+            <FadeIn delay={0} direction="right">
               <div
-                className="absolute right-0 top-8 bottom-8 w-0.5"
-                style={{ background: "#8B0D1A" }}
-              />
-            </div>
+                className="relative"
+                style={{
+                  aspectRatio: "4/5",
+                  border: "1px solid #2A2A2A",
+                }}
+              >
+                <Image
+                  src="/our-story.jpg"
+                  alt="SalarX store"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
+                {/* Red right border accent */}
+                <div
+                  className="absolute right-0 top-8 bottom-8 w-0.5"
+                  style={{ background: "#8B0D1A" }}
+                />
+              </div>
+            </FadeIn>
 
             {/* Text */}
-            <div className="space-y-7">
+            <FadeIn delay={0.2} direction="left" className="space-y-7">
               <div className="sx-label">Our Story</div>
               <h2
                 style={{
@@ -599,7 +608,7 @@ export default async function StorefrontHomepage() {
               <Link href="/about" className="sx-btn-primary inline-flex">
                 Read Our Full Story <ArrowRight className="h-4 w-4" />
               </Link>
-            </div>
+            </FadeIn>
           </div>
         </div>
       </section>
@@ -747,48 +756,56 @@ export default async function StorefrontHomepage() {
             </svg>
 
             {/* Node 1: Fast Delivery */}
-            <div className="absolute left-0 top-[40px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
-                  <Truck className="w-5 h-5" />
+            <FadeIn delay={0.1} direction="right">
+              <div className="absolute left-0 top-[40px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
+                    <Truck className="w-5 h-5" />
+                  </div>
+                  <h4 className="text-white font-bold font-heading text-[16px]">Fast Delivery Nationwide</h4>
                 </div>
-                <h4 className="text-white font-bold font-heading text-[16px]">Fast Delivery Nationwide</h4>
+                <p className="text-[#9A9A8E] text-[13px] leading-relaxed">We deliver to all districts across Bangladesh. Estimated 2–5 working days. Shipped via Steadfast / Pathao Courier.</p>
               </div>
-              <p className="text-[#9A9A8E] text-[13px] leading-relaxed">We deliver to all districts across Bangladesh. Estimated 2–5 working days. Shipped via Steadfast / Pathao Courier.</p>
-            </div>
+            </FadeIn>
 
             {/* Node 2: Flexible Payment */}
-            <div className="absolute left-[220px] top-[380px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
-                  <CreditCard className="w-5 h-5" />
+            <FadeIn delay={0.3} direction="up">
+              <div className="absolute left-[220px] top-[380px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
+                    <CreditCard className="w-5 h-5" />
+                  </div>
+                  <h4 className="text-white font-bold font-heading text-[16px]">Flexible Payment</h4>
                 </div>
-                <h4 className="text-white font-bold font-heading text-[16px]">Flexible Payment</h4>
+                <p className="text-[#9A9A8E] text-[13px] leading-relaxed">Pay with bKash, Nagad, or Rocket. Cash on Delivery (COD) also available. 100% safe transactions.</p>
               </div>
-              <p className="text-[#9A9A8E] text-[13px] leading-relaxed">Pay with bKash, Nagad, or Rocket. Cash on Delivery (COD) also available. 100% safe transactions.</p>
-            </div>
+            </FadeIn>
 
             {/* Node 3: Quality Guaranteed */}
-            <div className="absolute left-[760px] top-[380px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
-                  <ShieldCheck className="w-5 h-5" />
+            <FadeIn delay={0.5} direction="up">
+              <div className="absolute left-[760px] top-[380px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <h4 className="text-white font-bold font-heading text-[16px]">Quality Guaranteed</h4>
                 </div>
-                <h4 className="text-white font-bold font-heading text-[16px]">Quality Guaranteed</h4>
+                <p className="text-[#9A9A8E] text-[13px] leading-relaxed">Every product is personally checked before shipping. What you see in the photo is exactly what you receive.</p>
               </div>
-              <p className="text-[#9A9A8E] text-[13px] leading-relaxed">Every product is personally checked before shipping. What you see in the photo is exactly what you receive.</p>
-            </div>
+            </FadeIn>
 
             {/* Node 4: 7-Day Easy Exchange */}
-            <div className="absolute left-[1000px] top-[40px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
-                  <RefreshCw className="w-5 h-5" />
+            <FadeIn delay={0.7} direction="left">
+              <div className="absolute left-[1000px] top-[40px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
+                    <RefreshCw className="w-5 h-5" />
+                  </div>
+                  <h4 className="text-white font-bold font-heading text-[16px]">7-Day Easy Exchange</h4>
                 </div>
-                <h4 className="text-white font-bold font-heading text-[16px]">7-Day Easy Exchange</h4>
+                <p className="text-[#9A9A8E] text-[13px] leading-relaxed">Not happy with the fit? Exchange within 7 days of delivery. Just WhatsApp us and we'll sort it out.</p>
               </div>
-              <p className="text-[#9A9A8E] text-[13px] leading-relaxed">Not happy with the fit? Exchange within 7 days of delivery. Just WhatsApp us and we'll sort it out.</p>
-            </div>
+            </FadeIn>
           </div>
 
           {/* Mobile Flowchart (hidden on desktop) */}
