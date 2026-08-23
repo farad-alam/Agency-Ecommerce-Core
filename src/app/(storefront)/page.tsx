@@ -722,52 +722,100 @@ export default async function StorefrontHomepage() {
         </div>
       </section>
 
-      {/* ── SECTION 11: DELIVERY & PAYMENT ───────────────────── */}
-      <section style={{ background: "#F5F2ED", padding: "80px 0" }}>
-        <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-0">
-            {DELIVERY_ITEMS.map(({ Icon, heading, body }, i) => (
-              <div
-                key={heading}
-                className="flex flex-col items-center text-center px-6"
-                style={{
-                  borderRight:
-                    i < DELIVERY_ITEMS.length - 1
-                      ? "1px solid #2A2A2A20"
-                      : "none",
-                }}
-              >
-                <div
-                  className="flex items-center justify-center w-12 h-12 mb-5"
-                  style={{ background: "#8B0D1A" }}
-                >
-                  <Icon className="h-6 w-6 text-white" strokeWidth={1.5} />
+      {/* ── SECTION 11: FLOWCHART PROCESS ───────────────────── */}
+      <section className="bg-[#030000] py-24 overflow-hidden" style={{ borderTop: "1px solid #2A2A2A" }}>
+        <div className="mx-auto max-w-5xl px-4 relative">
+          <div className="text-center mb-20 relative z-20">
+            <h2 className="font-heading text-3xl md:text-5xl font-extrabold text-white mb-4 uppercase tracking-tight">How We Work</h2>
+            <p className="text-[#9A9A8E] text-sm md:text-base max-w-xl mx-auto">The process that guarantees a premium experience from checkout to delivery.</p>
+          </div>
+
+          {/* Desktop Flowchart (hidden on mobile) */}
+          <div className="hidden md:block relative h-[600px] w-full max-w-[900px] mx-auto">
+            {/* Animated SVG lines */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="8" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+              <g stroke="#ff1e32" strokeWidth="3" fill="none" filter="url(#glow)" className="flow-line">
+                {/* Node 1 to Node 2 */}
+                <path d="M 340 300 C 420 300, 420 100, 500 100" />
+                {/* Node 1 to Node 3 */}
+                <path d="M 340 300 C 420 300, 420 300, 500 300" />
+                {/* Node 2 loop to Node 3 */}
+                <path d="M 840 100 C 950 100, 950 300, 840 300" />
+                {/* Node 3 to Node 4 */}
+                <path d="M 670 390 L 670 450" />
+              </g>
+            </svg>
+
+            {/* Node 1: Fast Delivery */}
+            <div className="absolute left-0 top-[250px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
+                  <Truck className="w-5 h-5" />
                 </div>
-                <h3
-                  style={{
-                    fontFamily: "'Montserrat', Arial, sans-serif",
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    letterSpacing: "0.05em",
-                    textTransform: "uppercase",
-                    color: "#0B0B0B",
-                    marginBottom: "10px",
-                  }}
-                >
-                  {heading}
-                </h3>
-                <p
-                  style={{
-                    fontFamily: "'Inter', system-ui, sans-serif",
-                    fontSize: "13px",
-                    color: "#5A5A52",
-                    lineHeight: 1.7,
-                  }}
-                >
-                  {body}
-                </p>
+                <h4 className="text-white font-bold font-heading text-[16px]">Fast Delivery Nationwide</h4>
               </div>
-            ))}
+              <p className="text-[#9A9A8E] text-[13px] leading-relaxed">We deliver to all districts across Bangladesh. Estimated 2–5 working days. Shipped via Steadfast / Pathao Courier.</p>
+            </div>
+
+            {/* Node 2: Flexible Payment */}
+            <div className="absolute left-[500px] top-[50px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <h4 className="text-white font-bold font-heading text-[16px]">Flexible Payment</h4>
+              </div>
+              <p className="text-[#9A9A8E] text-[13px] leading-relaxed">Pay with bKash, Nagad, or Rocket. Cash on Delivery (COD) also available. 100% safe transactions.</p>
+            </div>
+
+            {/* Node 3: Quality Guaranteed */}
+            <div className="absolute left-[500px] top-[250px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <h4 className="text-white font-bold font-heading text-[16px]">Quality Guaranteed</h4>
+              </div>
+              <p className="text-[#9A9A8E] text-[13px] leading-relaxed">Every product is personally checked before shipping. What you see in the photo is exactly what you receive.</p>
+            </div>
+
+            {/* Node 4: 7-Day Easy Exchange */}
+            <div className="absolute left-[500px] top-[450px] w-[340px] bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.2)] z-10 transition-transform hover:scale-105 duration-300">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-[#ff1e32]/20 flex items-center justify-center text-[#ff1e32] shadow-[0_0_15px_rgba(255,30,50,0.4)]">
+                  <RefreshCw className="w-5 h-5" />
+                </div>
+                <h4 className="text-white font-bold font-heading text-[16px]">7-Day Easy Exchange</h4>
+              </div>
+              <p className="text-[#9A9A8E] text-[13px] leading-relaxed">Not happy with the fit? Exchange within 7 days of delivery. Just WhatsApp us and we'll sort it out.</p>
+            </div>
+          </div>
+
+          {/* Mobile Flowchart (hidden on desktop) */}
+          <div className="md:hidden flex flex-col gap-8 relative">
+             <div className="absolute left-[39px] top-10 bottom-10 w-[2px] bg-gradient-to-b from-[#ff1e32] via-[#ff1e32]/50 to-transparent z-0"></div>
+             {[
+               { icon: Truck, title: "Fast Delivery Nationwide", desc: "We deliver to all districts across Bangladesh. Estimated 2–5 working days. Shipped via Steadfast / Pathao Courier." },
+               { icon: CreditCard, title: "Flexible Payment", desc: "Pay with bKash, Nagad, or Rocket. Cash on Delivery (COD) also available. 100% safe transactions." },
+               { icon: ShieldCheck, title: "Quality Guaranteed", desc: "Every product is personally checked before shipping. What you see in the photo is exactly what you receive." },
+               { icon: RefreshCw, title: "7-Day Easy Exchange", desc: "Not happy with the fit? Exchange within 7 days of delivery. Just WhatsApp us and we'll sort it out." }
+             ].map((item, i) => (
+               <div key={i} className="relative z-10 pl-[84px]">
+                 <div className="absolute left-4 top-1/2 -translate-y-1/2 w-[52px] h-[52px] rounded-full bg-[#0a0204] border-2 border-[#ff1e32] flex items-center justify-center shadow-[0_0_20px_rgba(255,30,50,0.4)]">
+                   <item.icon className="w-6 h-6 text-[#ff1e32]" />
+                 </div>
+                 <div className="bg-[#0a0204] border border-[#ff1e32]/40 rounded-2xl p-5 shadow-[0_0_30px_rgba(255,30,50,0.15)]">
+                   <h4 className="text-white font-bold font-heading text-[15px] mb-2">{item.title}</h4>
+                   <p className="text-[#9A9A8E] text-[13px] leading-relaxed">{item.desc}</p>
+                 </div>
+               </div>
+             ))}
           </div>
         </div>
       </section>
