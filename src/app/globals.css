@@ -307,6 +307,55 @@
 }
 
 /* ============================================================
+   CRYPTO-NEON CATEGORY CARDS
+   ============================================================ */
+.sx-crypto-card {
+  position: relative;
+  background: #080808;
+  border-radius: 20px;
+  overflow: hidden;
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease;
+  transform-style: preserve-3d;
+}
+
+.sx-crypto-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  padding: 2px; /* thickness of the neon border */
+  /* Neon red coming from top-left to dark bottom-right */
+  background: linear-gradient(135deg, rgba(255, 30, 50, 0.8) 0%, rgba(139, 13, 26, 0.4) 30%, rgba(0,0,0,0) 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.sx-crypto-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    -10px -10px 40px rgba(255, 30, 50, 0.15),
+    0px 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.sx-crypto-card:hover::before {
+  background: linear-gradient(135deg, rgba(255, 50, 80, 1) 0%, rgba(200, 20, 40, 0.6) 40%, rgba(0,0,0,0.1) 80%);
+}
+
+.sx-crypto-img-wrapper {
+  position: absolute;
+  inset: 0;
+  opacity: 0.6;
+  transition: opacity 0.4s ease;
+}
+
+.sx-crypto-card:hover .sx-crypto-img-wrapper {
+  opacity: 0.9;
+}
+
+/* ============================================================
    MOBILE OVERRIDES (≤ 639px)
    ============================================================ */
 @media (max-width: 639px) {

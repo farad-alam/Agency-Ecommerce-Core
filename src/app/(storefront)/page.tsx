@@ -23,32 +23,28 @@ const heroSlide: HeroSlide = {
 /* ─── CATEGORIES ─────────────────────────────────────────── */
 const CATEGORIES = [
   {
-    label: "Men's Wear",
-    bangla: "পুরুষদের পোশাক",
-    href: "/products?category=mens-wear",
-    imageUrl:
-      "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=600&auto=format&fit=crop",
+    label: "Oversized Tops",
+    tag: "STAPLES",
+    href: "/products?category=oversized-tops",
+    imageUrl: "/categories/cat_oversized_tops.png",
   },
   {
-    label: "Women's Wear",
-    bangla: "মহিলাদের পোশাক",
-    href: "/products?category=womens-wear",
-    imageUrl:
-      "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?q=80&w=600&auto=format&fit=crop",
+    label: "Street Bottoms",
+    tag: "BAGGY",
+    href: "/products?category=street-bottoms",
+    imageUrl: "/categories/cat_street_bottoms.png",
   },
   {
-    label: "Casual Wear",
-    bangla: "আরামদায়ক পোশাক",
-    href: "/products?category=casual",
-    imageUrl:
-      "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=600&auto=format&fit=crop",
+    label: "Matching Sets",
+    tag: "TRENDING",
+    href: "/products?category=matching-sets",
+    imageUrl: "/categories/cat_matching_sets.png",
   },
   {
-    label: "Festive & Formal",
-    bangla: "উৎসবের পোশাক",
-    href: "/products?category=formal",
-    imageUrl:
-      "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=600&auto=format&fit=crop",
+    label: "Denim Vault",
+    tag: "CLASSICS",
+    href: "/products?category=denim",
+    imageUrl: "/categories/cat_denim_vault.png",
   },
 ];
 
@@ -175,68 +171,72 @@ export default async function StorefrontHomepage() {
       <TrustBar />
 
       {/* ── SECTION 5: CATEGORIES ────────────────────────────── */}
-      <section style={{ background: "#0B0B0B", padding: "96px 0" }}>
+      <section style={{ background: "radial-gradient(ellipse at top center, rgba(139,13,26,0.1) 0%, #0B0B0B 60%)", padding: "96px 0" }}>
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
-          <div className="flex items-end justify-between mb-10 gap-4">
+          <div className="flex flex-col items-center justify-center mb-16 gap-4 text-center">
             <SectionHeading
-              label="Find What You Love"
-              title="Shop by Category"
-              subtitle="Find exactly what you're looking for — fast."
+              label="Explore The Drops"
+              title="Gear Up"
+              align="center"
             />
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {CATEGORIES.map((cat) => (
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            {CATEGORIES.map((cat, i) => (
               <Link
                 key={cat.href}
                 href={cat.href}
-                className="group block relative overflow-hidden"
-                style={{ aspectRatio: "2/3" }}
+                className="sx-crypto-card group block"
+                style={{ 
+                  aspectRatio: "3/4", 
+                  /* Stagger the cards slightly to mimic floating crypto UI */
+                  marginTop: i % 2 === 1 ? "24px" : "0" 
+                }}
               >
-                <Image
-                  src={cat.imageUrl}
-                  alt={cat.label}
-                  fill
-                  className="object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                  sizes="(max-width: 640px) 50vw, 25vw"
-                />
-                {/* Gradient overlay */}
-                <div
-                  className="absolute inset-0 transition-all duration-300 group-hover:opacity-80"
-                  style={{
-                    background:
-                      "linear-gradient(to top, rgba(11,11,11,0.9) 0%, rgba(11,11,11,0.3) 60%)",
-                  }}
-                />
-                {/* Red bottom border on hover */}
-                <div
-                  className="absolute inset-x-0 bottom-0 h-0.5 bg-[#8B0D1A] transition-all duration-300 scale-x-0 group-hover:scale-x-100 origin-left"
-                />
-                {/* Text */}
-                <div className="absolute inset-x-0 bottom-0 p-4 z-10">
-                  <span
+                {/* Background Image Image */}
+                <div className="sx-crypto-img-wrapper">
+                  <Image
+                    src={cat.imageUrl}
+                    alt={cat.label}
+                    fill
+                    className="object-cover object-center transition-transform duration-700 group-hover:scale-110"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                  />
+                  {/* Heavy dark gradient overlay to make text pop and feel deep */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+                </div>
+                
+                {/* Text Content */}
+                <div className="absolute inset-0 p-6 flex flex-col justify-end z-20">
+                  <div className="flex items-center justify-between mb-2">
+                    <span
+                      style={{
+                        fontFamily: "'Inter', system-ui, sans-serif",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        letterSpacing: "0.15em",
+                        color: "#9A9A8E",
+                      }}
+                    >
+                      {cat.tag}
+                    </span>
+                    {/* Small glowing red dot indicator */}
+                    <span className="w-2 h-2 rounded-full bg-[#8B0D1A] shadow-[0_0_8px_#8B0D1A] animate-pulse" />
+                  </div>
+                  
+                  <h3
                     style={{
                       fontFamily: "'Montserrat', Arial, sans-serif",
-                      fontSize: "14px",
-                      fontWeight: 700,
-                      letterSpacing: "0.08em",
+                      fontSize: "clamp(24px, 3vw, 28px)",
+                      fontWeight: 900,
+                      letterSpacing: "-0.02em",
                       textTransform: "uppercase",
                       color: "#F5F2ED",
-                      display: "block",
-                      marginBottom: "2px",
+                      lineHeight: 1.1,
                     }}
                   >
                     {cat.label}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "'Inter', system-ui, sans-serif",
-                      fontSize: "11px",
-                      color: "#9A9A8E",
-                      display: "block",
-                    }}
-                  >
-                    {cat.bangla}
-                  </span>
+                  </h3>
                 </div>
               </Link>
             ))}
